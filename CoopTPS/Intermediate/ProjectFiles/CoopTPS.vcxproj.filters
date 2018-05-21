@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<None Include="..\..\CoopTPS.uproject" />
+		<Filter Include="Source">
+			<UniqueIdentifier>{C2A4F7BE-1D9F-4012-8AFD-B766D894D5B5}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Source\CoopTPS.Target.cs">
+			<Filter>Source</Filter>
+		</None >
+		<None Include="..\..\Source\CoopTPSEditor.Target.cs">
+			<Filter>Source</Filter>
+		</None >
+		<Filter Include="Config">
+			<UniqueIdentifier>{7D946B0C-B36F-4CF9-AE7A-EFEA285F3101}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Config\DefaultEditor.ini">
+			<Filter>Config</Filter>
+		</None >
+		<None Include="..\..\Config\DefaultEngine.ini">
+			<Filter>Config</Filter>
+		</None >
+		<None Include="..\..\Config\DefaultGame.ini">
+			<Filter>Config</Filter>
+		</None >
+		<None Include="..\..\Config\DefaultInput.ini">
+			<Filter>Config</Filter>
+		</None >
+		<Filter Include="Source\CoopTPS">
+			<UniqueIdentifier>{DEBCDDFB-A28D-4821-BEA1-EB7F96C31F9B}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Source\CoopTPS\CoopTPS.Build.cs">
+			<Filter>Source\CoopTPS</Filter>
+		</None >
+		<ClCompile Include="..\..\Source\CoopTPS\CoopTPS.cpp">
+			<Filter>Source\CoopTPS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\CoopTPS\CoopTPS.h">
+			<Filter>Source\CoopTPS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\CoopTPS\CoopTPSGameModeBase.cpp">
+			<Filter>Source\CoopTPS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\CoopTPS\CoopTPSGameModeBase.h">
+			<Filter>Source\CoopTPS</Filter>
+		</ClInclude >
+		<Filter Include="Source\CoopTPS\Private">
+			<UniqueIdentifier>{D38867EE-0CF7-46C6-B8BC-D67D99416021}</UniqueIdentifier>
+		</Filter>
+		<ClCompile Include="..\..\Source\CoopTPS\Private\SCharacter.cpp">
+			<Filter>Source\CoopTPS\Private</Filter>
+		</ClCompile >
+		<ClCompile Include="..\..\Source\CoopTPS\Private\SWeapon.cpp">
+			<Filter>Source\CoopTPS\Private</Filter>
+		</ClCompile >
+		<Filter Include="Source\CoopTPS\Public">
+			<UniqueIdentifier>{31E27738-08EE-4433-834A-7652A7DF2B16}</UniqueIdentifier>
+		</Filter>
+		<ClInclude Include="..\..\Source\CoopTPS\Public\SCharacter.h">
+			<Filter>Source\CoopTPS\Public</Filter>
+		</ClInclude >
+		<ClInclude Include="..\..\Source\CoopTPS\Public\SWeapon.h">
+			<Filter>Source\CoopTPS\Public</Filter>
+		</ClInclude >
+	</ItemGroup>
+</Project>

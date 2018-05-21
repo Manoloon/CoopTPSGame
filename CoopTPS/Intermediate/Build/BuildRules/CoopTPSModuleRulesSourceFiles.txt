@@ -1,0 +1,3 @@
+E:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Source\CoopTPS\CoopTPS.Build.cs
+E:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Source\CoopTPS.Target.cs
+E:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Source\CoopTPSEditor.Target.cs

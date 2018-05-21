@@ -1,0 +1,18 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-CoopTPS-608.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"e:\Program Files\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\Engine\SharedPCH.Engine.h.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\CoopTPS.cpp.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\CoopTPSGameModeBase.cpp.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\SCharacter.cpp.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\CoopTPS.init.gen.cpp.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\CoopTPSGameModeBase.gen.cpp.obj"
+"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\SCharacter.gen.cpp.obj"
+"e:\Program Files\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\CoopTPS\PCLaunch.rc.res"
+"e:\Program Files\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\ModuleVersionResource.rc.inl.res"
+/OUT:"e:\Unreal Proyects\Looman\02-CoopTPSGame\CoopTPS\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CoopTPS-608.lib"
