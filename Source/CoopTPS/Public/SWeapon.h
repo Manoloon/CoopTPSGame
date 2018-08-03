@@ -12,6 +12,20 @@ class UParticleSystem;
 class USoundCue;
 class UAudioComponent;
 
+// Contains one Hitscan of the weapon Single trace.
+USTRUCT()
+struct FHitScanTrace 
+{
+GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+
+};
+
 UCLASS()
 class COOPTPS_API ASWeapon : public AActor
 {
@@ -23,6 +37,8 @@ public:
 	virtual void BeginPlay() override;
 
 protected:
+
+	void PlayImpactFX(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
@@ -83,6 +99,16 @@ protected:
 	virtual void Fire();
 	void Reload();
 	
+	// newtworking
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerFire();
+
+	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
+		FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+		void ONREP_HitScanTrace();
+
 public:
 	virtual void StartFire();
 	virtual void StopFire();

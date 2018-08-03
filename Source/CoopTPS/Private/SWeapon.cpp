@@ -13,6 +13,7 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // console debuging
 static int32 DebugWeaponDrawing = 0;
@@ -32,6 +33,11 @@ ASWeapon::ASWeapon()
 	ReloadTime = 3.0f;
 	CurrentAmmo = 30;
 	MaxAmmo = 30;
+	SetReplicates(true);
+
+	/* hace que el update de la red sea mas rapido, NO LAG*/
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 }
 
 void ASWeapon::BeginPlay()
@@ -42,14 +48,19 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
+	// DE ESTA MANERA SOLO Corre todo el FIRE si es ROLE_AUTHORITY
+	if(Role < ROLE_Authority)
+	{
+		ServerFire();
+	}
 	AActor* MyOwner = GetOwner();
-	if(MyOwner && CurrentAmmo>0)
+	if (MyOwner && CurrentAmmo > 0)
 	{
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 		FVector ShotDirection = EyeRotation.Vector();
-		FVector TraceEnd = EyeLocation + ( ShotDirection * 10000);
+		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(MyOwner);
 		QueryParams.AddIgnoredActor(this);
@@ -58,46 +69,38 @@ void ASWeapon::Fire()
 
 		// particle "Target" parameter - la necesitamos por el hitpoint
 		FVector TracerEndPoint = TraceEnd;
+		EPhysicalSurface SurfaceType = SurfaceType_Default;
 		FHitResult Hit;
-		
+
+		// Trace VFX
+		PlayVFX(TracerEndPoint);
 		//SFX
 		if (FireSFX)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, EyeLocation);
 		}
-		
-		if (GetWorld()->LineTraceSingleByChannel(Hit,EyeLocation,TraceEnd,COLLISION_WEAPON,QueryParams))
+
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			AActor* HitActor = Hit.GetActor();
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-			UParticleSystem* SelectedFX = nullptr;
-			switch (SurfaceType)
-			{
-			case SURFACE_FLESHDEFAULT: //flesh default
-				SelectedFX = FleshImpactFX;
-				break;
-			case SURFACE_FLESHVULNERABLE: // flesh headshot
-				SelectedFX = FleshImpactFX;
-				break;
 
-			default:
-				SelectedFX = DefaultImpactFX;
-				break;
-			}
 			float ActualDamage = BaseDamage;
+
 			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
 				ActualDamage *= 4.0f;
 			}
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			
+			PlayImpactFX(SurfaceType,Hit.ImpactPoint);
 			TracerEndPoint = Hit.ImpactPoint;
-			PlayVFX(TracerEndPoint);
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);				
-
-			if (SelectedFX) 
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-			}
-
+			
+		}
+		if (Role == ROLE_Authority)
+		{
+			HitScanTrace.TraceTo = TracerEndPoint;
+			HitScanTrace.SurfaceType = SurfaceType;
 		}
 		if(DebugWeaponDrawing>0)
 		{
@@ -108,6 +111,8 @@ void ASWeapon::Fire()
 	LastFireTime = GetWorld()->TimeSeconds;
 	CurrentAmmo -= 1;
 }
+
+/*ACTIONS*/
 
 void ASWeapon::Reload()
 {
@@ -142,6 +147,33 @@ void ASWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBeetwenShots);
 }
 
+/*Play Impact FX*/
+
+void ASWeapon::PlayImpactFX(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+{
+	UParticleSystem* SelectedFX = nullptr;
+	switch (SurfaceType)
+	{
+	case SURFACE_FLESHDEFAULT: //flesh default
+	case SURFACE_FLESHVULNERABLE: // flesh headshot
+		SelectedFX = FleshImpactFX;
+		break;
+
+	default:
+		SelectedFX = DefaultImpactFX;
+		break;
+	}
+	if (SelectedFX)
+	{
+		FVector MuzzleLoc = MeshComp->GetSocketLocation(MuzzleSocketName);
+		FVector ShotDirection = ImpactPoint - MuzzleLoc;
+		ShotDirection.Normalize();
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint, ShotDirection.Rotation());
+	}
+}
+
+/*Play Trace VFX*/
+
 void ASWeapon::PlayVFX(FVector TraceEnd)
 {
 	if (MuzzleFX)
@@ -164,4 +196,32 @@ void ASWeapon::PlayVFX(FVector TraceEnd)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+}
+
+
+// NETWORK FIRE ACTION
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
+}
+
+void ASWeapon::ONREP_HitScanTrace()
+{
+	//Play cosmetic FX
+	PlayVFX(HitScanTrace.TraceTo);
+	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// esto hace que se replique dicha variable a todos nuestros clientes.
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
 }

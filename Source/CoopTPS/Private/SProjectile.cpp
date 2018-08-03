@@ -17,12 +17,5 @@ ASProjectile::ASProjectile()
 void ASProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ProjectileComp->SetVelocityInLocalSpace(InitialLocalVelocity);
 }
-
-// Called every frame
-void ASProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-

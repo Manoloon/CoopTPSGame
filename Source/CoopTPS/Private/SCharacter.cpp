@@ -7,7 +7,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "SWeapon.h"
 #include "SProjectile.h"
-
+#include "Components/CapsuleComponent.h"
+#include "Particles/ParticleSystem.h" // beam test
+#include "Particles/ParticleSystemComponent.h"
+#include "ParticleDefinitions.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "SHealthComponent.h"
+#include "CoopTPS.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -23,12 +30,22 @@ ASCharacter::ASCharacter()
 	// this line is for crouch
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore); // de esta manera la capsula no bloqueara nuestra arma.
+
 	// camera component
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
-	//ThrowPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ThrowPosComp"));
-	//ThrowPosition->SetRelativeLocation(FVector(-30.0f, 9.0f, 110.0f));
+	// beamcomponent
+	BeamComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BeamComp"));
+	BeamComp->SetupAttachment(SpringArmComp);
+	BeamComp->bAutoActivate = false;
+
+	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
+	BeamEndPointDecal->SetVisibility(false);
+
+	// health Component
+	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 
 	// Default FOV 
 	
@@ -36,9 +53,13 @@ ASCharacter::ASCharacter()
 	ZoomInterpSpeed = 20.0f;
 	WeaponSocketName = "WeaponSocket";
 	GrenadeSocketName = "GrenadeSocket";
-	InitialVelocity = FVector(1000.0f, 0.0f, 1000.0f);
 	bIsGranadaMode = false;
-	LaunchDistance = 20.0f;
+	LaunchDistance = 100.0f;
+	PathLifeTime = 5.0f;
+	TimeInterval = 0.05;
+	Gravity = FVector(0.0f, 0.0f, -980.0f);
+	SpawnScale = FVector(0.1f);
+	bDied = false;
 }
 
 // Called to bind functionality to input
@@ -105,16 +126,22 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	DefaultFOV = CameraComp->FieldOfView;
+	// health start
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 
-	// spawn initial weapon
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-	if (CurrentWeapon)
+	if(Role == ROLE_Authority)
 	{
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		// spawn initial weapon
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		}
 	}
+	
 }
 
 void ASCharacter::BeginZoom()
@@ -155,34 +182,108 @@ void ASCharacter::Throw()
 {
 	if (GranadaClass)
 	{
-		const FRotator SpawnRotation = GetControlRotation();
-		const FVector SpawnLocation = GetMesh()->GetSocketLocation(GrenadeSocketName);
-		const FVector SpawnScale = FVector(0.1f);
+		ClearBeam();
 		UWorld* World = GetWorld();
-		//FActorSpawnParameters GranadaSpawnParams;
-		//GranadaSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-		ASProjectile* Grenade = World->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, SpawnLocation));
+		ASProjectile* Grenade = World->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
+		
 		if (Grenade)
 		{
-		Grenade->InitialLocalVelocity = InitialVelocity;
-		//Grenade->ProjectileComp->SetVelocityInLocalSpace(InitialVelocity);
-		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation, SpawnLocation, SpawnScale));
-		}
-		
+		Grenade->InitialLocalVelocity = InitialLocalVelocity;
+		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation, StartLocation, SpawnScale));
+		}		
 	}
 }
 
-void ASCharacter::StartThrow() // TODO Continuar!
+void ASCharacter::StartThrow()
 {
-	bIsGranadaMode = true;	
+	bIsGranadaMode = true;		
 }
 
 void ASCharacter::StopThrow()
 {
 	bIsGranadaMode = false;
-	LaunchDistance = 0.20f;
+	LaunchDistance = 100.0f;
+	BeamEndPointDecal->SetVisibility(false);
+	ClearBeam();
 	Throw();
+}
+
+void ASCharacter::ClearBeam()
+{
+for(auto Beam = BeamArray.CreateIterator(); Beam; Beam++)
+{
+	(*Beam)->DestroyComponent();
+}
+	BeamArray.Empty();
+}
+
+void ASCharacter::AddNewBeam(FVector Point1, FVector Point2)
+{
+	
+	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, Point1, FRotator::ZeroRotator, true);
+	BeamArray.Add(BeamComp);
+
+		BeamComp->SetBeamSourcePoint(0, Point1, 0);
+		BeamComp->SetBeamTargetPoint(0, Point2, 0);
+}
+
+
+void ASCharacter::GetSegmentAtTime(FVector LocalStartLocation, FVector LocalInitialVelocity, FVector LocalGravity, float LocalTime1, float LocalTime2, FVector &OutPoint1, FVector &OutPoint2)
+{
+	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) + (LocalGravity*(LocalTime1*LocalTime1*0.5f)));
+	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) + (LocalGravity*(LocalTime2*LocalTime2*0.5f)));
+}
+
+void ASCharacter::DrawingTrajectory()
+{
+	if (GranadaClass)
+	{
+		ClearBeam();
+
+		SpawnRotation = GetControlRotation();
+		FVector GrenadeOffset = FVector(100.0f, 0.0f, -10.0f);
+		ThrowRotateVector = GetControlRotation().RotateVector(GrenadeOffset);
+		StartLocation = GetMesh()->GetSocketLocation(GrenadeSocketName) + ThrowRotateVector;
+		const FTransform TotalPosition(SpawnRotation, ThrowRotateVector, SpawnScale);
+		
+		const UWorld* World = GetWorld();
+		InitialVelocity = UKismetMathLibrary::TransformDirection(TotalPosition, InitialLocalVelocity);
+		uint8 LastIndex = floor(PathLifeTime / TimeInterval); 
+		for (uint8 i = 0; i <= LastIndex; i++)
+		{
+			float Time1 = i * TimeInterval;
+			float Time2 = (i + 1) * TimeInterval;
+
+			// trace line
+			const FName TraceTag("TraceTag");
+			FCollisionQueryParams QueryParams;
+			QueryParams.TraceTag = TraceTag;
+			FHitResult Hit;
+			GetSegmentAtTime(StartLocation, InitialVelocity, Gravity, Time1, Time2,Point1,Point2);
+			if (World->LineTraceSingleByChannel(Hit, Point1, Point2, ECC_Visibility, QueryParams))
+			{
+				BeamEndPointDecal->SetVisibility(true);
+				BeamEndPointDecal->SetWorldLocation(Hit.ImpactPoint);
+				BeamEndPointDecal->SetWorldRotation(UKismetMathLibrary::MakeRotFromX(Hit.ImpactNormal));
+								
+				break;
+			}
+			AddNewBeam(Point1, Point2);
+			BeamEndPointDecal->SetVisibility(false);
+		}
+	}
+}
+
+void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health<=0.0f && !bDied)
+	{
+		bDied = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(10);
+	}
 }
 
 // Called every frame
@@ -193,14 +294,24 @@ void ASCharacter::Tick(float DeltaTime)
 	// in grenade mode
 	if(bIsGranadaMode)
 	{
-		float adding = 20.0f;
+		float adding = 10.0f;
 		LaunchDistance = FMath::Clamp(LaunchDistance + adding, 1.0f, 1000.0f);
-		InitialVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
-		UE_LOG(LogTemp, Warning, TEXT("%f"),LaunchDistance);
+		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
+		DrawingTrajectory();
 	}
 
 	// is true : first - false : second
 	float TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
 	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 	CameraComp->SetFieldOfView(NewFOV);
+}
+
+// networking
+void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// esto hace que se replique dicha variable a todos nuestros clientes.
+	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, bDied);
 }
