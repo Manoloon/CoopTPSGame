@@ -8,6 +8,9 @@
 
 enum class EWaveState : uint8;
 
+// Declarar una funcion que retorne la victima y el asesino para puntos. ESTE SE USARA EN EL HealthComponent!!
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);  // Parametro Actor victima y Actor Asesino(rifle) y el actorcontroller (3 parametros)
+
 UCLASS()
 class COOPTPS_API ASGameMode : public AGameModeBase
 {
@@ -50,10 +53,15 @@ protected:
 
 	void SetWaveState(EWaveState NewWaveState);
 
+	void RestoreDeadPlayer();
+
 public:
 	ASGameMode();
 
 	virtual void StartPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(BlueprintAssignable, Category = "GameMode")
+		FOnActorKilled OnActorKilled;
 };

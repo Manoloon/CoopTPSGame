@@ -33,6 +33,7 @@ ASWeapon::ASWeapon()
 	ReloadTime = 3.0f;
 	CurrentAmmo = 30;
 	MaxAmmo = 30;
+	BulletSpread = 2.0f;
 	SetReplicates(true);
 
 	/* hace que el update de la red sea mas rapido, NO LAG*/
@@ -59,8 +60,14 @@ void ASWeapon::Fire()
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
+		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(MyOwner);
 		QueryParams.AddIgnoredActor(this);

@@ -90,8 +90,7 @@ protected:
 	void EndCrouch();
 	void BeginZoom();
 	void EndZoom();
-	void StartFire();
-	void StopFire();
+
 	void Reload();
 	void Throw();
 	void StartThrow();
@@ -112,4 +111,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	// Esto esta expuesto para poder usarse en el BT.
+	UFUNCTION(BlueprintCallable,Category = "Player")
+	void StartFire();
+	UFUNCTION(BlueprintCallable,Category = "Player")
+	void StopFire();
 };

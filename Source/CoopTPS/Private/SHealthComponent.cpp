@@ -3,6 +3,8 @@
 #include "SHealthComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
+#include "SGameMode.h"
+#include "Engine/World.h"
 
 
 
@@ -10,6 +12,7 @@
 USHealthComponent::USHealthComponent()
 {
 	MaxHealth = 100.0f;
+	bOwnerIsDead = false;
 	SetIsReplicated (true);
 }
 
@@ -33,9 +36,24 @@ void USHealthComponent::BeginPlay()
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0.0f) { return; }
+	if (Damage <= 0.0f || bOwnerIsDead) 
+	{
+		return; 
+	}
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
+	bOwnerIsDead = Health <= 0.0f;
+
+	if (bOwnerIsDead)
+	{
+		ASGameMode* GM =Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
+		}
+	}
+	
+
 }
 
 
@@ -47,13 +65,12 @@ float USHealthComponent::GetHealth() const
 
 void USHealthComponent::Heal(float HealAmount)
 {
-	if(HealAmount <=0.0f || Health <=0.0f)
+	if(HealAmount <=0.0f || bOwnerIsDead)
 	{
 		return;
 	}
 	Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
 	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr,nullptr,nullptr);
-	//UE_LOG(LogTemp, Warning, TEXT("Health amount added: %s"), *FString::SanitizeFloat(HealAmount));
 }
 
 /*NETWORKING*/

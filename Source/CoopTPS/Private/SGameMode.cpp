@@ -4,6 +4,7 @@
 #include "SHealthComponent.h"
 #include "Engine/World.h" // FConstIterators
 #include "SGameState.h"
+#include "SPlayerState.h"
 #include "TimerManager.h"
 
 
@@ -13,6 +14,7 @@ ASGameMode::ASGameMode()
 
 	// declaramos al SGAMESTATE como el default.
 	GameStateClass = ASGameState::StaticClass();
+	PlayerStateClass = ASPlayerState::StaticClass();
 
 	// prepara el tick para correr cada segundo y no cada frame.
 	PrimaryActorTick.bCanEverTick = true;
@@ -27,6 +29,7 @@ void ASGameMode::StartWave()
 	NumBotsToSpawn = NumBotsToSpawn * WaveCount;
 	// start timer
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASGameMode::SpawnBotTimerElapsed, 1.0f,true,0.0f);
+	SetWaveState(EWaveState::WaveInProgress);
 }
 
 void ASGameMode::EndWave()
@@ -34,11 +37,14 @@ void ASGameMode::EndWave()
 	GetWorldTimerManager().ClearTimer(TimerHandle_SpawnBots);
 
 	PrepareNextWave();
+	SetWaveState(EWaveState::WaveComplete);
 }
 
 void ASGameMode::PrepareNextWave()
 {
 	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ASGameMode::StartWave, TimeBetweenWaves, false);
+	SetWaveState(EWaveState::WaitingToStart);
+	RestoreDeadPlayer();
 }
 
 void ASGameMode::CheckWaveState()
@@ -97,14 +103,28 @@ void ASGameMode::CheckAnyPlayerAlive()
 void ASGameMode::GameOver()
 {
 	EndWave();
+	SetWaveState(EWaveState::GameOver);
 }
 
 void ASGameMode::SetWaveState(EWaveState NewWaveState)
 {
 	ASGameState* GS = GetGameState<ASGameState>();
-	if(ensureAlways(GS))
+	if (ensureAlways(GS))
 	{
-		GS->WaveState = NewWaveState;
+		GS->SetWaveState(NewWaveState);
+	}
+}
+
+void ASGameMode::RestoreDeadPlayer()
+{
+	for (FConstPlayerControllerIterator It= GetWorld()->GetPlayerControllerIterator();It;++It)
+	{
+		APlayerController* PC = It->Get();
+		if(PC && PC->GetPawn() == nullptr)
+		{
+			// this function is god! jaja
+			RestartPlayer(PC);
+		}
 	}
 }
 

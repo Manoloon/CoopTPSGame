@@ -21,6 +21,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 		float MaxHealth;
 
+	bool bOwnerIsDead;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -30,12 +30,14 @@ protected:
 	UFUNCTION()
 		void OnRep_WaveState(EWaveState OldWaveState);
 
+	UPROPERTY(BlueprintReadOnly, Replicatedusing = ONREP_WaveState, Category = "WaveState")
+		EWaveState WaveState;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "WaveState")
 		void WaveStateChanged(EWaveState NewWaveState, EWaveState OldWaveState);
 public:
 
-	UPROPERTY(BlueprintReadOnly, Replicatedusing = ONREP_WaveState, Category = "WaveState")
-		EWaveState WaveState;
-
+	UFUNCTION()
+		void SetWaveState(EWaveState NewWaveState);
 
 };
