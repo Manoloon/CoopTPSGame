@@ -62,6 +62,7 @@ protected:
 	float SelfDamageInterval;
 
 	FTimerHandle TimerHandle_SelfDamage;
+	FTimerHandle TimerHandle_RefreshPath;
 
 	void SelfDamage();
 
@@ -69,6 +70,8 @@ protected:
 		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
 	void SelfDestruct();
+
+	void RefreshPath();
 
 public:	
 	// Called every frame

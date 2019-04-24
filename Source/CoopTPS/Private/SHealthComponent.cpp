@@ -14,6 +14,7 @@ USHealthComponent::USHealthComponent()
 	MaxHealth = 100.0f;
 	bOwnerIsDead = false;
 	SetIsReplicated (true);
+	TeamNum = 255;
 }
 
 
@@ -40,6 +41,12 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 	{
 		return; 
 	}
+	// if friendly , no damage, But can do SelfDamage (trackball self destruct)
+	if(DamagedActor != DamageCauser && IsFriendly(DamagedActor,DamageCauser))
+	{
+		return;
+	}
+
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 	bOwnerIsDead = Health <= 0.0f;
@@ -52,8 +59,6 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
 		}
 	}
-	
-
 }
 
 
@@ -71,6 +76,24 @@ void USHealthComponent::Heal(float HealAmount)
 	}
 	Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
 	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr,nullptr,nullptr);
+}
+
+bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+	if(ActorA == nullptr ||ActorB == nullptr)
+	{
+		//assume friendly
+		return true;
+	}
+	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
+	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
+
+	if(HealthCompA == nullptr || HealthCompB == nullptr)
+	{
+		//Assume friendly
+		return true;
+	}
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
 /*NETWORKING*/

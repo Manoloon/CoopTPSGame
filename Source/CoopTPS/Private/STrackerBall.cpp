@@ -15,6 +15,16 @@
 #include "components/AudioComponent.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+
+// debug
+static int32 DebugtrackballDraw = 0;
+FAutoConsoleVariableRef CVARDebugtrackballDraw(
+	TEXT("Coop.DebugTrackball"),
+	DebugtrackballDraw,
+	TEXT("draw debug lines for trackball"),
+	ECVF_Cheat);
+
+
 // Sets default values
 ASTrackerBall::ASTrackerBall()
 {
@@ -64,16 +74,41 @@ void ASTrackerBall::BeginPlay()
 
 FVector ASTrackerBall::GetNextPathPoint()
 {
-	ACharacter* PlayerPawn = UGameplayStatics::GetPlayerCharacter(this, 0);
-		if (PlayerPawn)
-		{
-			UNavigationPath* NavPath = UNavigationSystem::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
-			if (NavPath->PathPoints.Num() > 1)
-			{
+	AActor* BestTarget = nullptr;
+	float NearestTargetDistance = FLT_MAX; // asignamos el maximo en float con ese macro.
 
-				return NavPath->PathPoints[1];
+	for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+	{
+		APawn* TestPawn = It->Get();
+		if (TestPawn  == nullptr && USHealthComponent::IsFriendly(TestPawn, this))
+		{
+			continue;
+		}
+		USHealthComponent*  TestPawnHealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+		if(HealthComp && HealthComp->GetHealth()>0.0)
+		{
+			float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
+			if(Distance < NearestTargetDistance)
+			{
+				BestTarget = TestPawn;
+				NearestTargetDistance = Distance;
 			}
 		}
+	}
+
+	if(BestTarget)
+	{
+		UNavigationPath* NavPath = UNavigationSystem::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
+
+		// Con esto busca desatorarse si asi fuera recalculando el path.
+		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
+		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBall::RefreshPath, 5.0f, false);
+
+		if (NavPath->PathPoints.Num() > 1)
+		{
+			return NavPath->PathPoints[1];
+		}
+	}	
 		return GetActorLocation();	
 }
 
@@ -86,7 +121,7 @@ void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float H
 {
 	if(MatInst == nullptr)
 	{
-	MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(1));
 	}
 	if(MatInst)
 	{
@@ -114,12 +149,20 @@ void ASTrackerBall::SelfDestruct()
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
 	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this,GetInstigatorController(),true);
-	
-	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 3.0f);
 
+		if(DebugtrackballDraw)
+		{
+			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 3.0f);
+		}
 	 // en vez de Destroy() , usamos lifespan para que le de tiempo al cliente de ver la explosion.
 	SetLifeSpan(2.0f);
 	}
+}
+
+
+void ASTrackerBall::RefreshPath()
+{
+	NextPathPoint = GetNextPathPoint();
 }
 
 // Called every frame
@@ -145,7 +188,10 @@ void ASTrackerBall::Tick(float DeltaTime)
 		ForceDirection *= MovementForce;
 		MeshComp->AddForce(ForceDirection, NAME_None, bVelocityChanged);
 	}
-	DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow, false, 1.0f, 0, 3.0f);
+		if (DebugtrackballDraw)
+		{
+			DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow, false, 1.0f, 0, 3.0f);
+		}
 	}
 }
 
@@ -156,7 +202,7 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 	if(!bStartedSelfDestruction)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
-		if (PlayerPawn)
+		if (PlayerPawn && !USHealthComponent::IsFriendly(OtherActor,this))
 		{
 			// we overlapped player
 			if (Role == ROLE_Authority)
@@ -171,4 +217,3 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 	
 }
-

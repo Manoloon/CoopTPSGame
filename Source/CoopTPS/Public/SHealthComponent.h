@@ -21,6 +21,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 		float MaxHealth;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Team")
+		uint8 TeamNum;
+
 	bool bOwnerIsDead;
 
 protected:
@@ -40,4 +43,8 @@ public:
 		FOnHealthChangedSignature OnHealthChanged;
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		void Heal(float HealAmount);
+
+	// necesitamos 2 actores a los cuales comparar.
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Team")
+		static bool IsFriendly(AActor* ActorA , AActor* ActorB);
 };

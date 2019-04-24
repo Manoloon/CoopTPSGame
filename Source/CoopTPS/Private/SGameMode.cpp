@@ -26,7 +26,7 @@ ASGameMode::ASGameMode()
 void ASGameMode::StartWave()
 {
 	WaveCount++;
-	NumBotsToSpawn = NumBotsToSpawn * WaveCount;
+	NumBotsToSpawn = 2 * WaveCount;
 	// start timer
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASGameMode::SpawnBotTimerElapsed, 1.0f,true,0.0f);
 	SetWaveState(EWaveState::WaveInProgress);
@@ -35,8 +35,6 @@ void ASGameMode::StartWave()
 void ASGameMode::EndWave()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_SpawnBots);
-
-	PrepareNextWave();
 	SetWaveState(EWaveState::WaveComplete);
 }
 
@@ -67,6 +65,7 @@ void ASGameMode::CheckWaveState()
 		{
 		continue;
 		}
+
 		USHealthComponent* HealthComp =Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
 		if (HealthComp && HealthComp->GetHealth() >0.0f) // if still alive
 		{
@@ -149,6 +148,7 @@ void ASGameMode::SpawnBotTimerElapsed()
 /*TICKING*/
 void ASGameMode::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
 	CheckWaveState();
 	CheckAnyPlayerAlive();
 }
