@@ -4,10 +4,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
-#include "AI/Navigation/NavigationSystem.h"
-#include "AI/Navigation/NavigationPath.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
 #include "DrawDebugHelpers.h"
 #include "SHealthComponent.h"
+#include "EngineUtils.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SphereComponent.h"
 #include "SCharacter.h"
@@ -63,7 +64,7 @@ void ASTrackerBall::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if(Role == ROLE_Authority)
+	if(GetLocalRole() == ROLE_Authority)
 	{
 		// Initial location
 		NextPathPoint = GetNextPathPoint();
@@ -77,9 +78,9 @@ FVector ASTrackerBall::GetNextPathPoint()
 	AActor* BestTarget = nullptr;
 	float NearestTargetDistance = FLT_MAX; // asignamos el maximo en float con ese macro.
 
-	for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
 	{
-		APawn* TestPawn = It->Get();
+		APawn* TestPawn = *PawnIterator;
 		if (TestPawn  == nullptr && USHealthComponent::IsFriendly(TestPawn, this))
 		{
 			continue;
@@ -98,12 +99,12 @@ FVector ASTrackerBall::GetNextPathPoint()
 
 	if(BestTarget)
 	{
-		UNavigationPath* NavPath = UNavigationSystem::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
-
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
+		if (!NavPath) { return GetActorLocation(); }
 		// Con esto busca desatorarse si asi fuera recalculando el path.
 		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
 		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBall::RefreshPath, 5.0f, false);
-
+		
 		if (NavPath->PathPoints.Num() > 1)
 		{
 			return NavPath->PathPoints[1];
@@ -144,7 +145,7 @@ void ASTrackerBall::SelfDestruct()
 	MeshComp->SetVisibility(false, true); 
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	if(Role == ROLE_Authority)
+	if(GetLocalRole() == ROLE_Authority)
 	{
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
@@ -169,7 +170,7 @@ void ASTrackerBall::RefreshPath()
 void ASTrackerBall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(Role == ROLE_Authority && !bExploded)
+	if(GetLocalRole() == ROLE_Authority && !bExploded)
 	{
 	float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 	if(GetVelocity().Size()>10)
@@ -205,7 +206,7 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 		if (PlayerPawn && !USHealthComponent::IsFriendly(OtherActor,this))
 		{
 			// we overlapped player
-			if (Role == ROLE_Authority)
+			if (GetLocalRole() == ROLE_Authority)
 			{
 				// set a timer that inflict damage to ourself until we self destruct --- ESTE TIMER se corre cada medio segundo , y aplica el daño de 10 a el mismo.
 				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBall::SelfDamage, SelfDamageInterval, true, 0.0f);

@@ -4,6 +4,7 @@
 #include "SHealthComponent.h"
 #include "Engine/World.h" // FConstIterators
 #include "SGameState.h"
+#include "EngineUtils.h"
 #include "SPlayerState.h"
 #include "TimerManager.h"
 
@@ -58,9 +59,9 @@ void ASGameMode::CheckWaveState()
 	bool bIsAnyBotAlive = false;
 
 	// con esta sintaxis chequea todos los pawns que hay en escena
-	for(FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
 	{
-		APawn* TestPawn = It->Get();
+		APawn* TestPawn = *PawnIterator;
 		if(TestPawn == nullptr || TestPawn->IsPlayerControlled())
 		{
 		continue;

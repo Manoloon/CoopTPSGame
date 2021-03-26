@@ -19,10 +19,10 @@ public:
 	UPROPERTY(ReplicatedUsing=ONREP_Health, BlueprintReadOnly, Category = "Health")
 		float Health;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
-		float MaxHealth;
+		float MaxHealth = 100.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Team")
-		uint8 TeamNum;
+		uint8 TeamNum = 255;
 
 	bool bOwnerIsDead;
 

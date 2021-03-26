@@ -12,7 +12,7 @@ void ASGameState::OnRep_WaveState(EWaveState OldWaveState)
 
 void ASGameState::SetWaveState(EWaveState NewWaveState)
 {
-	if(Role == ROLE_Authority)
+	if(GetLocalRole() == ROLE_Authority)
 	{
 		EWaveState OldWaveState = WaveState;
 		WaveState = NewWaveState;

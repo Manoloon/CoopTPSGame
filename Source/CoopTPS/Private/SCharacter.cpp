@@ -129,7 +129,7 @@ void ASCharacter::BeginPlay()
 	// health start
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 
-	if(Role == ROLE_Authority)
+	if(GetLocalRole() == ROLE_Authority)
 	{
 		// spawn initial weapon
 		FActorSpawnParameters SpawnParams;
@@ -217,14 +217,14 @@ for(auto Beam = BeamArray.CreateIterator(); Beam; Beam++)
 	BeamArray.Empty();
 }
 
-void ASCharacter::AddNewBeam(FVector Point1, FVector Point2)
+void ASCharacter::AddNewBeam(FVector NewPoint1, FVector NewPoint2)
 {
 	
-	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, Point1, FRotator::ZeroRotator, true);
+	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, NewPoint1, FRotator::ZeroRotator, true);
 	BeamArray.Add(BeamComp);
 
-		BeamComp->SetBeamSourcePoint(0, Point1, 0);
-		BeamComp->SetBeamTargetPoint(0, Point2, 0);
+		BeamComp->SetBeamSourcePoint(0, NewPoint1, 0);
+		BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
 }
 
 

@@ -96,7 +96,7 @@ protected:
 	void StartThrow();
 	void StopThrow();
 	void ClearBeam();
-	void AddNewBeam(FVector Point1,FVector Point2);
+	void AddNewBeam(FVector NewPoint1,FVector NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 

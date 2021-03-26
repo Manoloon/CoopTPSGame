@@ -11,10 +11,8 @@
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
 {
-	MaxHealth = 100.0f;
 	bOwnerIsDead = false;
-	SetIsReplicated (true);
-	TeamNum = 255;
+
 }
 
 
@@ -22,7 +20,7 @@ USHealthComponent::USHealthComponent()
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	SetIsReplicated(true);
 	// Only on server --- Como es un componente , no tiene role, sino que su dueño lo tiene.
 	if(GetOwnerRole() == ROLE_Authority)
 	{

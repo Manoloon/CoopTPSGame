@@ -8,7 +8,8 @@ public class CoopTPSTarget : TargetRules
 	public CoopTPSTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-
+		DefaultBuildSettings = BuildSettingsVersion.V2;
+		ShadowVariableWarningLevel = WarningLevel.Warning;
 		ExtraModuleNames.AddRange( new string[] { "CoopTPS" } );
 	}
 }

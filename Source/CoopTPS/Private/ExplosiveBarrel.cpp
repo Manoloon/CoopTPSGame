@@ -90,7 +90,7 @@ void AExplosiveBarrel::SelfDestruct()
 	RadialForceComp->FireImpulse();
 	
 
-	if (Role == ROLE_Authority)
+	if (GetLocalRole()== ROLE_Authority)
 	{
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);

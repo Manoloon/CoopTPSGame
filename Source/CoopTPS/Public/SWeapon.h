@@ -9,6 +9,7 @@
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
+class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
 
@@ -38,7 +39,7 @@ public:
 
 protected:
 
-	void PlayImpactFX(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+	void PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
@@ -75,7 +76,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* TracerFX;	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		TSubclassOf<UCameraShake>FireCamShake;
+		TSubclassOf<UMatineeCameraShake>FireCamShake;
 
 	// SFX
 	UPROPERTY(EditDefaultsOnly,Category = "Weapon")
@@ -96,6 +97,7 @@ protected:
 	// reload Time Handlers
 	FTimerHandle TimeHandle_Reloading;
 
+	//EPhysicalSurface SurfaceType;
 
 	void PlayVFX(FVector TraceEnd);
 	virtual void Fire();

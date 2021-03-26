@@ -11,6 +11,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
 #include "TimerManager.h"
+#include "Camera/CameraShake.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -34,7 +35,7 @@ ASWeapon::ASWeapon()
 	CurrentAmmo = 30;
 	MaxAmmo = 30;
 	BulletSpread = 2.0f;
-	SetReplicates(true);
+	bReplicates = true;
 
 	/* hace que el update de la red sea mas rapido, NO LAG*/
 	NetUpdateFrequency = 66.0f;
@@ -50,7 +51,7 @@ void ASWeapon::BeginPlay()
 void ASWeapon::Fire()
 {
 	// DE ESTA MANERA SOLO Corre todo el FIRE si es ROLE_AUTHORITY
-	if(Role < ROLE_Authority)
+	if(GetLocalRole() < ROLE_Authority)
 	{
 		ServerFire();
 	}
@@ -90,7 +91,7 @@ void ASWeapon::Fire()
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			AActor* HitActor = Hit.GetActor();
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
 			float ActualDamage = BaseDamage;
 
@@ -104,7 +105,7 @@ void ASWeapon::Fire()
 			TracerEndPoint = Hit.ImpactPoint;
 			
 		}
-		if (Role == ROLE_Authority)
+		if (GetLocalRole() == ROLE_Authority)
 		{
 			HitScanTrace.TraceTo = TracerEndPoint;
 			HitScanTrace.SurfaceType = SurfaceType;
@@ -156,10 +157,10 @@ void ASWeapon::StopFire()
 
 /*Play Impact FX*/
 
-void ASWeapon::PlayImpactFX(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+void ASWeapon::PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint)
 {
 	UParticleSystem* SelectedFX = nullptr;
-	switch (SurfaceType)
+	switch (NewSurfaceType)
 	{
 	case SURFACE_FLESHDEFAULT: //flesh default
 	case SURFACE_FLESHVULNERABLE: // flesh headshot
@@ -200,7 +201,7 @@ void ASWeapon::PlayVFX(FVector TraceEnd)
 		APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
 		if(PC)
 		{
-			PC->ClientPlayCameraShake(FireCamShake);
+			PC->ClientStartCameraShake(FireCamShake);
 		}
 	}
 }
