@@ -33,6 +33,7 @@ ASTrackerBall::ASTrackerBall()
 	PrimaryActorTick.bCanEverTick = true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCanEverAffectNavigation(false);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 

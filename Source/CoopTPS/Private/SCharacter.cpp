@@ -128,7 +128,6 @@ void ASCharacter::BeginPlay()
 	DefaultFOV = CameraComp->FieldOfView;
 	// health start
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
-
 	if(GetLocalRole() == ROLE_Authority)
 	{
 		// spawn initial weapon
@@ -152,6 +151,26 @@ void ASCharacter::BeginZoom()
 void ASCharacter::EndZoom()
 {
 	bIsZoomed = false;
+}
+
+void ASCharacter::SetPlayerColor(EPlayerColor NewColor)
+{
+	SelectPlayerColor = NewColor;
+	switch (SelectPlayerColor)
+	{
+	case EPlayerColor::Blue:
+		PlayerColor = FLinearColor::Blue;
+		break;
+	case EPlayerColor::Green:
+		PlayerColor = FLinearColor::Green;
+		break;
+	case EPlayerColor::Red:
+		PlayerColor = FLinearColor::Red;
+		break;
+	case EPlayerColor::Yellow:
+		PlayerColor = FLinearColor::Yellow;
+		break;
+	}
 }
 
 void ASCharacter::StartFire()

@@ -15,7 +15,14 @@ class UParticleSystem;
 class UDecalComponent;
 class UMaterialInterface;
 class USHealthComponent;
-
+UENUM() 
+enum class EPlayerColor : uint8
+{
+Blue,
+Yellow,
+Red,
+Green
+};
 UCLASS()
 class COOPTPS_API ASCharacter : public ACharacter
 {
@@ -69,8 +76,14 @@ protected:
 	FName GrenadeSocketName;
 
 	// current weapon
+public:
 	UPROPERTY(Replicated)
 	ASWeapon* CurrentWeapon;
+	UPROPERTY(BlueprintReadOnly,Replicated)
+	FLinearColor PlayerColor;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	EPlayerColor SelectPlayerColor = EPlayerColor::Blue;
+protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
@@ -91,6 +104,8 @@ protected:
 	void BeginZoom();
 	void EndZoom();
 
+	void SetPlayerColor(EPlayerColor NewColor);
+
 	void Reload();
 	void Throw();
 	void StartThrow();
@@ -99,6 +114,7 @@ protected:
 	void AddNewBeam(FVector NewPoint1,FVector NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
+
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);

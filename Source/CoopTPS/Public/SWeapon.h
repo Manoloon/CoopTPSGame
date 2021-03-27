@@ -51,9 +51,10 @@ protected:
 		float FireRate;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		float ReloadTime;
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		bool bIsReloading;
-
+protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
 		int32 CurrentAmmo;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = 8, ClampMax = 30))

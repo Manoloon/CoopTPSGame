@@ -15,7 +15,6 @@ USHealthComponent::USHealthComponent()
 
 }
 
-
 // Called when the game starts
 void USHealthComponent::BeginPlay()
 {
