@@ -1,6 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SGameMode.h"
+#include "SCharacter.h"
+#include "CoopPlayerController.h"
+#include "TPSHud.h"
 #include "SHealthComponent.h"
 #include "Engine/World.h" // FConstIterators
 #include "SGameState.h"
@@ -16,6 +19,16 @@ ASGameMode::ASGameMode()
 	// declaramos al SGAMESTATE como el default.
 	GameStateClass = ASGameState::StaticClass();
 	PlayerStateClass = ASPlayerState::StaticClass();
+	PlayerControllerClass = ACoopPlayerController::StaticClass();
+	DefaultPawnClass = ASCharacter::StaticClass();
+	HUDClass = ATPSHud::StaticClass();	
+
+	// colores
+	PlayerColors.Add(FLinearColor::Blue);
+	PlayerColors.Add(FLinearColor::Red);
+	PlayerColors.Add(FLinearColor::Yellow);
+	PlayerColors.Add(FLinearColor::Green);
+	LastPlayerColorIndex = -1;
 
 	// prepara el tick para correr cada segundo y no cada frame.
 	PrimaryActorTick.bCanEverTick = true;
@@ -152,5 +165,20 @@ void ASGameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CheckWaveState();
 	CheckAnyPlayerAlive();
+}
+
+void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
+{
+	Super::SetPlayerDefaults(PlayerPawn);
+	ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn);
+	if (CoopPawn)
+	{
+		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
+		if(PlayerColors.IsValidIndex(PlayerColorIndex))
+		{
+			CoopPawn->AuthSetPlayerColor(PlayerColors[PlayerColorIndex]);
+			LastPlayerColorIndex = PlayerColorIndex;
+		}
+	}
 }
 

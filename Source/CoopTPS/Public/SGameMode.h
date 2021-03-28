@@ -15,8 +15,13 @@ UCLASS()
 class COOPTPS_API ASGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
+
+public:
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FLinearColor>PlayerColors;
+	UPROPERTY(BlueprintReadWrite)
+	int32 LastPlayerColorIndex;
+
 protected:
 	// timer for spawn bots
 	FTimerHandle TimerHandle_SpawnBots;
@@ -61,6 +66,9 @@ public:
 	virtual void StartPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+	
+	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
 		FOnActorKilled OnActorKilled;

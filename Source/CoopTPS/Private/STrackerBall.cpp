@@ -18,10 +18,10 @@
 #include "Engine/World.h"
 
 // debug
-static int32 DebugtrackballDraw = 0;
+static int32 DebugTrackballDraw = 1;
 FAutoConsoleVariableRef CVARDebugtrackballDraw(
 	TEXT("Coop.DebugTrackball"),
-	DebugtrackballDraw,
+	DebugTrackballDraw,
 	TEXT("draw debug lines for trackball"),
 	ECVF_Cheat);
 
@@ -33,7 +33,7 @@ ASTrackerBall::ASTrackerBall()
 	PrimaryActorTick.bCanEverTick = true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCanEverAffectNavigation(false);
-	SphereComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 
@@ -65,7 +65,7 @@ void ASTrackerBall::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if(GetLocalRole() == ROLE_Authority)
+	if(HasAuthority())
 	{
 		// Initial location
 		NextPathPoint = GetNextPathPoint();
@@ -146,13 +146,13 @@ void ASTrackerBall::SelfDestruct()
 	MeshComp->SetVisibility(false, true); 
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	if(GetLocalRole() == ROLE_Authority)
+	if(HasAuthority())
 	{
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
 	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this,GetInstigatorController(),true);
 
-		if(DebugtrackballDraw)
+		if(DebugTrackballDraw)
 		{
 			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 3.0f);
 		}
@@ -171,7 +171,7 @@ void ASTrackerBall::RefreshPath()
 void ASTrackerBall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(GetLocalRole() == ROLE_Authority && !bExploded)
+	if(HasAuthority() && !bExploded)
 	{
 	float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 	if(GetVelocity().Size()>10)
@@ -190,7 +190,7 @@ void ASTrackerBall::Tick(float DeltaTime)
 		ForceDirection *= MovementForce;
 		MeshComp->AddForce(ForceDirection, NAME_None, bVelocityChanged);
 	}
-		if (DebugtrackballDraw)
+		if (DebugTrackballDraw)
 		{
 			DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow, false, 1.0f, 0, 3.0f);
 		}
@@ -214,8 +214,6 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 				bStartedSelfDestruction = true;
 			}			
 			UGameplayStatics::SpawnSoundAttached(FoundTargetSFX, RootComponent);
-		}
-		
-	}
-	
+		}		
+	}	
 }

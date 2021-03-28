@@ -9,7 +9,7 @@ public class CoopTPS : ModuleRules
 		PrivatePCHHeaderFile = "CoopTPS.h";
 		PCHUsage = PCHUsageMode.Default;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "PhysicsCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "PhysicsCore", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

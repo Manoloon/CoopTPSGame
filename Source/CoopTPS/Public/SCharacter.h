@@ -15,14 +15,7 @@ class UParticleSystem;
 class UDecalComponent;
 class UMaterialInterface;
 class USHealthComponent;
-UENUM() 
-enum class EPlayerColor : uint8
-{
-Blue,
-Yellow,
-Red,
-Green
-};
+
 UCLASS()
 class COOPTPS_API ASCharacter : public ACharacter
 {
@@ -48,7 +41,9 @@ protected:
 		USHealthComponent* HealthComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 		bool bDied;
-	
+	UPROPERTY(EditAnywhere, Category = "Settings")
+		USkeletalMesh* PawnMesh = nullptr;
+
 	// aiming variables
 	bool bIsZoomed;
 	float DefaultFOV;
@@ -70,6 +65,10 @@ protected:
 	FVector Gravity;
 	UMaterialInterface* CurrentBeamEndPointMaterial;
 
+	// material dinamico para el color del player
+	UPROPERTY(BlueprintReadWrite)
+	UMaterialInstanceDynamic* MeshID;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Grenades")
 	TSubclassOf<class ASProjectile> GranadaClass;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Grenades")
@@ -81,8 +80,7 @@ public:
 	ASWeapon* CurrentWeapon;
 	UPROPERTY(BlueprintReadOnly,Replicated)
 	FLinearColor PlayerColor;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	EPlayerColor SelectPlayerColor = EPlayerColor::Blue;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
@@ -103,9 +101,10 @@ protected:
 	void EndCrouch();
 	void BeginZoom();
 	void EndZoom();
-
-	void SetPlayerColor(EPlayerColor NewColor);
-
+public:
+	UFUNCTION()
+	void AuthSetPlayerColor(const FLinearColor& NewColor);
+protected:
 	void Reload();
 	void Throw();
 	void StartThrow();
@@ -115,6 +114,8 @@ protected:
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 
+	UFUNCTION()
+	void OnRep_PlayerColor();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -122,6 +123,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void PostInitializeComponents() override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

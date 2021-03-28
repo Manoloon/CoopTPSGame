@@ -93,6 +93,59 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 }
 
+void ASCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+	if (PawnMesh)
+	{
+		MeshComponent->SetSkeletalMesh(PawnMesh);
+		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
+	}
+}
+
+// Called when the game starts or when spawned
+void ASCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	DefaultFOV = CameraComp->FieldOfView;
+	// health start
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+	if (HasAuthority())
+	{
+		// spawn initial weapon
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		}
+	}
+}
+
+// Called every frame
+void ASCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// in grenade mode
+	if (bIsGranadaMode)
+	{
+		float adding = 10.0f;
+		LaunchDistance = FMath::Clamp(LaunchDistance + adding, 1.0f, 1000.0f);
+		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
+		DrawingTrajectory();
+	}
+
+	// is true : first - false : second
+	float TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
+	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+	CameraComp->SetFieldOfView(NewFOV);
+}
+
 void ASCharacter::MoveForward(float Value)
 {
 	AddMovementInput(GetActorForwardVector() * Value);
@@ -121,28 +174,6 @@ FVector ASCharacter::GetPawnViewLocation() const
 	return Super::GetPawnViewLocation();
 }
 
-// Called when the game starts or when spawned
-void ASCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	DefaultFOV = CameraComp->FieldOfView;
-	// health start
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
-	if(GetLocalRole() == ROLE_Authority)
-	{
-		// spawn initial weapon
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
-		}
-	}
-	
-}
-
 void ASCharacter::BeginZoom()
 {
 	bIsZoomed = true;
@@ -153,25 +184,7 @@ void ASCharacter::EndZoom()
 	bIsZoomed = false;
 }
 
-void ASCharacter::SetPlayerColor(EPlayerColor NewColor)
-{
-	SelectPlayerColor = NewColor;
-	switch (SelectPlayerColor)
-	{
-	case EPlayerColor::Blue:
-		PlayerColor = FLinearColor::Blue;
-		break;
-	case EPlayerColor::Green:
-		PlayerColor = FLinearColor::Green;
-		break;
-	case EPlayerColor::Red:
-		PlayerColor = FLinearColor::Red;
-		break;
-	case EPlayerColor::Yellow:
-		PlayerColor = FLinearColor::Yellow;
-		break;
-	}
-}
+
 
 void ASCharacter::StartFire()
 {
@@ -293,6 +306,14 @@ void ASCharacter::DrawingTrajectory()
 	}
 }
 
+void ASCharacter::OnRep_PlayerColor()
+{
+	if(MeshID)
+	{
+		MeshID->SetVectorParameterValue(TEXT("BodyColor"), PlayerColor);
+	}
+}
+
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
@@ -305,24 +326,11 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 	}
 }
 
-// Called every frame
-void ASCharacter::Tick(float DeltaTime)
+void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 {
-	Super::Tick(DeltaTime);
-
-	// in grenade mode
-	if(bIsGranadaMode)
-	{
-		float adding = 10.0f;
-		LaunchDistance = FMath::Clamp(LaunchDistance + adding, 1.0f, 1000.0f);
-		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
-		DrawingTrajectory();
-	}
-
-	// is true : first - false : second
-	float TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
-	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
-	CameraComp->SetFieldOfView(NewFOV);
+	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
+	PlayerColor = NewColor;
+	OnRep_PlayerColor();
 }
 
 // networking
