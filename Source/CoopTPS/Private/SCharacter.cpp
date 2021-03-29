@@ -21,7 +21,6 @@ ASCharacter::ASCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 	// spring arm
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->bUsePawnControlRotation = true;
@@ -103,6 +102,13 @@ void ASCharacter::PostInitializeComponents()
 		MeshComponent->SetSkeletalMesh(PawnMesh);
 		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
 	}
+}
+
+void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
+{
+	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
+	PlayerColor = NewColor;
+	OnRep_PlayerColor();
 }
 
 // Called when the game starts or when spawned
@@ -310,7 +316,8 @@ void ASCharacter::OnRep_PlayerColor()
 {
 	if(MeshID)
 	{
-		MeshID->SetVectorParameterValue(TEXT("BodyColor"), PlayerColor);
+		MeshID->SetVectorParameterValue(FName("BodyColor"), PlayerColor);
+		bRepli = false;
 	}
 }
 
@@ -325,14 +332,6 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 		SetLifeSpan(10);
 	}
 }
-
-void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
-{
-	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
-	PlayerColor = NewColor;
-	OnRep_PlayerColor();
-}
-
 // networking
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {

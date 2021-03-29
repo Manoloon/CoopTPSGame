@@ -6,16 +6,6 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
-class UCameraComponent;
-class USceneComponent;
-class USpringArmComponent;
-class ASWeapon;
-class ASProjetile;
-class UParticleSystem;
-class UDecalComponent;
-class UMaterialInterface;
-class USHealthComponent;
-
 UCLASS()
 class COOPTPS_API ASCharacter : public ACharacter
 {
@@ -28,9 +18,9 @@ public:
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
-		UCameraComponent* CameraComp;
+		class UCameraComponent* CameraComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
-		USpringArmComponent* SpringArmComp;
+		class USpringArmComponent* SpringArmComp;
 	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
 		UParticleSystem* BeamFX;
 	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
@@ -38,9 +28,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
 		UDecalComponent* BeamEndPointDecal;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HealthComp")
-		USHealthComponent* HealthComp;
+		class USHealthComponent* HealthComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 		bool bDied;
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+		bool bRepli;
 	UPROPERTY(EditAnywhere, Category = "Settings")
 		USkeletalMesh* PawnMesh = nullptr;
 
@@ -67,7 +59,7 @@ protected:
 
 	// material dinamico para el color del player
 	UPROPERTY(BlueprintReadWrite)
-	UMaterialInstanceDynamic* MeshID;
+	class UMaterialInstanceDynamic* MeshID;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenades")
 	TSubclassOf<class ASProjectile> GranadaClass;
@@ -76,9 +68,10 @@ protected:
 
 	// current weapon
 public:
-	UPROPERTY(Replicated)
-	ASWeapon* CurrentWeapon;
-	UPROPERTY(BlueprintReadOnly,Replicated)
+	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	class ASWeapon* CurrentWeapon;
+
+	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,Transient)
 	FLinearColor PlayerColor;
 
 protected:
@@ -113,7 +106,7 @@ protected:
 	void AddNewBeam(FVector NewPoint1,FVector NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
-
+private:
 	UFUNCTION()
 	void OnRep_PlayerColor();
 

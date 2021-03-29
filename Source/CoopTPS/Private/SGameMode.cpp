@@ -15,12 +15,15 @@
 ASGameMode::ASGameMode()
 {
 	TimeBetweenWaves = 2.0f;
-
+	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
+	if(BPPlayerCharacterClass.Class !=NULL)
+	{
+		DefaultPawnClass = BPPlayerCharacterClass.Class;
+	}
 	// declaramos al SGAMESTATE como el default.
 	GameStateClass = ASGameState::StaticClass();
 	PlayerStateClass = ASPlayerState::StaticClass();
 	PlayerControllerClass = ACoopPlayerController::StaticClass();
-	DefaultPawnClass = ASCharacter::StaticClass();
 	HUDClass = ATPSHud::StaticClass();	
 
 	// colores
@@ -35,7 +38,20 @@ ASGameMode::ASGameMode()
 	PrimaryActorTick.TickInterval = 1.0f;
 }
 
-
+void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
+{
+	Super::SetPlayerDefaults(PlayerPawn);
+	ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn);
+	if (CoopPawn)
+	{
+		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
+		if (PlayerColors.IsValidIndex(PlayerColorIndex))
+		{
+			CoopPawn->AuthSetPlayerColor(PlayerColors[PlayerColorIndex]);
+			LastPlayerColorIndex = PlayerColorIndex;
+		}
+	}
+}
 
 void ASGameMode::StartWave()
 {
@@ -165,20 +181,5 @@ void ASGameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CheckWaveState();
 	CheckAnyPlayerAlive();
-}
-
-void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
-{
-	Super::SetPlayerDefaults(PlayerPawn);
-	ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn);
-	if (CoopPawn)
-	{
-		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
-		if(PlayerColors.IsValidIndex(PlayerColorIndex))
-		{
-			CoopPawn->AuthSetPlayerColor(PlayerColors[PlayerColorIndex]);
-			LastPlayerColorIndex = PlayerColorIndex;
-		}
-	}
 }
 
