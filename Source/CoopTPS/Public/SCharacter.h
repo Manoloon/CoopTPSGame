@@ -31,8 +31,7 @@ protected:
 		class USHealthComponent* HealthComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 		bool bDied;
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
-		bool bRepli;
+	
 	UPROPERTY(EditAnywhere, Category = "Settings")
 		USkeletalMesh* PawnMesh = nullptr;
 
@@ -71,9 +70,8 @@ public:
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	class ASWeapon* CurrentWeapon;
 
-	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,Transient)
+	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
-
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;

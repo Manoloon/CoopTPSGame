@@ -104,6 +104,7 @@ void ASCharacter::PostInitializeComponents()
 	}
 }
 
+// Esta funcion es llamada desde el Gamemode para señalar el cambio de color segun el player controller. 
 void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 {
 	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
@@ -312,15 +313,16 @@ void ASCharacter::DrawingTrajectory()
 	}
 }
 
+// Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor()
 {
 	if(MeshID)
 	{
 		MeshID->SetVectorParameterValue(FName("BodyColor"), PlayerColor);
-		bRepli = false;
 	}
 }
 
+// Cuando la energia del cliente cambia pero no ha muerto.-
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
@@ -332,12 +334,14 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 		SetLifeSpan(10);
 	}
 }
-// networking
+// networking --> 
+//Mantenemos actualizadas las variables en el cliente usando la macro DOREPLIFETIME
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
 }
