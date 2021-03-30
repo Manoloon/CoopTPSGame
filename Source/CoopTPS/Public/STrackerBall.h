@@ -19,50 +19,52 @@ class COOPTPS_API ASTrackerBall : public APawn
 public:
 	// Sets default values for this pawn's properties
 	ASTrackerBall();
+protected: 
+	UPROPERTY(Category = "Componentes", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		USHealthComponent* HealthComp = nullptr;
+	UPROPERTY(Category = "Componentes", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		USphereComponent* SphereComp = nullptr;
+	UPROPERTY(Category = "Componentes", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UAudioComponent* AudioComp = nullptr;
+	UPROPERTY(Category = "Componentes", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UStaticMeshComponent* MeshComp = nullptr;
+	UPROPERTY(Category = "FX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		UParticleSystem* ExplosionFX = nullptr;
+	
+	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		USoundCue* ExplosionSFX = nullptr;
+	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		USoundCue* FoundTargetSFX = nullptr;
+	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		USoundCue* RollSFX = nullptr;
 
-	UPROPERTY(Category = MeshComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* MeshComp;
+protected:
+	UPROPERTY(Category = "Settings", EditDefaultsOnly)
+		float ExplosionRadius = 600.0f;
+	UPROPERTY(Category = "Settings", EditDefaultsOnly)
+		float ExplosionDamage = 80.0f;
+	UPROPERTY(Category = "Settings", EditAnywhere)
+		bool bVelocityChanged;
+	UPROPERTY(Category = "Settings", EditAnywhere)
+		float MovementForce = 7000.0f;
+	UPROPERTY(Category = "Settings", EditAnywhere,BlueprintReadOnly)
+		float RequireDistanceToTarget = 100.0f;
+	/*UPROPERTY(Category = "Settings", EditDefaultsOnly, BlueprintReadOnly)*/
+		UMaterialInstanceDynamic* MeshMaterialInstance = nullptr;
 
 	FVector NextPathPoint;
+	bool bExploded;
+	bool bStartedSelfDestruction;
+	float SelfDamageInterval = 0.25;
 
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly)
-		bool bVelocityChanged;
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly)
-		float MovementForce;
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly,BlueprintReadOnly)
-		float RequireDistanceToTarget;
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly, BlueprintReadOnly)
-		UMaterialInstanceDynamic* MatInst;
+	FTimerHandle TimerHandle_SelfDamage;
+	FTimerHandle TimerHandle_RefreshPath;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector GetNextPathPoint();
-	UPROPERTY(Category = HealthComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USHealthComponent* HealthComp;
-	UPROPERTY(Category = HealthComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USphereComponent* SphereComp;
-	UPROPERTY(Category = AudioComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* AudioComp;
-	UPROPERTY(Category = "FX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ExplosionFX;
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly)
-		float ExplosionRadius;
-	UPROPERTY(Category = "TrackerBall", EditDefaultsOnly)
-		float ExplosionDamage;
-	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* ExplosionSFX;
-	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* FoundTargetSFX;
-	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* RollSFX;
 
-	bool bExploded;
-	bool bStartedSelfDestruction;
-	float SelfDamageInterval;
-
-	FTimerHandle TimerHandle_SelfDamage;
-	FTimerHandle TimerHandle_RefreshPath;
 
 	void SelfDamage();
 

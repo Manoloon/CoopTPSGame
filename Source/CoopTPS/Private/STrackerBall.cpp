@@ -38,7 +38,7 @@ ASTrackerBall::ASTrackerBall()
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealhComp"));
-
+	
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetSphereRadius(200);
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -51,13 +51,8 @@ ASTrackerBall::ASTrackerBall()
 	AudioComp->SetupAttachment(RootComponent);
 
 	bVelocityChanged = false;
-	MovementForce = 7000.0f;
-	RequireDistanceToTarget = 100.0f;
-	ExplosionDamage = 80.0f;
-	ExplosionRadius = 600.0f;
 	bExploded = false;
 	bStartedSelfDestruction = false;
-	SelfDamageInterval = 0.25;
 }
 
 // Called when the game starts or when spawned
@@ -74,6 +69,37 @@ void ASTrackerBall::BeginPlay()
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 }
 
+
+void ASTrackerBall::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	if (HasAuthority() && !bExploded)
+	{
+		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
+		if (GetVelocity().Size() > 10)
+		{
+			AudioComp->SetSound(RollSFX);
+		}
+		if (DistanceToTarget <= RequireDistanceToTarget)
+		{
+			NextPathPoint = GetNextPathPoint();
+		}
+		else
+		{
+			// keep going toward goal
+			FVector ForceDirection = NextPathPoint - GetActorLocation();
+			ForceDirection.Normalize();
+			ForceDirection *= MovementForce;
+			MeshComp->AddForce(ForceDirection, NAME_None, bVelocityChanged);
+		}
+
+		if (DebugTrackballDraw)
+		{
+			DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow, false, 1.0f, 0, 3.0f);
+		}
+	}
+}
+
 FVector ASTrackerBall::GetNextPathPoint()
 {
 	AActor* BestTarget = nullptr;
@@ -82,12 +108,13 @@ FVector ASTrackerBall::GetNextPathPoint()
 	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
 	{
 		APawn* TestPawn = *PawnIterator;
-		if (TestPawn  == nullptr && USHealthComponent::IsFriendly(TestPawn, this))
+		if (TestPawn  == nullptr || USHealthComponent::IsFriendly(TestPawn, this))
 		{
 			continue;
+			UE_LOG(LogTemp, Warning,TEXT("no tengo objetivo"));
 		}
 		USHealthComponent*  TestPawnHealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-		if(HealthComp && HealthComp->GetHealth()>0.0)
+		if(TestPawnHealthComp && TestPawnHealthComp->GetHealth()>0.0)
 		{
 			float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
 			if(Distance < NearestTargetDistance)
@@ -106,7 +133,7 @@ FVector ASTrackerBall::GetNextPathPoint()
 		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
 		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBall::RefreshPath, 5.0f, false);
 		
-		if (NavPath->PathPoints.Num() > 1)
+		if (NavPath && NavPath->PathPoints.Num() > 1)
 		{
 			return NavPath->PathPoints[1];
 		}
@@ -121,13 +148,13 @@ void ASTrackerBall::SelfDamage()
 
 void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if(MatInst == nullptr)
+	if(MeshMaterialInstance == nullptr)
 	{
-	MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(1));
+	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
 	}
-	if(MatInst)
+	if(MeshMaterialInstance)
 	{
-	MatInst->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
+	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
 	}
 	if(Health <=0.0f)
 	{
@@ -167,35 +194,7 @@ void ASTrackerBall::RefreshPath()
 	NextPathPoint = GetNextPathPoint();
 }
 
-// Called every frame
-void ASTrackerBall::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	if(HasAuthority() && !bExploded)
-	{
-	float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
-	if(GetVelocity().Size()>10)
-	{
-		AudioComp->SetSound(RollSFX);
-	}
-	if(DistanceToTarget <= RequireDistanceToTarget)
-	{
-		NextPathPoint = GetNextPathPoint();
-	}
-	else 
-	{
-		// keep going toward goal
-		FVector ForceDirection = NextPathPoint - GetActorLocation();
-		ForceDirection.Normalize();
-		ForceDirection *= MovementForce;
-		MeshComp->AddForce(ForceDirection, NAME_None, bVelocityChanged);
-	}
-		if (DebugTrackballDraw)
-		{
-			DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow, false, 1.0f, 0, 3.0f);
-		}
-	}
-}
+
 
 void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 {
