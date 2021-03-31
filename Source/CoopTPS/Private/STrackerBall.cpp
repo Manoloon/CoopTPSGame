@@ -18,7 +18,7 @@
 #include "Engine/World.h"
 
 // debug
-static int32 DebugTrackballDraw = 1;
+static int32 DebugTrackballDraw = 0;
 FAutoConsoleVariableRef CVARDebugtrackballDraw(
 	TEXT("Coop.DebugTrackball"),
 	DebugTrackballDraw,
@@ -33,7 +33,7 @@ ASTrackerBall::ASTrackerBall()
 	PrimaryActorTick.bCanEverTick = true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCanEverAffectNavigation(false);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	//MeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 
@@ -167,10 +167,14 @@ void ASTrackerBall::SelfDestruct()
 	if (bExploded) { return; }
 	bExploded = true;
 	const UWorld* World = GetWorld();
-	UGameplayStatics::SpawnEmitterAtLocation(World, ExplosionFX, GetActorLocation());
-	UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
-	// escondemos el mesh al morir
+	if(ExplosionFX && ExplosionSFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(World, ExplosionFX, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+	}	
+	// escondemos el mesh al morir -> y el true es para la propagacion. 
 	MeshComp->SetVisibility(false, true); 
+	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if(HasAuthority())
