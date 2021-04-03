@@ -40,7 +40,7 @@ void UCoopGameInstance::Join(const FString& Address)
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
 	if(PlayerController)
 	{
-		PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute));
+		PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 	}
 }
 
