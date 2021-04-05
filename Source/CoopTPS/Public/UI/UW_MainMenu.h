@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainMenuInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "UW_MainMenu.generated.h"
 
@@ -13,6 +14,10 @@ UCLASS()
 class COOPTPS_API UUW_MainMenu : public UUserWidget
 {
 	GENERATED_BODY()
+public:
+	void SetMenuInterface(IMainMenuInterface* NewMenuInterface);
+	void Setup();
+	void TearDown();
 protected:
 	virtual bool Initialize() override;
 private:
@@ -23,4 +28,7 @@ private:
 	UFUNCTION()
 		void HostServer();
 
+protected:
+
+	IMainMenuInterface* MainMenuInterface;
 };

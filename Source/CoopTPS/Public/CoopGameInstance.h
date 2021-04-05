@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "UI/MainMenuInterface.h"
 #include "CoopGameInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class COOPTPS_API UCoopGameInstance : public UGameInstance
+class COOPTPS_API UCoopGameInstance : public UGameInstance, public IMainMenuInterface
 {
 	GENERATED_BODY()
 	
@@ -18,14 +19,14 @@ public:
 	UCoopGameInstance(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Init();
-	UFUNCTION(Exec)
+	UFUNCTION()
 		void Host();
-	UFUNCTION(Exec)
+	UFUNCTION()
 		void Join(const FString& Address);
 	UFUNCTION(BlueprintCallable)
 		void LoadMenu();
 
 private:
 	TSubclassOf<UUserWidget> MainMenuClass;
-
+	class UUW_MainMenu* MainMenu;
 };

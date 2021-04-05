@@ -3,6 +3,7 @@
 
 #include "CoopGameInstance.h"
 #include "Uobject/ConstructorHelpers.h"
+#include "UI/UW_MainMenu.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h"
 
@@ -22,6 +23,10 @@ void UCoopGameInstance::Init()
 
 void UCoopGameInstance::Host()
 {
+	if(MainMenu != nullptr )
+	{
+		MainMenu->TearDown();
+	}
 	UEngine* Engine = GetEngine();
 	if (!ensure(Engine != nullptr)) return;
 	Engine->AddOnScreenDebugMessage(0, 5, FColor::Green, FString::Printf(TEXT("Hosting")));
@@ -48,17 +53,9 @@ void UCoopGameInstance::LoadMenu()
 {
 	if(MainMenuClass)
 	{
-		UUserWidget* MainMenu = CreateWidget<UUserWidget>(this, MainMenuClass);
-		MainMenu->AddToViewport();
-		MainMenu->bIsFocusable = true;
-		APlayerController* PlayerController = GetFirstLocalPlayerController();
-		if(PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(MainMenu->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->bShowMouseCursor = true;
-		}		
+		MainMenu = CreateWidget<UUW_MainMenu>(this, MainMenuClass);
+		if (MainMenu == nullptr) { return; }
+		MainMenu->Setup();
+		MainMenu->SetMenuInterface(this);
 	}	
 }
