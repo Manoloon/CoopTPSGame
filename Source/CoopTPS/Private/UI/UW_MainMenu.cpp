@@ -27,7 +27,6 @@ void UUW_MainMenu::Setup()
 
 void UUW_MainMenu::TearDown()
 {	
-	this->RemoveFromParent();
 	UWorld* World = GetWorld();
 	if (World == nullptr) { return; }
 	APlayerController* PlayerController = World->GetFirstPlayerController();
@@ -38,6 +37,7 @@ void UUW_MainMenu::TearDown()
 		PlayerController->SetInputMode(InputModeData);
 		PlayerController->bShowMouseCursor = false;
 	}
+	this->RemoveFromParent();
 }
 
 bool UUW_MainMenu::Initialize()
