@@ -2,56 +2,54 @@
 
 #include "UI/UW_MainMenu.h"
 #include "Components/Button.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/EditableText.h"
 
-void UUW_MainMenu::SetMenuInterface(IMainMenuInterface* NewMenuInterface)
-{
-	MainMenuInterface = NewMenuInterface;
-}
 
-void UUW_MainMenu::Setup()
-{
-	this->AddToViewport();
-	this->bIsFocusable = true;
-	UWorld* World = GetWorld();
-	if (World == nullptr) { return; }
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (PlayerController)
-	{
-		FInputModeUIOnly InputModeData;
-		InputModeData.SetWidgetToFocus(this->TakeWidget());
-		InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		PlayerController->SetInputMode(InputModeData);
-		PlayerController->bShowMouseCursor = true;
-	}
-}
-
-void UUW_MainMenu::TearDown()
-{	
-	UWorld* World = GetWorld();
-	if (World == nullptr) { return; }
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (PlayerController)
-	{
-		FInputModeGameOnly InputModeData;
-		InputModeData.SetConsumeCaptureMouseDown(true);
-		PlayerController->SetInputMode(InputModeData);
-		PlayerController->bShowMouseCursor = false;
-	}
-	this->RemoveFromParent();
-}
-
+// inicializa el widget y crea el binding con la funcion hostServer y al menu de join server.
 bool UUW_MainMenu::Initialize()
 {
 	bool Success = Super::Initialize();
 	if (!Success) { return false; }
+	if (!ensure(BTN_Host != nullptr)) return false;
 	BTN_Host->OnClicked.AddDynamic(this, &UUW_MainMenu::HostServer);
+	if (!ensure(BTN_Join != nullptr)) return false;
+	BTN_Join->OnClicked.AddDynamic(this, &UUW_MainMenu::OpenJoinMenu);
+	if (!ensure(BTN_Cancel != nullptr)) return false;
+	BTN_Cancel->OnClicked.AddDynamic(this, &UUW_MainMenu::BackToMainMenu);
+	if(!ensure(BTN_Connect !=nullptr))return false;
+	BTN_Connect->OnClicked.AddDynamic(this, &UUW_MainMenu::JoinServer);
 	return true;
 }
 
+// llama a la funcion de la interface.
 void UUW_MainMenu::HostServer()
 {
-	if(MainMenuInterface !=nullptr)
+	if(MenuInterface !=nullptr)
 	{
-		MainMenuInterface->Host();
+		MenuInterface->Host();
+	}
+}
+// abre el menu de join -> ip address call.
+void UUW_MainMenu::OpenJoinMenu()
+{
+ 	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
+ 	if (!ensure(JoinMenu != nullptr))return;
+	JoinWidgetSwitcher->SetActiveWidget(JoinMenu);
+}
+
+void UUW_MainMenu::BackToMainMenu()
+{
+	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
+	if (!ensure(MainMenu != nullptr))return;
+	JoinWidgetSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UUW_MainMenu::JoinServer()
+{
+	if(IpAddressText != nullptr && MenuInterface !=nullptr)
+ 	{
+ 		const FString& IpText = IpAddressText->GetText().ToString();
+		MenuInterface->Join(IpText);
 	}
 }

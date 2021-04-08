@@ -20,13 +20,21 @@ public:
 
 	virtual void Init();
 	UFUNCTION()
-		void Host();
+		void Host() override;
 	UFUNCTION()
-		void Join(const FString& Address);
+		void Join(const FString& Address) override;
+	UFUNCTION()
+		virtual void LoadMainMenu() override;
+
+	// son blueprint callables porque se los llama desde el level blueprint. 
 	UFUNCTION(BlueprintCallable)
 		void LoadMenu();
+	UFUNCTION(BlueprintCallable)
+		void LoadPauseMenu();
 
 private:
 	TSubclassOf<UUserWidget> MainMenuClass;
-	class UUW_MainMenu* MainMenu;
+	class UBaseMenuWidget* MainMenu;
+	TSubclassOf<UUserWidget> PauseMenuClass;
+	UBaseMenuWidget* PauseMenu;
 };

@@ -3,32 +3,48 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MainMenuInterface.h"
-#include "Blueprint/UserWidget.h"
+#include "BaseMenuWidget.h"
 #include "UW_MainMenu.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class COOPTPS_API UUW_MainMenu : public UUserWidget
+class COOPTPS_API UUW_MainMenu : public UBaseMenuWidget
 {
 	GENERATED_BODY()
 public:
-	void SetMenuInterface(IMainMenuInterface* NewMenuInterface);
-	void Setup();
-	void TearDown();
+
+
 protected:
 	virtual bool Initialize() override;
 private:
-	UPROPERTY(META = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 		class UButton* BTN_Join;
-	UPROPERTY(META = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 		class UButton* BTN_Host;
+ 	UPROPERTY(meta = (BindWidget))
+ 		class UButton* BTN_Connect;
+ 	UPROPERTY(meta = (BindWidget))
+ 		class UButton* BTN_Cancel;
+
+	UPROPERTY(meta = (BindWidget))
+		class UWidgetSwitcher* JoinWidgetSwitcher;
+	UPROPERTY(meta = (BindWidget))
+		class UEditableText* IpAddressText;
+
+	// estos son los widgets que estan dentro del switcher.
+ 	UPROPERTY(meta = (BindWidget))
+ 		class UWidget* JoinMenu;
+	UPROPERTY(meta = (BindWidget))
+		class UWidget* MainMenu;
+
 	UFUNCTION()
 		void HostServer();
-
-protected:
-
-	IMainMenuInterface* MainMenuInterface;
+	UFUNCTION()
+		void OpenJoinMenu();
+	UFUNCTION()
+		void BackToMainMenu();
+	UFUNCTION()
+		void JoinServer();
 };

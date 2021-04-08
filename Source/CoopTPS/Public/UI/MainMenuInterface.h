@@ -24,4 +24,6 @@ class COOPTPS_API IMainMenuInterface
 public:
 	// para que la funcion virtual funcione , tiene que llamarse igual que la implementacion en el game instance , por ejemplo. 
 	virtual void Host() = 0;
+	virtual void Join(const FString& Address) = 0;
+	virtual void LoadMainMenu() = 0;
 };
