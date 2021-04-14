@@ -6,6 +6,7 @@
 #include "BaseMenuWidget.h"
 #include "UW_MainMenu.generated.h"
 
+class UButton;
 /**
  * 
  */
@@ -20,13 +21,15 @@ protected:
 	virtual bool Initialize() override;
 private:
 	UPROPERTY(meta = (BindWidget))
-		class UButton* BTN_Join;
+		UButton* BTN_Join;
 	UPROPERTY(meta = (BindWidget))
-		class UButton* BTN_Host;
+		UButton* BTN_Host;
  	UPROPERTY(meta = (BindWidget))
- 		class UButton* BTN_Connect;
+ 		UButton* BTN_Connect;
  	UPROPERTY(meta = (BindWidget))
- 		class UButton* BTN_Cancel;
+ 		UButton* BTN_Cancel;
+	UPROPERTY(meta = (BindWidget));
+		UButton* BTN_Quit;
 
 	UPROPERTY(meta = (BindWidget))
 		class UWidgetSwitcher* JoinWidgetSwitcher;
@@ -47,4 +50,6 @@ private:
 		void BackToMainMenu();
 	UFUNCTION()
 		void JoinServer();
+	UFUNCTION()
+		void QuitGame();
 };

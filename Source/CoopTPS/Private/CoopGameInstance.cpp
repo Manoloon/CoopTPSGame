@@ -5,6 +5,7 @@
 #include "Uobject/ConstructorHelpers.h"
 #include "UI/UW_MainMenu.h"
 #include "UI/W_PauseMenu.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "UI/BaseMenuWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h"
@@ -66,6 +67,18 @@ void UCoopGameInstance::LoadMainMenu()
 	if (PlayerController)
 	{
 		PlayerController->ClientTravel("/Game/Map/M_MainMenu", ETravelType::TRAVEL_Absolute);
+	}
+}
+
+void UCoopGameInstance::QuitGame()
+{
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if(PlayerController)
+	{
+		UEngine* Engine = GetEngine();
+		if (!ensure(Engine != nullptr)) return;
+		Engine->AddOnScreenDebugMessage(0, 5, FColor::Green, FString::Printf(TEXT("Quitting Game")));
+		UKismetSystemLibrary::QuitGame(GetWorld(), PlayerController, EQuitPreference::Quit, true);
 	}
 }
 

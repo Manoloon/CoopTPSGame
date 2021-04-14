@@ -19,16 +19,20 @@ bool UUW_MainMenu::Initialize()
 	BTN_Cancel->OnClicked.AddDynamic(this, &UUW_MainMenu::BackToMainMenu);
 	if(!ensure(BTN_Connect !=nullptr))return false;
 	BTN_Connect->OnClicked.AddDynamic(this, &UUW_MainMenu::JoinServer);
+	if (!ensure(BTN_Quit != nullptr))return false;
+	BTN_Quit->OnClicked.AddDynamic(this, &UUW_MainMenu::QuitGame);
+
 	return true;
 }
 
 // llama a la funcion de la interface.
 void UUW_MainMenu::HostServer()
 {
-	if(MenuInterface !=nullptr)
+	if (MenuInterface != nullptr)
 	{
 		MenuInterface->Host();
 	}
+
 }
 // abre el menu de join -> ip address call.
 void UUW_MainMenu::OpenJoinMenu()
@@ -51,5 +55,13 @@ void UUW_MainMenu::JoinServer()
  	{
  		const FString& IpText = IpAddressText->GetText().ToString();
 		MenuInterface->Join(IpText);
+	}
+}
+
+void UUW_MainMenu::QuitGame()
+{
+	if (MenuInterface != nullptr)
+	{
+		MenuInterface->QuitGame();
 	}
 }
