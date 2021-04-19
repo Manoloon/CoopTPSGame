@@ -23,6 +23,10 @@
 				"Win64",
 				"Linux"
 			]
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
 		}
 	]
 }

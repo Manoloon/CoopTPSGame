@@ -2,9 +2,20 @@
 
 #include "UI/UW_MainMenu.h"
 #include "Components/Button.h"
+#include "Uobject/ConstructorHelpers.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableText.h"
+#include "Components/TextBlock.h"
 
+
+UUW_MainMenu::UUW_MainMenu(const FObjectInitializer& ObjectInitializer)
+{
+	static ConstructorHelpers::FClassFinder<UUserWidget>BPServerListItemClass(TEXT("/Game/UI/UWG_ServerItem"));
+	if(BPServerListItemClass.Class)
+	{
+		ServerListItemClass = BPServerListItemClass.Class;
+	}
+}
 
 // inicializa el widget y crea el binding con la funcion hostServer y al menu de join server.
 bool UUW_MainMenu::Initialize()
@@ -40,6 +51,10 @@ void UUW_MainMenu::OpenJoinMenu()
  	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
  	if (!ensure(JoinMenu != nullptr))return;
 	JoinWidgetSwitcher->SetActiveWidget(JoinMenu);
+	if(MenuInterface !=nullptr)
+	{
+		MenuInterface->RefreshServerList();
+	}
 }
 
 void UUW_MainMenu::BackToMainMenu()
@@ -51,10 +66,12 @@ void UUW_MainMenu::BackToMainMenu()
 
 void UUW_MainMenu::JoinServer()
 {
-	if(IpAddressText != nullptr && MenuInterface !=nullptr)
- 	{
- 		const FString& IpText = IpAddressText->GetText().ToString();
-		MenuInterface->Join(IpText);
+	if(SelectedIndex.IsSet())
+	{
+		if(MenuInterface != nullptr)
+		{
+			MenuInterface->Join(SelectedIndex.GetValue());
+		}
 	}
 }
 
@@ -64,4 +81,19 @@ void UUW_MainMenu::QuitGame()
 	{
 		MenuInterface->QuitGame();
 	}
+}
+
+void UUW_MainMenu::SetServerListItems(TArray<FString>newServerNames)
+{
+	ServerList->ClearChildren();
+	uint32 LocalIndex = 0;
+	for(const FString& ServerName : newServerNames)
+	{
+		++LocalIndex;
+	}
+}
+
+void UUW_MainMenu::SetSelectedIndex(uint32 newIndex)
+{
+	SelectedIndex = newIndex;
 }
