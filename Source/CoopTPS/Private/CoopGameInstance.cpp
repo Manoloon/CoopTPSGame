@@ -13,7 +13,8 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 
-const static FName SESSION_NAME = TEXT("HORDE");
+const static FName SESSION_NAME = TEXT("GameSession");
+const static FName SERVER_NAME_SETTING_KEY = TEXT("Server Name");
 
 UCoopGameInstance::UCoopGameInstance(const FObjectInitializer & ObjectInitializer)
 {
@@ -47,23 +48,27 @@ void UCoopGameInstance::Init()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Online Subsystem NOT FOUND"));
 	}
+	if(GEngine != nullptr)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &UCoopGameInstance::OnNetworkFailure);
+	}
 }
 
-void UCoopGameInstance::Host()
+void UCoopGameInstance::Host(FString NewServerName)
 {
 	if (OnlineSessionInterface.IsValid()) 
 	{ 
-		FNamedOnlineSession* ExistingSession = OnlineSessionInterface->GetNamedSession(SESSION_NAME);
+		DesiredServerName = NewServerName;
+		FNamedOnlineSession* ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
 		if(ExistingSession !=nullptr)
 		{
-			OnlineSessionInterface->DestroySession(SESSION_NAME);
+			OnlineSessionInterface->DestroySession(NAME_GameSession);
 		}
 		else
 		{
 			CreateSession();
 		}
-	}
-	
+	}	
 }
 
 void UCoopGameInstance::Join(uint32 newIndex)
@@ -137,6 +142,57 @@ void UCoopGameInstance::LoadPauseMenu()
 
 // ONLINE SUBSYSTEM CALLBACKS!
 
+void UCoopGameInstance::OnFindSessionsComplete(bool Success)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Finish Session Found"));
+	if (Success && OnlineSessionSearch.IsValid() && MainMenu != nullptr)
+	{
+		TArray<FOnlineSessionSearchResult>Results = OnlineSessionSearch->SearchResults;
+		TArray<FServerData>ServerSessionNames;
+		for (FOnlineSessionSearchResult& Result : Results)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Session Found %s"), *Result.GetSessionIdStr());
+			FServerData LocalData;
+
+			LocalData.HostName = Result.Session.OwningUserName;
+			LocalData.MaxNumPlayers = Result.Session.SessionSettings.NumPublicConnections;
+			LocalData.CurrentPlayers = (LocalData.MaxNumPlayers - Result.Session.NumOpenPublicConnections);
+
+			FString ServerName;
+			if (Result.Session.SessionSettings.Get(SERVER_NAME_SETTING_KEY, ServerName))
+			{
+				LocalData.ServerName = ServerName;
+			}
+			else
+			{
+				LocalData.ServerName = "Could not found name";
+			}
+			ServerSessionNames.Add(LocalData);
+		}
+		MainMenu->SetServerListItems(ServerSessionNames);
+	}
+}
+
+void UCoopGameInstance::OnJoinSessionComplete(FName newSessionName, EOnJoinSessionCompleteResult::Type newResult)
+{
+	if (!OnlineSessionInterface.IsValid()) { return; }
+
+	FString RemoteSession;
+	if (!OnlineSessionInterface->GetResolvedConnectString(newSessionName, RemoteSession))
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Valid Remote Session"));
+		return;
+	}
+	else
+	{
+		APlayerController* PlayerController = GetFirstLocalPlayerController();
+		if (PlayerController != nullptr)
+		{
+			PlayerController->ClientTravel(RemoteSession, ETravelType::TRAVEL_Absolute);
+		}
+	}
+}
+
 void UCoopGameInstance::OnCreateSessionComplete(FName newSessionName, bool Success)
 {
 	if(!Success)
@@ -150,7 +206,7 @@ void UCoopGameInstance::OnCreateSessionComplete(FName newSessionName, bool Succe
 	}
 	UWorld* World = GetWorld();
 	// TODO : variable para cambiar de mapas segun session. 
-	World->ServerTravel("/Game/Map/M_Level1?listen");
+	World->ServerTravel("/Game/Map/M_Lobby?listen");
 }
 
 void UCoopGameInstance::OnDestroySessionComplete(FName newSessionName, bool Success)
@@ -161,47 +217,33 @@ void UCoopGameInstance::OnDestroySessionComplete(FName newSessionName, bool Succ
 	}
 }
 
-void UCoopGameInstance::OnFindSessionsComplete(bool Success)
+void UCoopGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Finish Session Found"));
-	if(Success && OnlineSessionSearch.IsValid() && MainMenu !=nullptr)
-	{
-		TArray<FOnlineSessionSearchResult>Results = OnlineSessionSearch->SearchResults;
-		TArray<FString>ServerSessionNames;
-		for(FOnlineSessionSearchResult& Result : Results)
-		{
-			ServerSessionNames.Add(Result.GetSessionIdStr());
-		}
-		MainMenu->SetServerListItems(ServerSessionNames);
-	}
+	LoadMainMenu();
+	//TODO : Mostrar cartel de error al usuario por desconexion.
 }
 
-void UCoopGameInstance::OnJoinSessionComplete(FName newSessionName, EOnJoinSessionCompleteResult::Type newResult)
-{
-	if (!OnlineSessionInterface.IsValid()) { return; }
+//////////////// END CALLBACKS
 
-	FString RemoteSession;
-	if(!OnlineSessionInterface->GetResolvedConnectString(newSessionName,RemoteSession))
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Valid Remote Session"));
-		return;
-	}
-	else
-	{
-		APlayerController* PlayerController = GetFirstLocalPlayerController();
-		if (PlayerController)
-		{
-			PlayerController->ClientTravel(RemoteSession, ETravelType::TRAVEL_Absolute);
-	 	}
-	}
-}
+
 
 void UCoopGameInstance::CreateSession()
 {
 	FOnlineSessionSettings OnlineSessionSettings;
-	OnlineSessionSettings.bIsLANMatch = false;
+	// Si no usamos steam como subsystem , que sea  LAN PARTY
+	OnlineSessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
+
 	OnlineSessionSettings.NumPublicConnections = 4;
 	OnlineSessionSettings.bShouldAdvertise = true;
 	OnlineSessionSettings.bUsesPresence = true;
+	OnlineSessionSettings.Set(SERVER_NAME_SETTING_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	OnlineSessionInterface->CreateSession(0, SESSION_NAME, OnlineSessionSettings);
+}
+
+void UCoopGameInstance::StartSession()
+{
+	if(OnlineSessionInterface.IsValid())
+	{
+		OnlineSessionInterface->StartSession(SESSION_NAME);
+	}
 }

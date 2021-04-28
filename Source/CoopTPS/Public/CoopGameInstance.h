@@ -23,15 +23,15 @@ class COOPTPS_API UCoopGameInstance : public UGameInstance, public IMainMenuInte
 public:
 	UCoopGameInstance(const FObjectInitializer& ObjectInitializer);
 
-	virtual void Init();
+	void Init() override;
 	UFUNCTION()
-		virtual void Host() override;
+		void Host(FString NewServerName) override;
 	UFUNCTION()
-		virtual void Join(uint32 newIndex) override;
+		void Join(uint32 newIndex) override;
 	UFUNCTION()
-		virtual void LoadMainMenu() override;
+		void LoadMainMenu() override;
 	UFUNCTION()
-		virtual void QuitGame() override;
+		void QuitGame() override;
 	UFUNCTION()
 		void RefreshServerList() override;
 
@@ -41,6 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void LoadPauseMenu();
 
+	void StartSession();
 
 private:
 	TSubclassOf<UUserWidget> MainMenuClass;
@@ -51,13 +52,18 @@ private:
 	// la interface de OnlineSession
 	IOnlineSessionPtr OnlineSessionInterface;
 
+	FString TravelURL;
+	FString DesiredServerName;
+
 	TSharedPtr<class FOnlineSessionSearch> OnlineSessionSearch;
 
 	void OnCreateSessionComplete(FName newSessionName, bool Success);
 	void OnDestroySessionComplete(FName newSessionName, bool Success);
 	void OnFindSessionsComplete(bool Success);
 	void OnJoinSessionComplete(FName newSessionName, EOnJoinSessionCompleteResult::Type newResult);
+	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 
 	void CreateSession();
+
 
 };

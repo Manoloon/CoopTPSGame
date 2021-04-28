@@ -2,7 +2,7 @@
 
 #include "SWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Public/DrawDebugHelpers.h"
+#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"

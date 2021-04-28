@@ -2,9 +2,11 @@
 
 #include "UI/UW_MainMenu.h"
 #include "Components/Button.h"
+#include "UI/W_ServerListItem.h"
 #include "Uobject/ConstructorHelpers.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableText.h"
+#include "Components/EditableTextBox.h"
 #include "Components/TextBlock.h"
 
 
@@ -23,7 +25,7 @@ bool UUW_MainMenu::Initialize()
 	bool Success = Super::Initialize();
 	if (!Success) { return false; }
 	if (!ensure(BTN_Host != nullptr)) return false;
-	BTN_Host->OnClicked.AddDynamic(this, &UUW_MainMenu::HostServer);
+	BTN_Host->OnClicked.AddDynamic(this, &UUW_MainMenu::OpenHostMenu);
 	if (!ensure(BTN_Join != nullptr)) return false;
 	BTN_Join->OnClicked.AddDynamic(this, &UUW_MainMenu::OpenJoinMenu);
 	if (!ensure(BTN_Cancel != nullptr)) return false;
@@ -32,6 +34,10 @@ bool UUW_MainMenu::Initialize()
 	BTN_Connect->OnClicked.AddDynamic(this, &UUW_MainMenu::JoinServer);
 	if (!ensure(BTN_Quit != nullptr))return false;
 	BTN_Quit->OnClicked.AddDynamic(this, &UUW_MainMenu::QuitGame);
+	if (!ensure(BTN_CreateSession != nullptr)) return false;
+	BTN_CreateSession->OnClicked.AddDynamic(this, &UUW_MainMenu::HostServer);
+	if (!ensure(BTN_HostCancel != nullptr)) return false;
+	BTN_HostCancel->OnClicked.AddDynamic(this, &UUW_MainMenu::BackToMainMenu);
 
 	return true;
 }
@@ -41,7 +47,8 @@ void UUW_MainMenu::HostServer()
 {
 	if (MenuInterface != nullptr)
 	{
-		MenuInterface->Host();
+		FString newServerName = NameServerBox->Text.ToString();
+		MenuInterface->Host(newServerName);
 	}
 
 }
@@ -83,12 +90,39 @@ void UUW_MainMenu::QuitGame()
 	}
 }
 
-void UUW_MainMenu::SetServerListItems(TArray<FString>newServerNames)
+void UUW_MainMenu::OpenHostMenu()
 {
+	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
+	if (!ensure(HostMenu != nullptr))return;
+	JoinWidgetSwitcher->SetActiveWidget(HostMenu);
+}
+
+void UUW_MainMenu::UpdateServerListChildren()
+{
+	for(int32 i=0;i<ServerList->GetChildrenCount();i++)
+	{
+		auto CurrentItem = Cast<UW_ServerListItem>(ServerList->GetChildAt(i));
+		if(CurrentItem !=nullptr)
+		{
+			CurrentItem->bIsSelected = (SelectedIndex.IsSet() && SelectedIndex.GetValue() == i);
+		}
+	}
+}
+
+void UUW_MainMenu::SetServerListItems(TArray<FServerData>newServerNames)
+{
+	UWorld* World = GetWorld();
 	ServerList->ClearChildren();
 	uint32 LocalIndex = 0;
-	for(const FString& ServerName : newServerNames)
+	for(const FServerData& ServerData : newServerNames)
 	{
+		UW_ServerListItem* Item = CreateWidget<UW_ServerListItem>(World, ServerListItemClass);
+		Item->ServerItem->SetText(FText::FromString(ServerData.ServerName));
+		Item->HostName->SetText(FText::FromString(ServerData.HostName));
+		Item->NumPlayers->SetText(FText::AsNumber(ServerData.CurrentPlayers));
+		Item->MaxPlayers->SetText(FText::AsNumber(ServerData.MaxNumPlayers));
+		Item->Setup(this, LocalIndex);
+		ServerList->AddChild(Item);
 		++LocalIndex;
 	}
 }
@@ -96,4 +130,5 @@ void UUW_MainMenu::SetServerListItems(TArray<FString>newServerNames)
 void UUW_MainMenu::SetSelectedIndex(uint32 newIndex)
 {
 	SelectedIndex = newIndex;
+	UpdateServerListChildren();
 }

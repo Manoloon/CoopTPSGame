@@ -2,7 +2,7 @@
 
 
 #include "UI/W_ServerListItem.h"
-#include "UW_MainMenu.h"
+#include "UI/UW_MainMenu.h"
 #include "Components/Button.h"
 
 void UW_ServerListItem::Setup(class UUW_MainMenu* newParent, uint32 newIndex)
