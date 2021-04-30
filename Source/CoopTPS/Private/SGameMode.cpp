@@ -55,9 +55,9 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 
 void ASGameMode::StartWave()
 {
-	WaveCount++;
-	NumBotsToSpawn = 2 * WaveCount;
-	// start timer
+	++WaveCount;
+	NumBotsToSpawn = 6 * WaveCount;
+
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASGameMode::SpawnBotTimerElapsed, 1.0f,true,0.0f);
 	SetWaveState(EWaveState::WaveInProgress);
 }
@@ -97,7 +97,7 @@ void ASGameMode::CheckWaveState()
 		}
 
 		USHealthComponent* HealthComp =Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-		if (HealthComp && HealthComp->GetHealth() >0.0f) // if still alive
+		if (HealthComp && HealthComp->GetHealth() >0.0f)
 		{
 			bIsAnyBotAlive = true;
 			break;
@@ -119,7 +119,8 @@ void ASGameMode::CheckAnyPlayerAlive()
 			APawn* PlayerPawn = PC->GetPawn();
 			USHealthComponent* HealthComp = Cast<USHealthComponent>(PlayerPawn->GetComponentByClass(USHealthComponent::StaticClass()));
 			// nos aseguramos que esto funcione ,sino ENSURE hace un break para avisar que algo esta muy mal.
-			if(ensure(HealthComp && HealthComp->Health > 0.0f ))
+			//TODO hacer un null system asi no se corta el juego.
+			if(HealthComp && HealthComp->Health > 0.0f )
 			{
 				return;
 			}
@@ -179,6 +180,7 @@ void ASGameMode::SpawnBotTimerElapsed()
 void ASGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	// TODO : send a notification for this , not using tick-
 	CheckWaveState();
 	CheckAnyPlayerAlive();
 }

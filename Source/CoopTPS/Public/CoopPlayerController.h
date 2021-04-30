@@ -21,8 +21,5 @@ public:
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)
 	ASCharacter* MyPawn = nullptr;
-
-public:
-	virtual void BeginPlay() override;
 	
 };

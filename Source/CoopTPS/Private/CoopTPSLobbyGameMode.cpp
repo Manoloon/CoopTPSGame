@@ -33,10 +33,10 @@ void ACoopTPSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	++NumOfPlayers;
-	if(NumOfPlayers>=1)
+	if(NumOfPlayers>=2)
 	{
 		FTimerHandle StartTravelTH;
-		GetWorldTimerManager().SetTimer(StartTravelTH, this, &ACoopTPSLobbyGameMode::TravelToMap, 10.0f, false, 1.0f);
+		GetWorldTimerManager().SetTimer(StartTravelTH, this, &ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
 	}
 }
 

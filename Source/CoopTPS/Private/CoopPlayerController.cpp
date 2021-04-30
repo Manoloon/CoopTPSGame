@@ -2,8 +2,3 @@
 
 
 #include "CoopPlayerController.h"
-
-void ACoopPlayerController::BeginPlay()
-{
-
-}

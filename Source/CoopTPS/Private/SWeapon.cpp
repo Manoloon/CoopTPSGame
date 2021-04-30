@@ -146,7 +146,10 @@ void ASWeapon::StartFire()
 	}
 	else
 	{
-		GLog->Log("RELOAD RELOAD!"); // TODO 
+		if(!bIsReloading)
+		{
+			StartReloading();
+		}		
 	}
 }
 
