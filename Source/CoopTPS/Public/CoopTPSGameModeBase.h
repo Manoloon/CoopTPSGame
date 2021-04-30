@@ -14,7 +14,4 @@ class COOPTPS_API ACoopTPSGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
-	
-	
-	
 };

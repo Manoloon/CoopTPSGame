@@ -14,11 +14,22 @@ class COOPTPS_API ACoopTPSLobbyGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+		ACoopTPSLobbyGameMode();
+
 public:
 	void PostLogin(APlayerController* NewPlayer) override;
 	void Logout(AController* Exiting) override;
 
-private:
+protected:
+
+	UPROPERTY(BlueprintReadWrite)
+		TArray<FLinearColor>PlayerColors;
+	UPROPERTY(BlueprintReadWrite)
+		int32 LastPlayerColorIndex;
+
 	uint32 NumOfPlayers = 0;
 	void TravelToMap();	
+
+private:
+	void SetPlayerDefaults(class APawn* PlayerPawn) override;
 };

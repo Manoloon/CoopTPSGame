@@ -68,7 +68,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	
-	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
+	void SetPlayerDefaults(class APawn* PlayerPawn) override;
 
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
 		FOnActorKilled OnActorKilled;
