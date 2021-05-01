@@ -2,6 +2,8 @@
 
 #include "SPickup.h"
 #include "SPowerUp.h"
+#include "SCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"
 #include "TimerManager.h"
@@ -47,14 +49,15 @@ void ASPickup::RespawnPowerUp()
 void ASPickup::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
-
-	if(PowerupInstance)
+	/*ASCharacter* OtherCharacter = Cast<ASCharacter>(OtherActor);*/
+	if(OtherActor == UGameplayStatics::GetPlayerPawn(this,0))
 	{
-		PowerupInstance->ActivatePowerUp();
-		PowerupInstance = nullptr;
+		if (PowerupInstance)
+		{
+			PowerupInstance->ActivatePowerUp();
+			PowerupInstance = nullptr;
 
-		// set timer for respawn powerup.
-
-		GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickup::RespawnPowerUp, CooldDownDuraction);
-	}
+			GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickup::RespawnPowerUp, CooldDownDuraction);
+		}
+	}	
 }

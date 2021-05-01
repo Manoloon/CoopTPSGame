@@ -20,7 +20,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<ASProjectile>ProjectileClass;
 	
-	
 public : 
-	virtual void Fire() override;
+	void Fire() override;
 };

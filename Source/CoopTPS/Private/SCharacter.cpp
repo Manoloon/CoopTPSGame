@@ -35,7 +35,7 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
-	// beamcomponent
+	// Throwing granade Arc
 	BeamComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BeamComp"));
 	BeamComp->SetupAttachment(SpringArmComp);
 	BeamComp->bAutoActivate = false;
@@ -43,22 +43,7 @@ ASCharacter::ASCharacter()
 	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
 	BeamEndPointDecal->SetVisibility(false);
 
-	// health Component
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-
-	// Default FOV 
-	
-	ZoomedFOV = 65.0f;
-	ZoomInterpSpeed = 20.0f;
-	WeaponSocketName = "WeaponSocket";
-	GrenadeSocketName = "GrenadeSocket";
-	bIsGranadaMode = false;
-	LaunchDistance = 100.0f;
-	PathLifeTime = 5.0f;
-	TimeInterval = 0.05;
-	Gravity = FVector(0.0f, 0.0f, -980.0f);
-	SpawnScale = FVector(0.1f);
-	bDied = false;
 }
 
 // Called to bind functionality to input
@@ -217,13 +202,14 @@ void ASCharacter::Reload()
 	}
 }
 
+// TODO : make a Throwing Actor Component
 void ASCharacter::Throw()
 {
 	if (GranadaClass)
 	{
 		ClearBeam();
 		UWorld* World = GetWorld();
-		ASProjectile* Grenade = World->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
+		Grenade = World->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
 		
 		if (Grenade)
 		{
@@ -265,7 +251,6 @@ void ASCharacter::AddNewBeam(FVector NewPoint1, FVector NewPoint2)
 		BeamComp->SetBeamSourcePoint(0, NewPoint1, 0);
 		BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
 }
-
 
 void ASCharacter::GetSegmentAtTime(FVector LocalStartLocation, FVector LocalInitialVelocity, FVector LocalGravity, float LocalTime1, float LocalTime2, FVector &OutPoint1, FVector &OutPoint2)
 {
@@ -312,6 +297,9 @@ void ASCharacter::DrawingTrajectory()
 		}
 	}
 }
+
+
+//////////////////////////////////////////////////////////
 
 // Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor()

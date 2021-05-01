@@ -30,7 +30,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HealthComp")
 		class USHealthComponent* HealthComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
-		bool bDied;
+		bool bDied = false;
 	
 	UPROPERTY(EditAnywhere, Category = "Settings")
 		USkeletalMesh* PawnMesh = nullptr;
@@ -40,20 +40,21 @@ protected:
 	float DefaultFOV;
 
 	// grenade mode
-	bool bIsGranadaMode;
-	float LaunchDistance;
+	class ASProjectile* Grenade = nullptr;
+	bool bIsGranadaMode = false;
+	float LaunchDistance = 100.0f;
 	FVector InitialVelocity;
 	FVector InitialLocalVelocity;
 	FVector StartLocation;
 	FVector ThrowRotateVector;
-	FVector SpawnScale;
+	FVector SpawnScale = FVector(1.0f);
 	FRotator SpawnRotation;
 	FVector Point1;
 	FVector Point2;
 	TArray<UParticleSystemComponent*>BeamArray;
-	float PathLifeTime;
-	float TimeInterval;
-	FVector Gravity;
+	float PathLifeTime = 5.0f;
+	float TimeInterval = 0.05;
+	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
 	UMaterialInterface* CurrentBeamEndPointMaterial;
 
 	// material dinamico para el color del player
@@ -63,12 +64,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Grenades")
 	TSubclassOf<class ASProjectile> GranadaClass;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Grenades")
-	FName GrenadeSocketName;
+	FName GrenadeSocketName = "GrenadeSocket";
 
 	// current weapon
 public:
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	class ASWeapon* CurrentWeapon;
+	class ASWeapon* CurrentWeapon= nullptr;
 
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
@@ -76,12 +77,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
-		FName WeaponSocketName;
+		FName WeaponSocketName = "WeaponSocket";
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = 10.0,ClampMax = 40.0))
-		float ZoomInterpSpeed;
+		float ZoomInterpSpeed = 20.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-		float ZoomedFOV;
+		float ZoomedFOV = 65.0f;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -104,6 +105,8 @@ protected:
 	void AddNewBeam(FVector NewPoint1,FVector NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
+
+
 private:
 	UFUNCTION()
 	void OnRep_PlayerColor();

@@ -7,6 +7,7 @@
 
 void ASLauncher::Fire()
 {
+/*	Super::Fire();*/
 	AActor* MyOwner = GetOwner();
 
 	if(MyOwner && ProjectileClass)
@@ -21,8 +22,6 @@ void ASLauncher::Fire()
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		// aca le digo que el instigador soy yo.
-		//ActorSpawnParams.Instigator = MyOwner;
 		// spawn the projectile at the muzzle
 		GetWorld()->SpawnActor<ASProjectile>(ProjectileClass, MuzzleLocation, EyeRotation, ActorSpawnParams);
 	}

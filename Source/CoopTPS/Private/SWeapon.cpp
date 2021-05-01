@@ -233,6 +233,5 @@ void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
 }

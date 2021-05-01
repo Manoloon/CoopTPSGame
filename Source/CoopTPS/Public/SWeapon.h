@@ -13,13 +13,19 @@ class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
 
+USTRUCT()
+struct FWeaponData
+{
+	GENERATED_BODY()
+
+};
+
 // Contains one Hitscan of the weapon Single trace.
 USTRUCT()
 struct FHitScanTrace 
 {
 GENERATED_BODY()
 
-public:
 	UPROPERTY()
 	TEnumAsByte<EPhysicalSurface> SurfaceType;
 	UPROPERTY()
@@ -44,7 +50,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Weapon")
-		TSubclassOf<UDamageType> DamageType;
+		const TSubclassOf<UDamageType> DamageType;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		float BaseDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
