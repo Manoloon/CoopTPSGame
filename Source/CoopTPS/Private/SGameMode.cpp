@@ -56,7 +56,7 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 void ASGameMode::StartWave()
 {
 	WaveCount++;
-	NumBotsToSpawn = 3 * WaveCount;
+	NumBotsToSpawn = 2 * WaveCount;
 
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASGameMode::SpawnBotTimerElapsed, 1.0f,true,0.0f);
 	SetWaveState(EWaveState::WaveInProgress);

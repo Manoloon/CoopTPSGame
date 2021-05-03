@@ -75,6 +75,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Throw", IE_Pressed, this, &ASCharacter::StartThrow);
 	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ASCharacter::StopThrow);
 
+	PlayerInputComponent->BindAction("ChangeWeapon", IE_Released, this, &ASCharacter::SelectWeapon);
 }
 
 void ASCharacter::PostInitializeComponents()
@@ -110,10 +111,16 @@ void ASCharacter::BeginPlay()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 		if (CurrentWeapon)
 		{
 			CurrentWeapon->SetOwner(this);
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		}
+		if(SecondaryWeapon)
+		{
+			SecondaryWeapon->SetOwner(this);
+			SecondaryWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
 		}
 	}
 }
@@ -299,6 +306,21 @@ void ASCharacter::DrawingTrajectory()
 }
 
 
+void ASCharacter::SelectWeapon() //ASWeapon* newWeapon
+{
+	if(CurrentWeapon != SecondaryWeapon)
+	{
+		if(HasAuthority())
+		{
+			ASWeapon* TempWeapon = SecondaryWeapon;
+			SecondaryWeapon = CurrentWeapon;
+			SecondaryWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
+			CurrentWeapon = TempWeapon;
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+		}
+	}
+}
+
 //////////////////////////////////////////////////////////
 
 // Cambio del color del pawn segun el playercontroller que lo controle.
@@ -330,6 +352,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 
 	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
 }

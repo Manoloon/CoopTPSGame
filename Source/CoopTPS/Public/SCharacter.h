@@ -5,6 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
+USTRUCT()
+struct FWeapons
+{
+	GENERATED_BODY()
+
+	AActor* WeaponToSpawn = nullptr;
+	bool bIsSelected = false;
+};
+
 
 UCLASS()
 class COOPTPS_API ASCharacter : public ACharacter
@@ -70,14 +79,22 @@ protected:
 public:
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	class ASWeapon* CurrentWeapon= nullptr;
+	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	class ASWeapon* SecondaryWeapon = nullptr;
 
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+		TSubclassOf<ASWeapon>SecondaryWeaponClass;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName WeaponSocketName = "WeaponSocket";
+	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+		FName SecondaryWeaponSocketName = "SecWeaponSocket";
+
+	//TArray<ASWeapon> Weapons;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = 10.0,ClampMax = 40.0))
 		float ZoomInterpSpeed = 20.0f;
@@ -106,6 +123,8 @@ protected:
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 
+	void SelectWeapon(); //ASWeapon* newWeapon
+
 
 private:
 	UFUNCTION()
@@ -116,9 +135,9 @@ private:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	void Tick(float DeltaTime) override;
 
-	virtual void PostInitializeComponents() override;
+	void PostInitializeComponents() override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
