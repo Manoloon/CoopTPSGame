@@ -4,13 +4,12 @@
 #include "Engine.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
+
 #include "SWeapon.h"
 #include "SProjectile.h"
 #include "Components/CapsuleComponent.h"
-#include "Particles/ParticleSystem.h" // beam test
+
 #include "Particles/ParticleSystemComponent.h"
-#include "ParticleDefinitions.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "SHealthComponent.h"
 #include "CoopTPS.h"
@@ -26,10 +25,9 @@ ASCharacter::ASCharacter()
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
 
-	// this line is for crouch
-	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
-	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore); // de esta manera la capsula no bloqueara nuestra arma.
+	// de esta manera la capsula no bloqueara nuestra arma.
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
 	// camera component
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
@@ -87,6 +85,8 @@ void ASCharacter::PostInitializeComponents()
 	{
 		MeshComponent->SetSkeletalMesh(PawnMesh);
 		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
+		// this line is for crouch
+		GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	}
 }
 
@@ -133,15 +133,15 @@ void ASCharacter::Tick(float DeltaTime)
 	// in grenade mode
 	if (bIsGranadaMode)
 	{
-		float adding = 10.0f;
-		LaunchDistance = FMath::Clamp(LaunchDistance + adding, 1.0f, 1000.0f);
+		float const Adding = 10.0f;
+		LaunchDistance = FMath::Clamp(LaunchDistance + Adding, 1.0f, 1000.0f);
 		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
 		DrawingTrajectory();
 	}
 
 	// is true : first - false : second
-	float TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
-	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+	float const TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
+	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 	CameraComp->SetFieldOfView(NewFOV);
 }
 
@@ -242,14 +242,14 @@ void ASCharacter::StopThrow()
 
 void ASCharacter::ClearBeam()
 {
-for(auto Beam = BeamArray.CreateIterator(); Beam; Beam++)
+for(auto Beam = BeamArray.CreateIterator(); Beam; ++Beam)
 {
 	(*Beam)->DestroyComponent();
 }
 	BeamArray.Empty();
 }
 
-void ASCharacter::AddNewBeam(FVector NewPoint1, FVector NewPoint2)
+void ASCharacter::AddNewBeam(FVector const NewPoint1, FVector const NewPoint2)
 {
 	
 	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, NewPoint1, FRotator::ZeroRotator, true);

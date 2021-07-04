@@ -64,6 +64,7 @@ void ASWeapon::Fire()
 
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
 		float HalfRad = FMath::DegreesToRadians(BulletSpread);
 		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 

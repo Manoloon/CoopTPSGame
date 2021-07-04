@@ -7,12 +7,12 @@
 
 void ASLauncher::Fire()
 {
-/*	Super::Fire();*/
-	AActor* MyOwner = GetOwner();
+ 	Super::Fire();
+ 	AActor* MyOwner = GetOwner();
 
-	if(MyOwner && ProjectileClass)
-	{
-		
+ 	if(MyOwner && ProjectileClass)
+ 	{
+	
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);

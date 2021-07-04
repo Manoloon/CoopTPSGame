@@ -5,16 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
-USTRUCT()
-struct FWeapons
-{
-	GENERATED_BODY()
 
-	AActor* WeaponToSpawn = nullptr;
-	bool bIsSelected = false;
-};
-
-
+// USTRUCT()
+// struct FWeaponsItems
+// {
+// 	GENERATED_USTRUCT_BODY()
+// 
+// 	AActor* WeaponToSpawn;
+// 	class UTexture2D WeaponImage;
+// };
 UCLASS()
 class COOPTPS_API ASCharacter : public ACharacter
 {
@@ -78,9 +77,11 @@ protected:
 	// current weapon
 public:
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	class ASWeapon* CurrentWeapon= nullptr;
+		class ASWeapon* CurrentWeapon= nullptr;
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	class ASWeapon* SecondaryWeapon = nullptr;
+		ASWeapon* PrimaryWeapon = nullptr;
+	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+		ASWeapon* SecondaryWeapon = nullptr;
 
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
@@ -94,8 +95,6 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName SecondaryWeaponSocketName = "SecWeaponSocket";
 
-	//TArray<ASWeapon> Weapons;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = 10.0,ClampMax = 40.0))
 		float ZoomInterpSpeed = 20.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
@@ -119,7 +118,7 @@ protected:
 	void StartThrow();
 	void StopThrow();
 	void ClearBeam();
-	void AddNewBeam(FVector NewPoint1,FVector NewPoint2);
+	void AddNewBeam(FVector const NewPoint1,FVector const NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 
@@ -146,7 +145,7 @@ public:
 
 	// Esto esta expuesto para poder usarse en el BT.
 	UFUNCTION(BlueprintCallable,Category = "Player")
-	void StartFire();
+	void  StartFire();
 	UFUNCTION(BlueprintCallable,Category = "Player")
 	void StopFire();
 };

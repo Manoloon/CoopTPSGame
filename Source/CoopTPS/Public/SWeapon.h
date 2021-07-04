@@ -110,7 +110,7 @@ protected:
 	virtual void Fire();
 	void Reload();
 	
-	// newtworking
+	// newtworking se crea una implementation en cpp. 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerFire();
 

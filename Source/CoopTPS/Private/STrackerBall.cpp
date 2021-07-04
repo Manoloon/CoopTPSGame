@@ -148,14 +148,16 @@ void ASTrackerBall::SelfDamage()
 
 void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if(MeshMaterialInstance == nullptr)
-	{
-	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
-	}
-	if(MeshMaterialInstance)
-	{
-	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
-	}
+// 	if(MeshMaterialInstance == nullptr)
+// 	{
+// 	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+// 	}
+// 	if(MeshMaterialInstance)
+// 	{
+// 	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
+// 	}
+	// si hittimer not playing
+	// GetWorldTimerManager().SetTimer(TimerHandle_HitShake, ASTrackerBall::StartHitShake, 0.0f, false);
 	if(Health <=0.0f)
 	{
 		SelfDestruct();
@@ -199,6 +201,23 @@ void ASTrackerBall::RefreshPath()
 }
 
 
+
+void ASTrackerBall::StartHitShake()
+{
+	if (MeshMaterialInstance == nullptr)
+	{
+		MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+	if (MeshMaterialInstance)
+	{
+		float DamageHit = FMath::FInterpTo(1.0f, 0.0, GetWorld()->TimeSeconds, 1.0f);
+		MeshMaterialInstance->SetScalarParameterValue("DamageTaken", DamageHit);
+		if(DamageHit == 0.0f)
+		{
+			GetWorldTimerManager().ClearTimer(TimerHandle_HitShake);
+		}
+	}
+}
 
 void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 {

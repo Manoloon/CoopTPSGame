@@ -59,6 +59,7 @@ protected:
 
 	FTimerHandle TimerHandle_SelfDamage;
 	FTimerHandle TimerHandle_RefreshPath;
+	FTimerHandle TimerHandle_HitShake;
 
 protected:
 	// Called when the game starts or when spawned
@@ -74,6 +75,8 @@ protected:
 	void SelfDestruct();
 
 	void RefreshPath();
+
+	void StartHitShake();
 
 public:	
 	// Called every frame
