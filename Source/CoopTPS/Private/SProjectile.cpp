@@ -51,7 +51,8 @@ void ASProjectile::Explode()
 		TArray<AActor*> IgnoredActors;
 		// TODO : add team players
 		IgnoredActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(this, Data.MaxDamage, GetActorLocation(), Data.DamageRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, Data.MaxDamage, GetActorLocation(), Data.DamageRadius,
+			nullptr, IgnoredActors, this, GetInstigatorController(), true);
 	}
 }
 
@@ -66,10 +67,3 @@ bool ASProjectile::ServerExplode_Validate()
 {
 	return true;
 }
-
-// void ASProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-// {
-// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-// 
-// 	/*DOREPLIFETIME_CONDITION(ASProjectile,)*/
-// }

@@ -3,6 +3,7 @@
 #include "SLauncher.h"
 #include "SProjectile.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 
 void ASLauncher::Fire()
@@ -17,12 +18,12 @@ void ASLauncher::Fire()
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		const FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		// spawn the projectile at the muzzle
-		GetWorld()->SpawnActor<ASProjectile>(ProjectileClass, MuzzleLocation, EyeRotation, ActorSpawnParams);
+ 		GetWorld()->SpawnActor<ASProjectile>(ProjectileClass, MuzzleLocation, FRotator::ZeroRotator, ActorSpawnParams);
 	}
 }

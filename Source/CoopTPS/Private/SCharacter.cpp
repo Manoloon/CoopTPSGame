@@ -133,11 +133,11 @@ void ASCharacter::Tick(float DeltaTime)
 	// in grenade mode
 	if (bIsGranadaMode)
 	{
-		float const Adding = 10.0f;
-		LaunchDistance = FMath::Clamp(LaunchDistance + Adding, 1.0f, 1000.0f);
-		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance);
+		LaunchDistance  = FMath::Clamp( LaunchDistance + 10.0f, 1.0f, 1500.0f);
+		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance/2.0f);
 		DrawingTrajectory();
 	}
+
 
 	// is true : first - false : second
 	float const TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
@@ -183,8 +183,6 @@ void ASCharacter::EndZoom()
 	bIsZoomed = false;
 }
 
-
-
 void ASCharacter::StartFire()
 {
 	if (CurrentWeapon)
@@ -215,8 +213,7 @@ void ASCharacter::Throw()
 	if (GranadaClass)
 	{
 		ClearBeam();
-		UWorld* World = GetWorld();
-		Grenade = World->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
+		const auto& Grenade = GetWorld()->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
 		
 		if (Grenade)
 		{
@@ -259,7 +256,9 @@ void ASCharacter::AddNewBeam(FVector const NewPoint1, FVector const NewPoint2)
 		BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
 }
 
-void ASCharacter::GetSegmentAtTime(FVector LocalStartLocation, FVector LocalInitialVelocity, FVector LocalGravity, float LocalTime1, float LocalTime2, FVector &OutPoint1, FVector &OutPoint2)
+void ASCharacter::GetSegmentAtTime(const FVector LocalStartLocation, const FVector LocalInitialVelocity,
+									const FVector LocalGravity, const float LocalTime1, const float LocalTime2,
+																FVector &OutPoint1, FVector &OutPoint2)
 {
 	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) + (LocalGravity*(LocalTime1*LocalTime1*0.5f)));
 	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) + (LocalGravity*(LocalTime2*LocalTime2*0.5f)));
@@ -276,8 +275,7 @@ void ASCharacter::DrawingTrajectory()
 		ThrowRotateVector = GetControlRotation().RotateVector(GrenadeOffset);
 		StartLocation = GetMesh()->GetSocketLocation(GrenadeSocketName) + ThrowRotateVector;
 		const FTransform TotalPosition(SpawnRotation, ThrowRotateVector, SpawnScale);
-		
-		const UWorld* World = GetWorld();
+
 		InitialVelocity = UKismetMathLibrary::TransformDirection(TotalPosition, InitialLocalVelocity);
 		uint8 LastIndex = floor(PathLifeTime / TimeInterval); 
 		for (uint8 i = 0; i <= LastIndex; i++)
@@ -291,7 +289,7 @@ void ASCharacter::DrawingTrajectory()
 			QueryParams.TraceTag = TraceTag;
 			FHitResult Hit;
 			GetSegmentAtTime(StartLocation, InitialVelocity, Gravity, Time1, Time2,Point1,Point2);
-			if (World->LineTraceSingleByChannel(Hit, Point1, Point2, ECC_Visibility, QueryParams))
+			if (GetWorld()->LineTraceSingleByChannel(Hit, Point1, Point2, ECC_Visibility, QueryParams))
 			{
 				BeamEndPointDecal->SetVisibility(true);
 				BeamEndPointDecal->SetWorldLocation(Hit.ImpactPoint);

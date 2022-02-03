@@ -64,7 +64,6 @@ void ASWeapon::Fire()
 
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
-		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
 		float HalfRad = FMath::DegreesToRadians(BulletSpread);
 		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 
@@ -142,7 +141,7 @@ void ASWeapon::StartFire()
 {
 	if (CurrentAmmo>1)
 	{
-		float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); // busca un numero entre lo primero y cero , nunca dara negativo.
+		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); // busca un numero entre lo primero y cero , nunca dara negativo.
 		GetWorldTimerManager().SetTimer(TimerHandle_TimeBeetwenShots, this, &ASWeapon::Fire, TimeBetweenShots, true,FireDelay);
 	}
 	else
@@ -161,7 +160,7 @@ void ASWeapon::StopFire()
 
 /*Play Impact FX*/
 
-void ASWeapon::PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint)
+void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint)
 {
 	UParticleSystem* SelectedFX = nullptr;
 	switch (NewSurfaceType)
@@ -177,7 +176,7 @@ void ASWeapon::PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint
 	}
 	if (SelectedFX)
 	{
-		FVector MuzzleLoc = MeshComp->GetSocketLocation(MuzzleSocketName);
+		const FVector MuzzleLoc = MeshComp->GetSocketLocation(MuzzleSocketName);
 		FVector ShotDirection = ImpactPoint - MuzzleLoc;
 		ShotDirection.Normalize();
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint, ShotDirection.Rotation());
@@ -186,13 +185,13 @@ void ASWeapon::PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint
 
 /*Play Trace VFX*/
 
-void ASWeapon::PlayVFX(FVector TraceEnd)
+void ASWeapon::PlayVFX(const FVector TraceEnd)
 {
 	if (MuzzleFX)
 	{
 		UGameplayStatics::SpawnEmitterAttached(MuzzleFX, MeshComp, MuzzleSocketName);
 	}
-	FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+	const FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
 	UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerFX, MuzzleLocation);
 	if (TracerComp)
 	{

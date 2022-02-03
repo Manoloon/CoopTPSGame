@@ -48,7 +48,8 @@ protected:
 	float DefaultFOV;
 
 	// grenade mode
-	class ASProjectile* Grenade = nullptr;
+	//UPROPERTY()
+	//class ASProjectile* Grenade = nullptr;
 	bool bIsGranadaMode = false;
 	float LaunchDistance = 100.0f;
 	FVector InitialVelocity;
@@ -63,6 +64,7 @@ protected:
 	float PathLifeTime = 5.0f;
 	float TimeInterval = 0.05;
 	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
+	UPROPERTY()
 	UMaterialInterface* CurrentBeamEndPointMaterial;
 
 	// material dinamico para el color del player

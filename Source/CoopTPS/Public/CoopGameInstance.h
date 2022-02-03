@@ -23,17 +23,17 @@ class COOPTPS_API UCoopGameInstance : public UGameInstance, public IMainMenuInte
 public:
 	UCoopGameInstance(const FObjectInitializer& ObjectInitializer);
 
-	void Init() override;
+	virtual void Init() override;
 	UFUNCTION()
-		void Host(FString NewServerName) override;
+		virtual void Host(FString NewServerName) override;
 	UFUNCTION()
-		void Join(uint32 newIndex) override;
+		virtual void Join(uint32 NewIndex) override;
 	UFUNCTION()
-		void LoadMainMenu() override;
+		virtual void LoadMainMenu() override;
 	UFUNCTION()
-		void QuitGame() override;
+		virtual void QuitGame() override;
 	UFUNCTION()
-		void RefreshServerList() override;
+		virtual void RefreshServerList() override;
 
 	// son blueprint callables porque se los llama desde el level blueprint. 
 	UFUNCTION(BlueprintCallable)
@@ -41,12 +41,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void LoadPauseMenu();
 
-	void StartSession();
+	void StartSession() const;
 
 private:
 	TSubclassOf<UUserWidget> MainMenuClass;
+	UPROPERTY()
 	class UUW_MainMenu* MainMenu;
 	TSubclassOf<UUserWidget> PauseMenuClass;
+	UPROPERTY()
 	class UBaseMenuWidget* PauseMenu;
 
 	// la interface de OnlineSession
@@ -57,13 +59,13 @@ private:
 
 	TSharedPtr<class FOnlineSessionSearch> OnlineSessionSearch;
 
-	void OnCreateSessionComplete(FName newSessionName, bool Success);
-	void OnDestroySessionComplete(FName newSessionName, bool Success);
+	void OnCreateSessionComplete(FName NewSessionName, bool Success);
+	void OnDestroySessionComplete(FName NewSessionName, bool Success);
 	void OnFindSessionsComplete(bool Success);
-	void OnJoinSessionComplete(FName newSessionName, EOnJoinSessionCompleteResult::Type newResult);
+	void OnJoinSessionComplete(FName NewSessionName, EOnJoinSessionCompleteResult::Type NewResult);
 	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 
-	void CreateSession();
+	void CreateSession() const;
 
 
 };

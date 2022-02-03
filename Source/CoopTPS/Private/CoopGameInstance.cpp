@@ -71,7 +71,7 @@ void UCoopGameInstance::Host(FString NewServerName)
 	}	
 }
 
-void UCoopGameInstance::Join(uint32 newIndex)
+void UCoopGameInstance::Join(uint32 NewIndex)
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
 	if (!OnlineSessionSearch.IsValid()) { return; }
@@ -79,7 +79,7 @@ void UCoopGameInstance::Join(uint32 newIndex)
 	{
 		MainMenu->Teardown();
 	}
-	OnlineSessionInterface->JoinSession(0, SESSION_NAME, OnlineSessionSearch->SearchResults[newIndex]);
+	OnlineSessionInterface->JoinSession(0, SESSION_NAME, OnlineSessionSearch->SearchResults[NewIndex]);
 }
 
 void UCoopGameInstance::LoadMainMenu()
@@ -142,7 +142,7 @@ void UCoopGameInstance::LoadPauseMenu()
 
 // ONLINE SUBSYSTEM CALLBACKS!
 
-void UCoopGameInstance::OnFindSessionsComplete(bool Success)
+void UCoopGameInstance::OnFindSessionsComplete(const bool Success)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Finish Session Found"));
 	if (Success && OnlineSessionSearch.IsValid() && MainMenu != nullptr)
@@ -173,12 +173,12 @@ void UCoopGameInstance::OnFindSessionsComplete(bool Success)
 	}
 }
 
-void UCoopGameInstance::OnJoinSessionComplete(FName newSessionName, EOnJoinSessionCompleteResult::Type newResult)
+void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoinSessionCompleteResult::Type NewResult)
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
 
 	FString RemoteSession;
-	if (!OnlineSessionInterface->GetResolvedConnectString(newSessionName, RemoteSession))
+	if (!OnlineSessionInterface->GetResolvedConnectString(NewSessionName, RemoteSession))
 	{
 		UE_LOG(LogTemp, Error, TEXT("No Valid Remote Session"));
 		return;
@@ -193,7 +193,7 @@ void UCoopGameInstance::OnJoinSessionComplete(FName newSessionName, EOnJoinSessi
 	}
 }
 
-void UCoopGameInstance::OnCreateSessionComplete(FName newSessionName, bool Success)
+void UCoopGameInstance::OnCreateSessionComplete(FName NewSessionName, const bool Success)
 {
 	if(!Success)
 	{
@@ -209,7 +209,7 @@ void UCoopGameInstance::OnCreateSessionComplete(FName newSessionName, bool Succe
 	World->ServerTravel("/Game/Map/M_Lobby?listen");
 }
 
-void UCoopGameInstance::OnDestroySessionComplete(FName newSessionName, bool Success)
+void UCoopGameInstance::OnDestroySessionComplete(FName NewSessionName, const bool Success)
 {
 	if(Success)
 	{
@@ -227,7 +227,7 @@ void UCoopGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, E
 
 
 
-void UCoopGameInstance::CreateSession()
+void UCoopGameInstance::CreateSession() const
 {
 	FOnlineSessionSettings OnlineSessionSettings;
 	// Si no usamos steam como subsystem , que sea  LAN PARTY
@@ -240,7 +240,7 @@ void UCoopGameInstance::CreateSession()
 	OnlineSessionInterface->CreateSession(0, SESSION_NAME, OnlineSessionSettings);
 }
 
-void UCoopGameInstance::StartSession()
+void UCoopGameInstance::StartSession() const
 {
 	if(OnlineSessionInterface.IsValid())
 	{
