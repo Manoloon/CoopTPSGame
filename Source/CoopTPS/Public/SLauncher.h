@@ -19,7 +19,6 @@ class COOPTPS_API ASLauncher : public ASWeapon
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<ASProjectile>ProjectileClass;
-	
 public : 
 	virtual void Fire() override;
 };
