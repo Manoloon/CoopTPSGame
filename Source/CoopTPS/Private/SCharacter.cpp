@@ -304,7 +304,7 @@ void ASCharacter::DrawingTrajectory()
 }
 
 
-void ASCharacter::SelectWeapon() //ASWeapon* newWeapon
+void ASCharacter::SelectWeapon()
 {
 	if(CurrentWeapon != SecondaryWeapon)
 	{

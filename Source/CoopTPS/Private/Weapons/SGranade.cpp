@@ -14,7 +14,7 @@
 			FVector EyeLocation;
 			FRotator EyeRotation;
 			MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-			FVector WeaponLocation = GetActorLocation();
+			const FVector WeaponLocation = GetActorLocation();
 
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
