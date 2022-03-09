@@ -26,15 +26,6 @@ ASWeapon::ASWeapon()
 {
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
-
-	MuzzleSocketName = "MuzzleSocket";
-	TracerTargetName = "BeamEnd";
-	BaseDamage = 20.0f;
-	FireRate = 600;
-	ReloadTime = 3.0f;
-	CurrentAmmo = 30;
-	MaxAmmo = 30;
-	BulletSpread = 2.0f;
 	bReplicates = true;
 
 	/* hace que el update de la red sea mas rapido, NO LAG*/
@@ -45,7 +36,7 @@ ASWeapon::ASWeapon()
 void ASWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	TimeBetweenShots = 60/ FireRate; // 10 balas por segundo;
+	TimeBetweenShots = 60/ WeaponConfig.FireRate; // 10 balas por segundo;
 }
 
 void ASWeapon::Fire()
@@ -64,7 +55,7 @@ void ASWeapon::Fire()
 
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
-		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
 		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
@@ -93,7 +84,7 @@ void ASWeapon::Fire()
 			AActor* HitActor = Hit.GetActor();
 			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-			float ActualDamage = BaseDamage;
+			float ActualDamage = WeaponConfig.BaseDamage;
 
 			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
@@ -124,16 +115,16 @@ void ASWeapon::Fire()
 
 void ASWeapon::Reload()
 {
-	CurrentAmmo = MaxAmmo;
+	CurrentAmmo = WeaponConfig.MaxAmmo;
 	bIsReloading = false;
 }
 
 void ASWeapon::StartReloading()
 {
-	if (CurrentAmmo < MaxAmmo) 
+	if (CurrentAmmo < WeaponConfig.MaxAmmo) 
 	{
 	bIsReloading = true;
-	GetWorldTimerManager().SetTimer(TimeHandle_Reloading, this, &ASWeapon::Reload,ReloadTime);
+	GetWorldTimerManager().SetTimer(TimeHandle_Reloading, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
 	}
 }
 
@@ -142,7 +133,7 @@ void ASWeapon::StartFire()
 	if (CurrentAmmo>1)
 	{
 		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); // busca un numero entre lo primero y cero , nunca dara negativo.
-		GetWorldTimerManager().SetTimer(TimerHandle_TimeBeetwenShots, this, &ASWeapon::Fire, TimeBetweenShots, true,FireDelay);
+		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true,FireDelay);
 	}
 	else
 	{
@@ -155,12 +146,12 @@ void ASWeapon::StartFire()
 
 void ASWeapon::StopFire()
 {
-	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBeetwenShots);
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
 /*Play Impact FX*/
 
-void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint)
+void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const
 {
 	UParticleSystem* SelectedFX = nullptr;
 	switch (NewSurfaceType)
@@ -176,7 +167,7 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	}
 	if (SelectedFX)
 	{
-		const FVector MuzzleLoc = MeshComp->GetSocketLocation(MuzzleSocketName);
+		const FVector MuzzleLoc = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 		FVector ShotDirection = ImpactPoint - MuzzleLoc;
 		ShotDirection.Normalize();
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint, ShotDirection.Rotation());
@@ -189,9 +180,9 @@ void ASWeapon::PlayVFX(const FVector TraceEnd)
 {
 	if (MuzzleFX)
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzleFX, MeshComp, MuzzleSocketName);
+		UGameplayStatics::SpawnEmitterAttached(MuzzleFX, MeshComp, WeaponConfig.MuzzleSocketName);
 	}
-	const FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+	const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 	UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerFX, MuzzleLocation);
 	if (TracerComp)
 	{

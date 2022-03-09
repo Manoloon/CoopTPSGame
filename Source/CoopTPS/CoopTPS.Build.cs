@@ -7,10 +7,9 @@ public class CoopTPS : ModuleRules
 	public CoopTPS(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PrivatePCHHeaderFile = "CoopTPS.h";
-		PCHUsage = PCHUsageMode.Default;
+		PCHUsage = PCHUsageMode.UseSharedPCHs;
         MinFilesUsingPrecompiledHeaderOverride = 1;
-        bFasterWithoutUnity = true;
-
+        
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "PhysicsCore", "UMG", "OnlineSubsystemSteam" });
 
 		// Uncomment if you are using Slate UI

@@ -2,9 +2,7 @@
 
 #include "SLauncher.h"
 #include "SProjectile.h"
-#include "Engine/World.h"
-#include "Kismet/GameplayStatics.h"
-
+#include "Components/SkeletalMeshComponent.h"
 
 void ASLauncher::Fire()
 {
@@ -18,7 +16,7 @@ void ASLauncher::Fire()
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-		const FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;

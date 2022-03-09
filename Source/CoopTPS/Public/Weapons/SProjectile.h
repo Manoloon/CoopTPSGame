@@ -35,6 +35,8 @@ struct FProjectileData
 		MaxDamage = 1000.0f;
 		ExplodeDelay = 2.0;
 		DamageType = UDamageType::StaticClass();
+		DefaultExplosionFX =nullptr;
+		ExplosionSFX = nullptr;
 	}
 };
 

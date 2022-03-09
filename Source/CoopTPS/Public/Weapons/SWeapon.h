@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChaosEngineInterface.h"
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 
@@ -13,11 +14,32 @@ class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FWeaponData
 {
 	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = 8, ClampMax = 30))
+	int32 MaxAmmo;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
+	float BulletSpread;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float BaseDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float FireRate;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float ReloadTime;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	FName MuzzleSocketName;
 
+	FWeaponData()
+	{
+		MaxAmmo = 30;
+		BulletSpread = 2.0f;
+		BaseDamage = 20.0f;
+		FireRate = 600;
+		ReloadTime = 3.0f;
+		MuzzleSocketName = "MuzzleSocket";
+	}
 };
 
 // Contains one Hitscan of the weapon Single trace.
@@ -30,7 +52,6 @@ GENERATED_BODY()
 	TEnumAsByte<EPhysicalSurface> SurfaceType;
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
-
 };
 
 UCLASS()
@@ -44,35 +65,23 @@ public:
 	virtual void BeginPlay() override;
 
 protected:
-
-	void PlayImpactFX(EPhysicalSurface NewSurfaceType, FVector ImpactPoint);
+	UPROPERTY(EditDefaultsOnly,Category = "Settings")
+	FWeaponData WeaponConfig;
+	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Weapon")
 		const TSubclassOf<UDamageType> DamageType;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		float BaseDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		float FireRate;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		float ReloadTime;
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		bool bIsReloading;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
-		int32 CurrentAmmo;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = 8, ClampMax = 30))
-		int32 MaxAmmo;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
-		float BulletSpread;
-
+	int32 CurrentAmmo=30;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		FName MuzzleSocketName;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		FName TracerTargetName;
-
+	FName TracerTargetName = "BeamEnd";
 	// VFX
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* MuzzleFX;
@@ -92,11 +101,11 @@ protected:
 		USoundCue* NoAmmoSFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		USoundCue* FireSFX;
-
+	UPROPERTY()
 		UAudioComponent* WeaponAudioComponent;
 
 	// fire time handlers
-	FTimerHandle TimerHandle_TimeBeetwenShots;
+	FTimerHandle TimerHandle_TimeBetweenShots;
 	float LastFireTime;
 	//deriva de FireRate
 	float TimeBetweenShots;

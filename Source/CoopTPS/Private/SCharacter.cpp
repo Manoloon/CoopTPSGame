@@ -350,6 +350,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 
 	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter,PrimaryWeapon);
 	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
