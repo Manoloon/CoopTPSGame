@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/IInputComm.h"
 #include "SCharacter.generated.h"
 
 // USTRUCT()
@@ -14,8 +15,8 @@
 // 	AActor* WeaponToSpawn;
 // 	class UTexture2D WeaponImage;
 // };
-UCLASS()
-class COOPTPS_API ASCharacter : public ACharacter
+UCLASS(Abstract)
+class COOPTPS_API ASCharacter : public ACharacter, public IIInputComm
 {
 	GENERATED_BODY()
 
@@ -104,50 +105,57 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void BeginCrouch();
-	void EndCrouch();
-	void BeginZoom();
-	void EndZoom();
+
 public:
 	UFUNCTION()
 	void AuthSetPlayerColor(const FLinearColor& NewColor);
 protected:
-	void Reload();
 	void Throw();
-	void StartThrow();
-	void StopThrow();
 	void ClearBeam();
 	void AddNewBeam(FVector const NewPoint1,FVector const NewPoint2);
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 
-	void SelectWeapon(); //ASWeapon* newWeapon
-
-
 private:
 	UFUNCTION()
-	void OnRep_PlayerColor();
+	void OnRep_PlayerColor() const;
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	// Called every frame
-	void Tick(float DeltaTime) override;
+	virtual void Tick(float DeltaTime) override;
 
-	void PostInitializeComponents() override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PostInitializeComponents() override;
 
 	virtual FVector GetPawnViewLocation() const override;
 
 	// Esto esta expuesto para poder usarse en el BT.
+	/**
 	UFUNCTION(BlueprintCallable,Category = "Player")
 	void  StartFire();
 	UFUNCTION(BlueprintCallable,Category = "Player")
-	void StopFire();
+	void StopFire();*/
+
+	// Input interface
+	virtual void I_Jump() override;
+	virtual void I_Reload() override;
+	virtual void I_ChangeWeapon() override;
+	virtual void I_StartCrouch() override;
+	virtual void I_StopCrouch() override;
+	UFUNCTION(BlueprintCallable,Category = "Player")
+	virtual void I_StartFire() override;
+	UFUNCTION(BlueprintCallable,Category = "Player")
+	virtual void I_StopFire() override;
+	virtual void I_StartRun() override;
+	virtual void I_StopRun() override;
+	virtual void I_StartThrow() override;
+	virtual void I_StopThrow() override;
+	virtual void I_MoveForward(float Value) override;
+	virtual void I_MoveRight(float Value) override;
+	virtual void I_TurnRate(float Value) override;
+	virtual void I_LookUpRate(float Value) override;
+	virtual void I_StartADS() override;
+	virtual void I_StopADS() override;
 };

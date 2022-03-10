@@ -44,38 +44,6 @@ ASCharacter::ASCharacter()
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 }
 
-// Called to bind functionality to input
-void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// forward Backward
-	PlayerInputComponent->BindAxis("MoveForward",this,&ASCharacter::MoveForward);
-	// Right - Left
-	PlayerInputComponent->BindAxis("MoveRight", this,&ASCharacter::MoveRight);
-	
-	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
-	
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ASCharacter::BeginCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);
-
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-
-	PlayerInputComponent->BindAction("ADS", IE_Pressed, this, &ASCharacter::BeginZoom);
-	PlayerInputComponent->BindAction("ADS", IE_Released, this, &ASCharacter::EndZoom);
-
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::StartFire);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
-
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ASCharacter::Reload);
-	
-	PlayerInputComponent->BindAction("Throw", IE_Pressed, this, &ASCharacter::StartThrow);
-	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ASCharacter::StopThrow);
-
-	PlayerInputComponent->BindAction("ChangeWeapon", IE_Released, this, &ASCharacter::SelectWeapon);
-}
-
 void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -145,21 +113,31 @@ void ASCharacter::Tick(float DeltaTime)
 	CameraComp->SetFieldOfView(NewFOV);
 }
 
-void ASCharacter::MoveForward(float Value)
+void ASCharacter::I_MoveForward(float Value)
 {
 	AddMovementInput(GetActorForwardVector() * Value);
 }
-void ASCharacter::MoveRight(float Value)
+void ASCharacter::I_MoveRight(float Value)
 {
 	AddMovementInput(GetActorRightVector() * Value);
 }
 
-void ASCharacter::BeginCrouch()
+void ASCharacter::I_TurnRate(float Value)
+{
+	AddControllerYawInput(Value);
+}
+
+void ASCharacter::I_LookUpRate(float Value)
+{
+	AddControllerPitchInput(Value);
+}
+
+void ASCharacter::I_StartCrouch()
 {
 	Crouch();
 }
 
-void ASCharacter::EndCrouch()
+void ASCharacter::I_StopCrouch()
 {
 	UnCrouch();
 }
@@ -173,17 +151,22 @@ FVector ASCharacter::GetPawnViewLocation() const
 	return Super::GetPawnViewLocation();
 }
 
-void ASCharacter::BeginZoom()
+void ASCharacter::I_Jump()
+{
+	Jump();
+}
+
+void ASCharacter::I_StartADS()
 {
 	bIsZoomed = true;
 }
 
-void ASCharacter::EndZoom()
+void ASCharacter::I_StopADS()
 {
 	bIsZoomed = false;
 }
 
-void ASCharacter::StartFire()
+void ASCharacter::I_StartFire()
 {
 	if (CurrentWeapon)
 	{
@@ -191,7 +174,7 @@ void ASCharacter::StartFire()
 	}
 }
 
-void ASCharacter::StopFire()
+void ASCharacter::I_StopFire()
 {
 	if (CurrentWeapon)
 	{
@@ -199,7 +182,15 @@ void ASCharacter::StopFire()
 	}
 }
 
-void ASCharacter::Reload()
+void ASCharacter::I_StartRun()
+{
+}
+
+void ASCharacter::I_StopRun()
+{
+}
+
+void ASCharacter::I_Reload()
 {
 	if(CurrentWeapon)
 	{
@@ -223,12 +214,12 @@ void ASCharacter::Throw()
 	}
 }
 
-void ASCharacter::StartThrow()
+void ASCharacter::I_StartThrow()
 {
 	bIsGranadaMode = true;		
 }
 
-void ASCharacter::StopThrow()
+void ASCharacter::I_StopThrow()
 {
 	bIsGranadaMode = false;
 	LaunchDistance = 100.0f;
@@ -304,7 +295,7 @@ void ASCharacter::DrawingTrajectory()
 }
 
 
-void ASCharacter::SelectWeapon()
+void ASCharacter::I_ChangeWeapon()
 {
 	if(CurrentWeapon != SecondaryWeapon)
 	{
@@ -319,10 +310,8 @@ void ASCharacter::SelectWeapon()
 	}
 }
 
-//////////////////////////////////////////////////////////
-
 // Cambio del color del pawn segun el playercontroller que lo controle.
-void ASCharacter::OnRep_PlayerColor()
+void ASCharacter::OnRep_PlayerColor() const
 {
 	if(MeshID)
 	{
@@ -331,7 +320,7 @@ void ASCharacter::OnRep_PlayerColor()
 }
 
 // Cuando la energia del cliente cambia pero no ha muerto.-
-void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
 	{
