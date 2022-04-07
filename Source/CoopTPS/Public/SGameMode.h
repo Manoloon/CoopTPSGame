@@ -8,8 +8,8 @@
 
 enum class EWaveState : uint8;
 
-// Declarar una funcion que retorne la victima y el asesino para puntos. ESTE SE USARA EN EL HealthComponent!!
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);  // Parametro Actor victima y Actor Asesino(rifle) y el actorcontroller (3 parametros)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*,
+	VictimActor, AActor*, KillerActor, AController*, KillerController);
 
 UCLASS()
 class COOPTPS_API ASGameMode : public AGameModeBase
@@ -23,14 +23,9 @@ public:
 	int32 LastPlayerColorIndex;
 
 protected:
-	// timer for spawn bots
 	FTimerHandle TimerHandle_SpawnBots;
-	FTimerHandle TimerHandle_NextWaveStart;
-
-	// number of bots to spawn in wave
+	FTimerHandle TH_NextWaveStart;
 	int32 NumBotsToSpawn;
-
-	// number of the wave
 	int32 WaveCount;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
@@ -40,8 +35,7 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameMode")
 		void SpawnNewBot();
-
-	// esto lleva el calculo de cuando arrancar una nueva wave.
+	
 	void SpawnBotTimerElapsed();
 	
 	void StartWave();
@@ -68,7 +62,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	
-	void SetPlayerDefaults(class APawn* PlayerPawn) override;
+	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
 		FOnActorKilled OnActorKilled;

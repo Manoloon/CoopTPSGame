@@ -6,9 +6,6 @@
 #include "GameFramework/GameModeBase.h"
 #include "CoopTPSLobbyGameMode.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COOPTPS_API ACoopTPSLobbyGameMode : public AGameModeBase
 {
@@ -17,8 +14,8 @@ class COOPTPS_API ACoopTPSLobbyGameMode : public AGameModeBase
 		ACoopTPSLobbyGameMode();
 
 public:
-	void PostLogin(APlayerController* NewPlayer) override;
-	void Logout(AController* Exiting) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* Exiting) override;
 
 protected:
 
@@ -31,5 +28,5 @@ protected:
 	void TravelToMap();	
 
 private:
-	void SetPlayerDefaults(class APawn* PlayerPawn) override;
+	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 };

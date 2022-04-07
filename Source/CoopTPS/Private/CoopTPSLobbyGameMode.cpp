@@ -12,7 +12,7 @@
 ACoopTPSLobbyGameMode::ACoopTPSLobbyGameMode()
 {
 	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
-	if (BPPlayerCharacterClass.Class != NULL)
+	if (BPPlayerCharacterClass.Class != nullptr)
 	{
 		DefaultPawnClass = BPPlayerCharacterClass.Class;
 	}
@@ -21,7 +21,6 @@ ACoopTPSLobbyGameMode::ACoopTPSLobbyGameMode()
 	PlayerControllerClass = ACoopPlayerController::StaticClass();
 	HUDClass = ATPSHud::StaticClass();
 
-	// colores
 	PlayerColors.Add(FLinearColor::Blue);
 	PlayerColors.Add(FLinearColor::Red);
 	PlayerColors.Add(FLinearColor::Yellow);
@@ -36,7 +35,8 @@ void ACoopTPSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if(NumOfPlayers>=2)
 	{
 		FTimerHandle StartTravelTH;
-		GetWorldTimerManager().SetTimer(StartTravelTH, this, &ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
+		GetWorldTimerManager().SetTimer(StartTravelTH, this,
+			&ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
 	}
 }
 
@@ -48,7 +48,7 @@ void ACoopTPSLobbyGameMode::Logout(AController* Exiting)
 
 void ACoopTPSLobbyGameMode::TravelToMap()
 {
-	auto GameInstance = Cast<UCoopGameInstance>(GetGameInstance());
+	const auto GameInstance = Cast<UCoopGameInstance>(GetGameInstance());
 	if(GameInstance !=nullptr)
 	{
 		GameInstance->StartSession();

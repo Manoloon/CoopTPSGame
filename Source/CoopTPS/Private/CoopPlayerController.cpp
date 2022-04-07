@@ -7,9 +7,7 @@
 void ACoopPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	// forward Backward
 	InputComponent->BindAxis("MoveForward",this,&ACoopPlayerController::MoveForward);
-	// Right - Left
 	InputComponent->BindAxis("MoveRight", this,&ACoopPlayerController::MoveRight);
 	
 	InputComponent->BindAxis("LookUp", this, &ACoopPlayerController::LookUpRate);
@@ -23,8 +21,8 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ADS", IE_Pressed, this, &ACoopPlayerController::StartAds);
 	InputComponent->BindAction("ADS", IE_Released, this, &ACoopPlayerController::StopAds);
 
-	InputComponent->BindAction("Fire", IE_Pressed, this, &ACoopPlayerController::StartFire);
-	InputComponent->BindAction("Fire", IE_Released, this, &ACoopPlayerController::StopFire);
+	InputComponent->BindAction("Fire", IE_Pressed, this, &ACoopPlayerController::StartFiring);
+	InputComponent->BindAction("Fire", IE_Released, this, &ACoopPlayerController::StopFiring);
 
 	InputComponent->BindAction("Reload", IE_Pressed, this, &ACoopPlayerController::Reload);
 	
@@ -128,7 +126,7 @@ void ACoopPlayerController::StopCrouch()
 	}
 }
 
-void ACoopPlayerController::StartFire()
+void ACoopPlayerController::StartFiring()
 {
 	if(PawnInterface)
 	{
@@ -136,7 +134,7 @@ void ACoopPlayerController::StartFire()
 	}
 }
 
-void ACoopPlayerController::StopFire()
+void ACoopPlayerController::StopFiring()
 {
 	if(PawnInterface)
 	{

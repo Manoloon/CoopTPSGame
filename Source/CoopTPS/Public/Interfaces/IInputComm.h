@@ -12,7 +12,6 @@ class IIInputComm
 {
 	GENERATED_BODY()
 public:
-	// Inputs for comm from controller
 	virtual void I_StartRun()=0;
 	virtual void I_StopRun()=0;
 	virtual void I_MoveForward(float Value)=0;

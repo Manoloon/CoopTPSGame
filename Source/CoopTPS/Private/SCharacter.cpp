@@ -297,16 +297,17 @@ void ASCharacter::DrawingTrajectory()
 
 void ASCharacter::I_ChangeWeapon()
 {
-	if(CurrentWeapon != SecondaryWeapon)
+	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
 	{
-		if(HasAuthority())
-		{
-			ASWeapon* TempWeapon = SecondaryWeapon;
-			SecondaryWeapon = CurrentWeapon;
-			SecondaryWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
-			CurrentWeapon = TempWeapon;
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-		}
+		ASWeapon* TempWeapon = SecondaryWeapon;
+		SecondaryWeapon = CurrentWeapon;
+		SecondaryWeapon->AttachToComponent(GetMesh(),
+		                                   FAttachmentTransformRules::SnapToTargetIncludingScale,
+		                                   SecondaryWeaponSocketName);
+		CurrentWeapon = TempWeapon;
+		CurrentWeapon->AttachToComponent(GetMesh(),
+		                                 FAttachmentTransformRules::SnapToTargetIncludingScale,
+		                                 WeaponSocketName);
 	}
 }
 
@@ -339,7 +340,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 
 	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
-	DOREPLIFETIME(ASCharacter,PrimaryWeapon);
+	DOREPLIFETIME(ASCharacter, PrimaryWeapon);
 	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);

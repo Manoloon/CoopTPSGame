@@ -7,9 +7,6 @@
 #include "Interfaces/IInputComm.h"
 #include "CoopPlayerController.generated.h"
 
-/**
- * 
- */
 class ASCharacter;
 
 UCLASS()
@@ -27,7 +24,7 @@ public:
 protected:
 	IIInputComm* PawnInterface;
 	virtual void OnPossess(APawn* APawn) override;
-	// inputs
+
 	void StartRun();
 	void StopRun();
 	void MoveForward(float Value);
@@ -38,12 +35,11 @@ protected:
 	void StopAds();
 	void StartCrouch();
 	void StopCrouch();
-	void StartFire();
-	void StopFire();
+	void StartFiring();
+	void StopFiring();
 	void Reload();
 	void ChangeWeapon();
 	void StartThrow();
 	void StopThrow();
 	void Jump();
-	
 };
