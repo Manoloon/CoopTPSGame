@@ -92,7 +92,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* TracerFX;	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		TSubclassOf<UMatineeCameraShake>FireCamShake;
+		TSubclassOf<UCameraShakeBase>FireCamShake;
 
 	// SFX
 	UPROPERTY(EditDefaultsOnly,Category = "Weapon")
@@ -104,13 +104,9 @@ protected:
 	UPROPERTY()
 		UAudioComponent* WeaponAudioComponent;
 
-	// fire time handlers
 	FTimerHandle TimerHandle_TimeBetweenShots;
 	float LastFireTime;
-	//deriva de FireRate
 	float TimeBetweenShots;
-
-	// reload Time Handlers
 	FTimerHandle TimeHandle_Reloading;
 
 	//EPhysicalSurface SurfaceType;

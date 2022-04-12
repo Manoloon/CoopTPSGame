@@ -11,7 +11,6 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
 #include "TimerManager.h"
-#include "Camera/CameraShake.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -189,19 +188,14 @@ void ASWeapon::PlayVFX(const FVector TraceEnd)
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 	}
 	// Camera shake
-	APawn* MyOwner = Cast<APawn>(GetOwner());
-	if(MyOwner)
+	if(const APawn* MyOwner = Cast<APawn>(GetOwner()))
 	{
-		APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
-		if(PC)
+		if(APlayerController* PC = Cast<APlayerController>(MyOwner->GetController()))
 		{
 			PC->ClientStartCameraShake(FireCamShake);
 		}
 	}
 }
-
-
-// NETWORK FIRE ACTION
 
 void ASWeapon::ServerFire_Implementation()
 {

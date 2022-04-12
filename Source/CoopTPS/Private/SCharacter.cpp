@@ -274,7 +274,6 @@ void ASCharacter::DrawingTrajectory()
 			float Time1 = i * TimeInterval;
 			float Time2 = (i + 1) * TimeInterval;
 
-			// trace line
 			const FName TraceTag("TraceTag");
 			FCollisionQueryParams QueryParams;
 			QueryParams.TraceTag = TraceTag;
