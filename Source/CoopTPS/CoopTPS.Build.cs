@@ -10,7 +10,9 @@ public class CoopTPS : ModuleRules
 		PCHUsage = PCHUsageMode.UseSharedPCHs;
         MinFilesUsingPrecompiledHeaderOverride = 1;
         
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "PhysicsCore", "UMG", "OnlineSubsystemSteam","GameplayCameras" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", 
+        "InputCore", "NavigationSystem", "PhysicsCore", "UMG", "OnlineSubsystemSteam",
+        "GameplayCameras","AIModule", "GameplayTasks" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
