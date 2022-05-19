@@ -19,7 +19,8 @@ public:
 	ASPowerUp();
 
 protected:
-	USceneComponent * SceneComp;
+	UPROPERTY()
+		USceneComponent * SceneComp;
 	UPROPERTY(Category = MeshComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* MeshComp;
 	UPROPERTY(Category = LightComp, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

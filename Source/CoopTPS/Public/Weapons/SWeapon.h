@@ -60,13 +60,17 @@ class COOPTPS_API ASWeapon : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ASWeapon();
 	virtual void BeginPlay() override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		bool bIsReloading;
 
+	virtual void StartFire();
+	virtual void StopFire();
+	void StartReloading();	
 protected:
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
-	FWeaponData WeaponConfig;
+		FWeaponData WeaponConfig;
 	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -74,14 +78,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Weapon")
 		const TSubclassOf<UDamageType> DamageType;
 
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		bool bIsReloading;
-protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
-	int32 CurrentAmmo=30;
+		int32 CurrentAmmo=30;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	FName TracerTargetName = "BeamEnd";
+		FName TracerTargetName = "BeamEnd";
 	// VFX
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* MuzzleFX;
@@ -124,9 +124,4 @@ protected:
 
 	UFUNCTION()
 		void ONREP_HitScanTrace();
-
-public:
-	virtual void StartFire();
-	virtual void StopFire();
-	void StartReloading();	
 };
