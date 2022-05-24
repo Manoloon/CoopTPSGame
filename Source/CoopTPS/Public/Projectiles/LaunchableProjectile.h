@@ -6,9 +6,6 @@
 #include "SProjectile.h"
 #include "LaunchableProjectile.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COOPTPS_API ALaunchableProjectile : public ASProjectile
 {

@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
+#include "Interfaces/IHealthyActor.h"
 #include "SCharacter.generated.h"
 
 // USTRUCT()
@@ -16,7 +18,7 @@
 // 	class UTexture2D WeaponImage;
 // };
 UCLASS(Abstract)
-class COOPTPS_API ASCharacter : public ACharacter, public IIInputComm
+class COOPTPS_API ASCharacter final : public ACharacter, public IIInputComm, public IIHealthyActor
 {
 	GENERATED_BODY()
 
@@ -25,7 +27,6 @@ public:
 	ASCharacter();
 
 protected:
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
 		class UCameraComponent* CameraComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
@@ -66,11 +67,11 @@ protected:
 	float TimeInterval = 0.05;
 	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
 	UPROPERTY()
-	UMaterialInterface* CurrentBeamEndPointMaterial;
+		UMaterialInterface* CurrentBeamEndPointMaterial;
 
 	// material dinamico para el color del player
 	UPROPERTY(BlueprintReadWrite)
-	class UMaterialInstanceDynamic* MeshID;
+		class UMaterialInstanceDynamic* MeshID;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenades")
 	TSubclassOf<class ASProjectile> GranadaClass;
@@ -98,7 +99,8 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName SecondaryWeaponSocketName = "SecWeaponSocket";
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = 10.0,ClampMax = 40.0))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera",
+													meta = (ClampMin = 10.0,ClampMax = 40.0))
 		float ZoomInterpSpeed = 20.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 		float ZoomedFOV = 65.0f;
@@ -113,7 +115,8 @@ protected:
 	void Throw();
 	void ClearBeam();
 	void AddNewBeam(FVector const NewPoint1,FVector const NewPoint2);
-	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
+	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity,
+								float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
 
 private:
@@ -121,7 +124,8 @@ private:
 	void OnRep_PlayerColor() const;
 
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
+		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	// Called every frame
@@ -158,4 +162,6 @@ public:
 	virtual void I_LookUpRate(float Value) override;
 	virtual void I_StartADS() override;
 	virtual void I_StopADS() override;
+
+	virtual USHealthComponent* I_GetHealthComp() const override;
 };

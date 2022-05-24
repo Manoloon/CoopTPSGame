@@ -1,21 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SHealthComponent.h"
+#include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "SGameMode.h"
-#include "Engine/World.h"
 
-
-
-// Sets default values for this component's properties
-USHealthComponent::USHealthComponent()
-{
-	bOwnerIsDead = false;
-
-}
-
-// Called when the game starts
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -23,8 +13,7 @@ void USHealthComponent::BeginPlay()
 	// Only on server --- Como es un componente , no tiene role, sino que su dueño lo tiene.
 	if(GetOwnerRole() == ROLE_Authority)
 	{
-		AActor* MyOwner = GetOwner();
-		if (MyOwner)
+		if (AActor* MyOwner = GetOwner())
 		{
 			MyOwner->OnTakeAnyDamage.AddDynamic(this, &USHealthComponent::HandleTakeAnyDamage);			
 		}
@@ -32,12 +21,10 @@ void USHealthComponent::BeginPlay()
 	Health = MaxHealth;
 }
 
-void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
+		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0.0f || bOwnerIsDead) 
-	{
-		return; 
-	}
+	if (Damage <= 0.0f || bOwnerIsDead) {return; }
 	// if friendly , no damage, But can do SelfDamage (trackball self destruct)
 	if(DamagedActor != DamageCauser && IsFriendly(DamagedActor,DamageCauser))
 	{
@@ -50,46 +37,37 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 
 	if (bOwnerIsDead)
 	{
-		ASGameMode* GM =Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
-		if (GM)
+		if (const ASGameMode* GamMode =Cast<ASGameMode>(GetWorld()->GetAuthGameMode()))
 		{
-			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
+			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
 		}
 	}
 }
 
+float USHealthComponent::GetHealth() const{	return Health; }
 
-/*Este Getter es para poder tomar el dato de la variable HEALTH desde afuera*/
-float USHealthComponent::GetHealth() const
+void USHealthComponent::Heal(const float HealAmount)
 {
-	return Health;
-}
-
-void USHealthComponent::Heal(float HealAmount)
-{
-	if(HealAmount <=0.0f || bOwnerIsDead)
-	{
-		return;
-	}
+	if(HealAmount <=0.0f || bOwnerIsDead){return;}
 	Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth);
-	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr,nullptr,nullptr);
+	OnHealthChanged.Broadcast(this, Health, -HealAmount,
+									nullptr,nullptr,nullptr);
 }
 
 bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 {
 	if(ActorA == nullptr ||ActorB == nullptr)
 	{
-		//assume friendly
 		return true;
 	}
-	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
-	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
-
-	if(HealthCompA == nullptr || HealthCompB == nullptr)
+	if(!ActorA->Implements<UIHealthyActor>() || !ActorB->Implements<UIHealthyActor>())
 	{
-		//Assume friendly
 		return true;
 	}
+	const USHealthComponent* HealthCompA = Cast<IIHealthyActor>(ActorA)->I_GetHealthComp();
+	//Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
+	const USHealthComponent* HealthCompB = Cast<IIHealthyActor>(ActorB)->I_GetHealthComp();
+		//Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
 	return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 

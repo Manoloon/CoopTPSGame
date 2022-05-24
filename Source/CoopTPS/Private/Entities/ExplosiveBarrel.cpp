@@ -1,18 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ExplosiveBarrel.h"
-#include "TimerManager.h"
 #include "Particles/ParticleSystem.h"
 #include "SHealthComponent.h"
 #include "DrawDebugHelpers.h"
-#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Sound/SoundCue.h"
-#include "Engine/World.h"
 #include "PhysicsEngine/RadialForceComponent.h"
-
 
 // debug
 static int32 DebugBarrelExp = 0;
@@ -22,10 +18,8 @@ FAutoConsoleVariableRef CVARDebugBarrelExp(
 	TEXT("draw debug lines for Explosion Barrel"),
 	ECVF_Cheat);
 
-// Sets default values
 AExplosiveBarrel::AExplosiveBarrel()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
@@ -38,6 +32,17 @@ AExplosiveBarrel::AExplosiveBarrel()
 
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
+}
+
+USHealthComponent* AExplosiveBarrel::I_GetHealthComp() const
+{
+	return  HealthComp;
+}
+
+void AExplosiveBarrel::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
 	RadialForceComp->Radius = ExplosionRadius;
 	RadialForceComp->bImpulseVelChange = true;
 	RadialForceComp->bAutoActivate = false;
@@ -49,17 +54,14 @@ AExplosiveBarrel::AExplosiveBarrel()
 	bExploded = false;
 }
 
-// Called when the game starts or when spawned
-void AExplosiveBarrel::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health,
+			float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
+																		AActor* DamageCauser)
 {
 	if(MatInst == nullptr)
 	{
-		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0,
+															MeshComp->GetMaterial(0));
 	}
 	if(MatInst)
 	{
@@ -81,12 +83,9 @@ void AExplosiveBarrel::SelfDestruct()
 	UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	
 	// push the barrel upward! 
-	FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
+	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
 	MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
-
 	MeshComp->SetMaterial(0, ExplodedMaterial);
-
-	// push all physics radial force
 	RadialForceComp->FireImpulse();
 	
 
@@ -94,11 +93,14 @@ void AExplosiveBarrel::SelfDestruct()
 	{
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage,
+			GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors,
+							this, GetInstigatorController(), true);
 
 		if (DebugBarrelExp)
 		{
-			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 3.0f);
+			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12,
+									FColor::Red, false, 2.0f, 3.0f);
 		}
 	}
 }

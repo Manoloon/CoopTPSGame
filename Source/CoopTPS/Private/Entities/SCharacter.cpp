@@ -166,6 +166,11 @@ void ASCharacter::I_StopADS()
 	bIsZoomed = false;
 }
 
+USHealthComponent* ASCharacter::I_GetHealthComp() const
+{
+	return HealthComp;
+}
+
 void ASCharacter::I_StartFire()
 {
 	if (CurrentWeapon)

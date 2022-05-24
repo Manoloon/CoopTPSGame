@@ -7,7 +7,7 @@
 #include "CoopTPSLobbyGameMode.generated.h"
 
 UCLASS()
-class COOPTPS_API ACoopTPSLobbyGameMode : public AGameModeBase
+class COOPTPS_API ACoopTPSLobbyGameMode final : public AGameModeBase
 {
 	GENERATED_BODY()
 

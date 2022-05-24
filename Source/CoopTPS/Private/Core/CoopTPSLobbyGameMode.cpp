@@ -11,7 +11,8 @@
 
 ACoopTPSLobbyGameMode::ACoopTPSLobbyGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
+	static ConstructorHelpers::FClassFinder<APawn>
+					BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
 	if (BPPlayerCharacterClass.Class != nullptr)
 	{
 		DefaultPawnClass = BPPlayerCharacterClass.Class;
@@ -48,24 +49,21 @@ void ACoopTPSLobbyGameMode::Logout(AController* Exiting)
 
 void ACoopTPSLobbyGameMode::TravelToMap()
 {
-	const auto GameInstance = Cast<UCoopGameInstance>(GetGameInstance());
-	if(GameInstance !=nullptr)
+	if(const auto GameInstance = Cast<UCoopGameInstance>(GetGameInstance()); GameInstance !=nullptr)
 	{
 		GameInstance->StartSession();
 	}
-	UWorld* World = GetWorld();
-	if(World != nullptr)
+	if(GetWorld()!= nullptr)
 	{
 		bUseSeamlessTravel = true;
-		World->ServerTravel("/Game/Map/M_Level?listen");
+		GetWorld()->ServerTravel("/Game/Map/M_Level?listen");
 	}
 }
 
 void ACoopTPSLobbyGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 {
 	Super::SetPlayerDefaults(PlayerPawn);
-	ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn);
-	if (CoopPawn)
+	if (ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn))
 	{
 		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
 		if (PlayerColors.IsValidIndex(PlayerColorIndex))
