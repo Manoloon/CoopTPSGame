@@ -38,10 +38,14 @@ void UCoopGameInstance::Init()
 		OnlineSessionInterface = CoopOnlineSubsystem->GetSessionInterface();
 		if(OnlineSessionInterface.IsValid())
 		{
-			OnlineSessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCoopGameInstance::OnCreateSessionComplete);
-			OnlineSessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCoopGameInstance::OnDestroySessionComplete);
-			OnlineSessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCoopGameInstance::OnFindSessionsComplete);
-			OnlineSessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UCoopGameInstance::OnJoinSessionComplete);
+			OnlineSessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this,
+													&UCoopGameInstance::OnCreateSessionComplete);
+			OnlineSessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, 
+													&UCoopGameInstance::OnDestroySessionComplete);
+			OnlineSessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, 
+													&UCoopGameInstance::OnFindSessionsComplete);
+			OnlineSessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this,
+			 										&UCoopGameInstance::OnJoinSessionComplete);
 		}
 	}
 	else
@@ -185,8 +189,7 @@ void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoi
 	}
 	else
 	{
-		APlayerController* PlayerController = GetFirstLocalPlayerController();
-		if (PlayerController != nullptr)
+		if (APlayerController* PlayerController = GetFirstLocalPlayerController(); PlayerController != nullptr)
 		{
 			PlayerController->ClientTravel(RemoteSession, ETravelType::TRAVEL_Absolute);
 		}
