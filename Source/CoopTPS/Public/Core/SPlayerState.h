@@ -6,18 +6,15 @@
 #include "GameFramework/PlayerState.h"
 #include "SPlayerState.generated.h"
 
-/**
- * 
- */
 UCLASS()
-class COOPTPS_API ASPlayerState : public APlayerState
+class COOPTPS_API ASPlayerState final : public APlayerState
 {
 	GENERATED_BODY()
 	
 public:
 
 	UFUNCTION(BlueprintCallable,Category = "Score" )
-		void AddScore(float ScoreDelta);
+		void AddScore(const float ScoreDelta);
 	
 	
 };

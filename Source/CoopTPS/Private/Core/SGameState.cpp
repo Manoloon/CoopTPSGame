@@ -3,8 +3,6 @@
 #include "SGameState.h"
 #include "Net/UnrealNetwork.h"
 
-
-
 void ASGameState::OnRep_WaveState(EWaveState OldWaveState)
 {
 	WaveStateChanged(WaveState,OldWaveState);
@@ -14,20 +12,16 @@ void ASGameState::SetWaveState(EWaveState NewWaveState)
 {
 	if(GetLocalRole() == ROLE_Authority)
 	{
-		EWaveState OldWaveState = WaveState;
+		const EWaveState OldWaveState = WaveState;
 		WaveState = NewWaveState;
 		// call on server
 		OnRep_WaveState(OldWaveState);
-
 	}
 }
 
-// networking
 void ASGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(ASGameState, WaveState);
-
 }

@@ -21,7 +21,7 @@ public:
 	virtual void DrawHUD() override;
 
 private:
-	void DrawPlayerColorBar(const FLinearColor& Color, bool bBottom, float Height);
+	void DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height);
 	void DrawCrosshair(const FLinearColor& Color, float TotalSize, float GapSize);
 	void DrawHealthBar(const FLinearColor& Color, float Height, float MaxHealth,float CurrentHealth);
 

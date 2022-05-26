@@ -39,8 +39,7 @@ ASGameMode::ASGameMode()
 void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 {
 	Super::SetPlayerDefaults(PlayerPawn);
-	ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn);
-	if (CoopPawn)
+	if (ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn))
 	{
 		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1)
 												% PlayerColors.Num();
@@ -78,9 +77,8 @@ void ASGameMode::PrepareNextWave()
 
 void ASGameMode::CheckWaveState()
 {
-	const bool bIsPreparingForWave = GetWorldTimerManager().IsTimerActive(TH_NextWaveStart);
-
-	if (NumBotsToSpawn > 0 || bIsPreparingForWave)
+	if (const bool bIsPreparingForWave = GetWorldTimerManager().IsTimerActive(TH_NextWaveStart);
+		NumBotsToSpawn > 0 || bIsPreparingForWave)
 	{
 		return;
 	}
@@ -95,9 +93,9 @@ void ASGameMode::CheckWaveState()
 		continue;
 		}
 
-		const USHealthComponent* HealthComp =Cast<USHealthComponent>
+		if (const USHealthComponent* HealthComp =Cast<USHealthComponent>
 			(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-		if (HealthComp && HealthComp->GetHealth() >0.0f)
+			HealthComp && HealthComp->GetHealth() >0.0f)
 		{
 			bIsAnyBotAlive = true;
 			break;
@@ -113,8 +111,7 @@ void ASGameMode::CheckAnyPlayerAlive()
 {
 	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator();It;++It)
 	{
-		const	APlayerController* PC = It->Get();
-		if(PC && PC->GetPawn())
+		if(const APlayerController* PC = It->Get(); PC && PC->GetPawn())
 		{
 			const APawn* PlayerPawn = PC->GetPawn();
 			const USHealthComponent* HealthComp = Cast<USHealthComponent>
@@ -137,8 +134,8 @@ void ASGameMode::GameOver()
 
 void ASGameMode::SetWaveState(EWaveState NewWaveState)
 {
-	ASGameState* GS = GetGameState<ASGameState>();
-	if (ensureAlways(GS))
+	if (ASGameState* GS = GetGameState<ASGameState>();
+		ensureAlways(GS))
 	{
 		GS->SetWaveState(NewWaveState);
 	}
@@ -148,8 +145,7 @@ void ASGameMode::RestoreDeadPlayer()
 {
 	for (FConstPlayerControllerIterator It= GetWorld()->GetPlayerControllerIterator();It;++It)
 	{
-		APlayerController* PC = It->Get();
-		if(PC && PC->GetPawn() == nullptr)
+		if(APlayerController* PC = It->Get(); PC && PC->GetPawn() == nullptr)
 		{
 			RestartPlayer(PC);
 		}

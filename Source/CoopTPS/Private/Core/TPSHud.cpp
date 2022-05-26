@@ -11,8 +11,7 @@ void ATPSHud::DrawHUD()
 {
 	Super::DrawHUD();
 
-	ASCharacter* Pawn = Cast<ASCharacter>(GetOwningPawn());
-	if(Pawn && Canvas)
+	if(const ASCharacter* Pawn = Cast<ASCharacter>(GetOwningPawn()); Pawn && Canvas)
 	{
 		DrawPlayerColorBar(Pawn->PlayerColor, false, 4.0f);
 		DrawPlayerColorBar(Pawn->PlayerColor, true, 8.0f);
@@ -28,11 +27,11 @@ void ATPSHud::DrawHUD()
 	}
 }
 
-void ATPSHud::DrawPlayerColorBar(const FLinearColor& Color, bool bBottom, float Height)
+void ATPSHud::DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height)
 {
 	check(Canvas);
 
-	const float OriginX = 0.0f;
+	constexpr float OriginX = 0.0f;
 	const float OriginY = bBottom ? Canvas->SizeY - Height : 0.0f;
 	DrawRect(Color, OriginX, OriginY, Canvas->SizeX, Height);
 }

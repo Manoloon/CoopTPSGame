@@ -2,10 +2,7 @@
 
 #include "SPlayerState.h"
 
-
-
-
-void ASPlayerState::AddScore(float ScoreDelta)
+void ASPlayerState::AddScore(const float ScoreDelta)
 {
 	SetScore(GetScore() + ScoreDelta);
 }
