@@ -2,7 +2,6 @@
 
 
 #include "AI/Logic/BTask_Attack.h"
-#include "CoopAIController.h"
 #include "IInputComm.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 
