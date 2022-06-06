@@ -32,8 +32,7 @@ UCoopGameInstance::UCoopGameInstance(const FObjectInitializer & ObjectInitialize
 
 void UCoopGameInstance::Init()
 {
-	IOnlineSubsystem* CoopOnlineSubsystem = IOnlineSubsystem::Get();
-	if(CoopOnlineSubsystem !=nullptr)
+	if(const IOnlineSubsystem* CoopOnlineSubsystem = IOnlineSubsystem::Get(); CoopOnlineSubsystem !=nullptr)
 	{
 		OnlineSessionInterface = CoopOnlineSubsystem->GetSessionInterface();
 		if(OnlineSessionInterface.IsValid())
@@ -63,8 +62,8 @@ void UCoopGameInstance::Host(FString NewServerName)
 	if (OnlineSessionInterface.IsValid()) 
 	{ 
 		DesiredServerName = NewServerName;
-		FNamedOnlineSession* ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
-		if(ExistingSession !=nullptr)
+		if(const FNamedOnlineSession* ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
+			ExistingSession !=nullptr)
 		{
 			OnlineSessionInterface->DestroySession(NAME_GameSession);
 		}
@@ -88,8 +87,7 @@ void UCoopGameInstance::Join(uint32 NewIndex)
 
 void UCoopGameInstance::LoadMainMenu()
 {
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (PlayerController)
+	if (APlayerController* PlayerController = GetFirstLocalPlayerController())
 	{
 		PlayerController->ClientTravel("/Game/Map/M_MainMenu", ETravelType::TRAVEL_Absolute);
 	}
@@ -97,8 +95,7 @@ void UCoopGameInstance::LoadMainMenu()
 
 void UCoopGameInstance::QuitGame()
 {
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if(PlayerController)
+	if(APlayerController* PlayerController = GetFirstLocalPlayerController())
 	{
 		UEngine* Engine = GetEngine();
 		if (!ensure(Engine != nullptr)) return;
@@ -162,8 +159,7 @@ void UCoopGameInstance::OnFindSessionsComplete(const bool Success)
 			LocalData.MaxNumPlayers = Result.Session.SessionSettings.NumPublicConnections;
 			LocalData.CurrentPlayers = (LocalData.MaxNumPlayers - Result.Session.NumOpenPublicConnections);
 
-			FString ServerName;
-			if (Result.Session.SessionSettings.Get(SERVER_NAME_SETTING_KEY, ServerName))
+			if (FString ServerName; Result.Session.SessionSettings.Get(SERVER_NAME_SETTING_KEY, ServerName))
 			{
 				LocalData.ServerName = ServerName;
 			}
@@ -181,8 +177,7 @@ void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoi
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
 
-	FString RemoteSession;
-	if (!OnlineSessionInterface->GetResolvedConnectString(NewSessionName, RemoteSession))
+	if (FString RemoteSession; !OnlineSessionInterface->GetResolvedConnectString(NewSessionName, RemoteSession))
 	{
 		UE_LOG(LogTemp, Error, TEXT("No Valid Remote Session"));
 		return;
@@ -207,9 +202,8 @@ void UCoopGameInstance::OnCreateSessionComplete(FName NewSessionName, const bool
 	{
 		MainMenu->Teardown();
 	}
-	UWorld* World = GetWorld();
 	// TODO : variable para cambiar de mapas segun session. 
-	World->ServerTravel("/Game/Map/M_Lobby?listen");
+	GetWorld()->ServerTravel("/Game/Map/M_Lobby?listen");
 }
 
 void UCoopGameInstance::OnDestroySessionComplete(FName NewSessionName, const bool Success)
