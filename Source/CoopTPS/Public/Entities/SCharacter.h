@@ -54,17 +54,16 @@ protected:
 	//class ASProjectile* Grenade = nullptr;
 	bool bIsGranadaMode = false;
 	float LaunchDistance = 100.0f;
-	FVector InitialVelocity;
+	//FVector InitialVelocity;
 	FVector InitialLocalVelocity;
 	FVector StartLocation;
-	FVector ThrowRotateVector;
+	//FVector ThrowRotateVector;
 	FVector SpawnScale = FVector(1.0f);
 	FRotator SpawnRotation;
 	FVector Point1;
 	FVector Point2;
 	TArray<UParticleSystemComponent*>BeamArray;
-	float PathLifeTime = 5.0f;
-	float TimeInterval = 0.05;
+	const float TimeInterval = 0.05;
 	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
 	UPROPERTY()
 		UMaterialInterface* CurrentBeamEndPointMaterial;

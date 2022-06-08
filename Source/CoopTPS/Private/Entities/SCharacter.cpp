@@ -244,12 +244,10 @@ for(auto Beam = BeamArray.CreateIterator(); Beam; ++Beam)
 
 void ASCharacter::AddNewBeam(FVector const NewPoint1, FVector const NewPoint2)
 {
-	
 	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, NewPoint1, FRotator::ZeroRotator, true);
 	BeamArray.Add(BeamComp);
-
-		BeamComp->SetBeamSourcePoint(0, NewPoint1, 0);
-		BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
+	BeamComp->SetBeamSourcePoint(0, NewPoint1, 0);
+	BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
 }
 
 void ASCharacter::GetSegmentAtTime(const FVector LocalStartLocation, const FVector LocalInitialVelocity,
@@ -265,14 +263,14 @@ void ASCharacter::DrawingTrajectory()
 	if (GranadaClass)
 	{
 		ClearBeam();
-
+		constexpr float PathLifeTime = 5.0f;
 		SpawnRotation = GetControlRotation();
 		FVector GrenadeOffset = FVector(100.0f, 0.0f, -10.0f);
-		ThrowRotateVector = GetControlRotation().RotateVector(GrenadeOffset);
+		FVector ThrowRotateVector = GetControlRotation().RotateVector(GrenadeOffset);
 		StartLocation = GetMesh()->GetSocketLocation(GrenadeSocketName) + ThrowRotateVector;
 		const FTransform TotalPosition(SpawnRotation, ThrowRotateVector, SpawnScale);
 
-		InitialVelocity = UKismetMathLibrary::TransformDirection(TotalPosition, InitialLocalVelocity);
+		FVector InitialVelocity = UKismetMathLibrary::TransformDirection(TotalPosition, InitialLocalVelocity);
 		uint8 LastIndex = floor(PathLifeTime / TimeInterval); 
 		for (uint8 i = 0; i <= LastIndex; i++)
 		{

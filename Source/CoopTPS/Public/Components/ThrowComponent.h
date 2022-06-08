@@ -9,8 +9,7 @@ USTRUCT(BlueprintType)
 struct FThrowData 
 {
 	GENERATED_USTRUCT_BODY()
-		uint8 LaunchDistance = 100;
-
+		uint8 LaunchDistance{100};
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -31,7 +30,13 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-
+	const float TimeInterval = 0.05;
+	FVector InitialLocalVelocity;
+	FVector StartLocation;
+	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
+		UParticleSystem* BeamFX;
+	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
+		UParticleSystemComponent* BeamComponent;
 	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
 	TArray<UParticleSystemComponent*>BeamArray;
 
@@ -41,6 +46,6 @@ private:
 	void Throw();
 	void ClearBeam();
 	void AddNewBeam(FVector newPoint1, FVector newPoint2);
-	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity, float Time1, float Time2, FVector& OutPoint1, FVector& OutPoint2);
+	void GetSegmentAtTime(FVector LocStartLocation, FVector LocInitialVelocity, FVector Gravity, float Time1, float Time2, FVector& OutPoint1, FVector& OutPoint2);
 	void DrawingTrajectory();		
 };

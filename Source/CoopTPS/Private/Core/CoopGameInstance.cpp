@@ -142,7 +142,6 @@ void UCoopGameInstance::LoadPauseMenu()
 }
 
 // ONLINE SUBSYSTEM CALLBACKS!
-
 void UCoopGameInstance::OnFindSessionsComplete(const bool Success)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Finish Session Found"));
