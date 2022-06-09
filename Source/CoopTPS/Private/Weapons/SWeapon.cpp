@@ -4,21 +4,17 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
-#include "Components/MeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
-#include "Components/AudioComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // console debuging
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"),DebugWeaponDrawing,TEXT("Draw debug lines for weapon fire"),ECVF_Cheat);
-
 
 // Sets default values
 ASWeapon::ASWeapon()
@@ -45,12 +41,11 @@ void ASWeapon::Fire()
 	{
 		ServerFire();
 	}
-	AActor* MyOwner = GetOwner();
-	if (MyOwner && CurrentAmmo > 0)
+	if (GetOwner() && CurrentAmmo > 0)
 	{
 		FVector EyeLocation;
 		FRotator EyeRotation;
-		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
@@ -60,7 +55,7 @@ void ASWeapon::Fire()
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(MyOwner);
+		QueryParams.AddIgnoredActor(GetOwner());
 		QueryParams.AddIgnoredActor(this);
 		QueryParams.bTraceComplex = true;
 		QueryParams.bReturnPhysicalMaterial = true;
@@ -69,8 +64,7 @@ void ASWeapon::Fire()
 		FVector TracerEndPoint = TraceEnd;
 		EPhysicalSurface SurfaceType = SurfaceType_Default;
 		FHitResult Hit;
-
-		// Trace VFX
+		
 		PlayVFX(TracerEndPoint);
 		//SFX
 		if (FireSFX)
@@ -89,7 +83,8 @@ void ASWeapon::Fire()
 			{
 				ActualDamage *= 4.0f;
 			}
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit,
+										GetOwner()->GetInstigatorController(), GetOwner(), DamageType);
 			
 			PlayImpactFX(SurfaceType,Hit.ImpactPoint);
 			TracerEndPoint = Hit.ImpactPoint;
@@ -106,11 +101,14 @@ void ASWeapon::Fire()
 		}
 		
 	}
+	else
+	{
+		StopFire();
+		StartReloading();
+	}
 	LastFireTime = GetWorld()->TimeSeconds;
 	CurrentAmmo -= 1;
 }
-
-/*ACTIONS*/
 
 void ASWeapon::Reload()
 {
@@ -120,35 +118,32 @@ void ASWeapon::Reload()
 
 void ASWeapon::StartReloading()
 {
-	if (CurrentAmmo < WeaponConfig.MaxAmmo) 
+	if (CurrentAmmo < WeaponConfig.MaxAmmo && !bIsReloading) 
 	{
 	bIsReloading = true;
-	GetWorldTimerManager().SetTimer(TimeHandle_Reloading, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
+	GetWorldTimerManager().SetTimer(ReloadingTH, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
 	}
 }
 
 void ASWeapon::StartFire()
 {
-	if (CurrentAmmo>1)
+	if (CurrentAmmo>1 && !GetWorldTimerManager().IsTimerActive(TimeBetweenShotsTH))
 	{
-		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); // busca un numero entre lo primero y cero , nunca dara negativo.
-		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true,FireDelay);
+		// busca un numero entre lo primero y cero , nunca dara negativo.
+		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); 
+		GetWorldTimerManager().SetTimer(TimeBetweenShotsTH, this, &ASWeapon::Fire,
+														TimeBetweenShots, true,FireDelay);
 	}
-	else
+	else if(!bIsReloading)
 	{
-		if(!bIsReloading)
-		{
-			StartReloading();
-		}		
+		StartReloading();
 	}
 }
 
 void ASWeapon::StopFire()
 {
-	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
+	GetWorldTimerManager().ClearTimer(TimeBetweenShotsTH);
 }
-
-/*Play Impact FX*/
 
 void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const
 {
@@ -173,8 +168,6 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	}
 }
 
-/*Play Trace VFX*/
-
 void ASWeapon::PlayVFX(const FVector TraceEnd)
 {
 	if (MuzzleFX)
@@ -182,8 +175,7 @@ void ASWeapon::PlayVFX(const FVector TraceEnd)
 		UGameplayStatics::SpawnEmitterAttached(MuzzleFX, MeshComp, WeaponConfig.MuzzleSocketName);
 	}
 	const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
-	UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerFX, MuzzleLocation);
-	if (TracerComp)
+	if (UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerFX, MuzzleLocation))
 	{
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 	}

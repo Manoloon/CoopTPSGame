@@ -62,7 +62,6 @@ void ASTrackerBall::BeginPlay()
 	
 	if(HasAuthority())
 	{
-		// Initial location
 		NextPathPoint = GetNextPathPoint();
 	}
 	// health
@@ -75,7 +74,7 @@ void ASTrackerBall::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (HasAuthority() && !bExploded)
 	{
-		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
+		const float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 		if (GetVelocity().Size() > 10)
 		{
 			AudioComp->SetSound(RollSFX);
@@ -111,12 +110,11 @@ FVector ASTrackerBall::GetNextPathPoint()
 		if (TestPawn  == nullptr || USHealthComponent::IsFriendly(TestPawn, this))
 		{
 			continue;
-			UE_LOG(LogTemp, Warning,TEXT("no tengo objetivo"));
 		}
-		USHealthComponent*  TestPawnHealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+		const USHealthComponent*  TestPawnHealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
 		if(TestPawnHealthComp && TestPawnHealthComp->GetHealth()>0.0)
 		{
-			float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
+			const float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
 			if(Distance < NearestTargetDistance)
 			{
 				BestTarget = TestPawn;
@@ -130,8 +128,8 @@ FVector ASTrackerBall::GetNextPathPoint()
 		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
 		if (!NavPath) { return GetActorLocation(); }
 		// Con esto busca desatorarse si asi fuera recalculando el path.
-		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
-		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBall::RefreshPath, 5.0f, false);
+		GetWorldTimerManager().ClearTimer(RefreshPathTH);
+		GetWorldTimerManager().SetTimer(RefreshPathTH, this, &ASTrackerBall::RefreshPath, 5.0f, false);
 		
 		if (NavPath && NavPath->PathPoints.Num() > 1)
 		{
@@ -148,16 +146,18 @@ void ASTrackerBall::SelfDamage()
 
 void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-// 	if(MeshMaterialInstance == nullptr)
-// 	{
-// 	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
-// 	}
-// 	if(MeshMaterialInstance)
-// 	{
-// 	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
-// 	}
+	/*
+ 	if(MeshMaterialInstance == nullptr)
+ 	{
+ 	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+ 	}
+ 	if(MeshMaterialInstance)
+ 	{
+ 	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
+ 	}
 	// si hittimer not playing
-	// GetWorldTimerManager().SetTimer(TimerHandle_HitShake, ASTrackerBall::StartHitShake, 0.0f, false);
+	//GetWorldTimerManager().SetTimer(HitShakeTH,this, &ThisClass::StartHitShake, 0.0f, false);
+	*/
 	if(Health <=0.0f)
 	{
 		SelfDestruct();
@@ -168,10 +168,9 @@ void ASTrackerBall::SelfDestruct()
 {
 	if (bExploded) { return; }
 	bExploded = true;
-	const UWorld* World = GetWorld();
 	if(ExplosionFX && ExplosionSFX)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(World, ExplosionFX, GetActorLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
 		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	}	
 	// escondemos el mesh al morir -> y el true es para la propagacion. 
@@ -194,13 +193,10 @@ void ASTrackerBall::SelfDestruct()
 	}
 }
 
-
 void ASTrackerBall::RefreshPath()
 {
 	NextPathPoint = GetNextPathPoint();
 }
-
-
 
 void ASTrackerBall::StartHitShake()
 {
@@ -210,11 +206,11 @@ void ASTrackerBall::StartHitShake()
 	}
 	if (MeshMaterialInstance)
 	{
-		float DamageHit = FMath::FInterpTo(1.0f, 0.0, GetWorld()->TimeSeconds, 1.0f);
+		const float DamageHit = FMath::FInterpTo(1.0f, 0.0, GetWorld()->TimeSeconds, 1.0f);
 		MeshMaterialInstance->SetScalarParameterValue("DamageTaken", DamageHit);
 		if(DamageHit == 0.0f)
 		{
-			GetWorldTimerManager().ClearTimer(TimerHandle_HitShake);
+			GetWorldTimerManager().ClearTimer(HitShakeTH);
 		}
 	}
 }
@@ -225,14 +221,13 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if(!bStartedSelfDestruction)
 	{
-		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
-		if (PlayerPawn && !USHealthComponent::IsFriendly(OtherActor,this))
+		if (!USHealthComponent::IsFriendly(OtherActor,this))
 		{
 			// we overlapped player
 			if (GetLocalRole() == ROLE_Authority)
 			{
 				// set a timer that inflict damage to ourself until we self destruct --- ESTE TIMER se corre cada medio segundo , y aplica el daño de 10 a el mismo.
-				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBall::SelfDamage, SelfDamageInterval, true, 0.0f);
+				GetWorldTimerManager().SetTimer(SelfDamageTH, this, &ASTrackerBall::SelfDamage, SelfDamageInterval, true, 0.0f);
 				bStartedSelfDestruction = true;
 			}			
 			UGameplayStatics::SpawnSoundAttached(FoundTargetSFX, RootComponent);

@@ -56,7 +56,7 @@ void USHealthComponent::Heal(const float HealAmount)
 
 bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 {
-	if(ActorA == nullptr ||ActorB == nullptr)
+	if(ActorA == nullptr || ActorB == nullptr)
 	{
 		return true;
 	}
@@ -65,9 +65,7 @@ bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 		return true;
 	}
 	const USHealthComponent* HealthCompA = Cast<IIHealthyActor>(ActorA)->I_GetHealthComp();
-	//Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
 	const USHealthComponent* HealthCompB = Cast<IIHealthyActor>(ActorB)->I_GetHealthComp();
-		//Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::GetPrivateStaticClass()));
 	return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
@@ -84,6 +82,6 @@ void USHealthComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 
 void USHealthComponent::ONREP_Health(float OldHealth)
 {
-	float Damage = Health - OldHealth;
+	const float Damage = Health - OldHealth;
 	OnHealthChanged.Broadcast(this, Health,Damage, nullptr, nullptr, nullptr);
 }

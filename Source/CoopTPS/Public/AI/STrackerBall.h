@@ -37,8 +37,7 @@ protected:
 		USoundCue* FoundTargetSFX = nullptr;
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 		USoundCue* RollSFX = nullptr;
-
-protected:
+	
 	UPROPERTY(Category = "Settings", EditDefaultsOnly)
 		float ExplosionRadius = 600.0f;
 	UPROPERTY(Category = "Settings", EditDefaultsOnly)
@@ -49,7 +48,7 @@ protected:
 		float MovementForce = 7000.0f;
 	UPROPERTY(Category = "Settings", EditAnywhere,BlueprintReadOnly)
 		float RequireDistanceToTarget = 100.0f;
-	/*UPROPERTY(Category = "Settings", EditDefaultsOnly, BlueprintReadOnly)*/
+	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly)
 		UMaterialInstanceDynamic* MeshMaterialInstance = nullptr;
 
 	FVector NextPathPoint;
@@ -57,9 +56,9 @@ protected:
 	bool bStartedSelfDestruction;
 	float SelfDamageInterval = 0.25;
 
-	FTimerHandle TimerHandle_SelfDamage;
-	FTimerHandle TimerHandle_RefreshPath;
-	FTimerHandle TimerHandle_HitShake;
+	FTimerHandle SelfDamageTH;
+	FTimerHandle RefreshPathTH;
+	FTimerHandle HitShakeTH;
 
 protected:
 	// Called when the game starts or when spawned

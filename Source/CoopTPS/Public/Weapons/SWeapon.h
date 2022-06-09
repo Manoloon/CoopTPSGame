@@ -104,10 +104,10 @@ protected:
 	UPROPERTY()
 		UAudioComponent* WeaponAudioComponent;
 
-	FTimerHandle TimerHandle_TimeBetweenShots;
+	FTimerHandle TimeBetweenShotsTH;
 	float LastFireTime;
 	float TimeBetweenShots;
-	FTimerHandle TimeHandle_Reloading;
+	FTimerHandle ReloadingTH;
 
 	//EPhysicalSurface SurfaceType;
 
