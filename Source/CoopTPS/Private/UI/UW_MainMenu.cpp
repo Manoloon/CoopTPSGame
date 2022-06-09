@@ -22,7 +22,7 @@ UUW_MainMenu::UUW_MainMenu(const FObjectInitializer& ObjectInitializer)
 // inicializa el widget y crea el binding con la funcion hostServer y al menu de join server.
 bool UUW_MainMenu::Initialize()
 {
-	bool Success = Super::Initialize();
+	const bool Success = Super::Initialize();
 	if (!Success) { return false; }
 	if (!ensure(BTN_Host != nullptr)) return false;
 	BTN_Host->OnClicked.AddDynamic(this, &UUW_MainMenu::OpenHostMenu);
@@ -47,7 +47,7 @@ void UUW_MainMenu::HostServer()
 {
 	if (MenuInterface != nullptr)
 	{
-		FString newServerName = NameServerBox->Text.ToString();
+		const FString newServerName = NameServerBox->Text.ToString();
 		MenuInterface->Host(newServerName);
 	}
 
@@ -101,7 +101,7 @@ void UUW_MainMenu::UpdateServerListChildren()
 {
 	for(int32 i=0;i<ServerList->GetChildrenCount();i++)
 	{
-		auto CurrentItem = Cast<UW_ServerListItem>(ServerList->GetChildAt(i));
+		const auto CurrentItem = Cast<UW_ServerListItem>(ServerList->GetChildAt(i));
 		if(CurrentItem !=nullptr)
 		{
 			CurrentItem->bIsSelected = (SelectedIndex.IsSet() && SelectedIndex.GetValue() == i);
