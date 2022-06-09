@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CoopTPSLobbyGameMode.h"
-#include "CoopGameInstance.h"
-#include "SCharacter.h"
-#include "TPSHud.h"
-#include "CoopPlayerController.h"
-#include "SPlayerState.h"
+#include "Core/CoopTPSLobbyGameMode.h"
+#include "Core/CoopGameInstance.h"
+#include "Entities/SCharacter.h"
+#include "Core/TPSHud.h"
+#include "Core/CoopPlayerController.h"
+#include "Core/SPlayerState.h"
 #include "TimerManager.h"
 
 ACoopTPSLobbyGameMode::ACoopTPSLobbyGameMode()
@@ -33,7 +33,7 @@ void ACoopTPSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	++NumOfPlayers;
-	if(NumOfPlayers>=2)
+	if(NumOfPlayers>=MaxNumPlayers)
 	{
 		FTimerHandle StartTravelTH;
 		GetWorldTimerManager().SetTimer(StartTravelTH, this,

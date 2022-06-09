@@ -1,11 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SPowerUp.h"
+#include "Entities/SPowerUp.h"
 #include "TimerManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
-
-
 
 // Sets default values
 ASPowerUp::ASPowerUp()

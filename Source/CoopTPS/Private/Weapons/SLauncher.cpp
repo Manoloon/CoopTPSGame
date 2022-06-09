@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SLauncher.h"
-#include "SProjectile.h"
+#include "Weapons/SLauncher.h"
+#include "Weapons/SProjectile.h"
 #include "Components/SkeletalMeshComponent.h"
 
 void ASLauncher::Fire()

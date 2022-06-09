@@ -2,7 +2,7 @@
 
 
 #include "AI/Logic/BTask_Attack.h"
-#include "IInputComm.h"
+#include "Interfaces/IInputComm.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 
 EBTNodeResult::Type UBTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

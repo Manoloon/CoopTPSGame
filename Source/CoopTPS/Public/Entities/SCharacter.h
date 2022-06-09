@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "IHealthyActor.h"
+#include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
-#include "Interfaces/IHealthyActor.h"
 #include "SCharacter.generated.h"
 
 // USTRUCT()

@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SHealthComponent.h"
+#include "Components/SHealthComponent.h"
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
-#include "SGameMode.h"
+#include "Core/SGameMode.h"
 
 void USHealthComponent::BeginPlay()
 {

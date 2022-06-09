@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ChaosEngineInterface.h"
+//#include "ChaosEngineInterface.h"
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 

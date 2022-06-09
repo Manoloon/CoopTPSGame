@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SProjectile.h"
+#include "Weapons/SProjectile.h"
 #include "LaunchableProjectile.generated.h"
 
 UCLASS()

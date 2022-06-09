@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SPickup.h"
-#include "SPowerUp.h"
-#include "SCharacter.h"
+#include "Entities/SPickup.h"
+#include "Entities/SPowerUp.h"
+#include "Entities/SCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"

@@ -16,7 +16,8 @@ class COOPTPS_API ACoopTPSLobbyGameMode final : public AGameModeBase
 public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
-
+	UPROPERTY(EditAnywhere)
+		uint32 MaxNumPlayers=2;
 protected:
 
 	UPROPERTY(BlueprintReadWrite)

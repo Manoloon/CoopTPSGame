@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ExplosiveBarrel.h"
+#include "Entities/ExplosiveBarrel.h"
 #include "Particles/ParticleSystem.h"
-#include "SHealthComponent.h"
+#include "Components/SHealthComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"

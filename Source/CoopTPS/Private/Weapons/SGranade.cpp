@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SGranade.h"
-#include "SProjectile.h"
+#include "Weapons/SGranade.h"
+#include "Weapons/SProjectile.h"
 #include "Engine/World.h"
 
 	void ASGranade::Fire()

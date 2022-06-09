@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CoopGameInstance.h"
+#include "Core/CoopGameInstance.h"
 #include "Uobject/ConstructorHelpers.h"
 #include "UI/UW_MainMenu.h"
 #include "UI/W_PauseMenu.h"
@@ -227,8 +227,8 @@ void UCoopGameInstance::CreateSession() const
 {
 	FOnlineSessionSettings OnlineSessionSettings;
 	// Si no usamos steam como subsystem , que sea  LAN PARTY
+	UE_LOG(LogTemp,Warning,TEXT("Subsystem : %s"),*IOnlineSubsystem::Get()->GetSubsystemName().ToString());
 	OnlineSessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
-
 	OnlineSessionSettings.NumPublicConnections = 4;
 	OnlineSessionSettings.bShouldAdvertise = true;
 	OnlineSessionSettings.bUsesPresence = true;

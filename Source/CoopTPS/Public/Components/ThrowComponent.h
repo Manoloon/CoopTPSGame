@@ -46,6 +46,6 @@ private:
 	void Throw();
 	void ClearBeam();
 	void AddNewBeam(FVector newPoint1, FVector newPoint2);
-	void GetSegmentAtTime(FVector LocStartLocation, FVector LocInitialVelocity, FVector Gravity, float Time1, float Time2, FVector& OutPoint1, FVector& OutPoint2);
+	void GetSegmentAtTime(FVector LocStartLocation, FVector LocInitialVelocity, FVector LocGravity, float Time1, float Time2, FVector& OutPoint1, FVector& OutPoint2);
 	void DrawingTrajectory();		
 };

@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TPSHud.h"
+#include "Core/TPSHud.h"
 #include "Engine/Canvas.h"
-#include "SWeapon.h"
-#include "SCharacter.h"
-#include "SHealthComponent.h"
+#include "Weapons/SWeapon.h"
+#include "Entities/SCharacter.h"
+#include "Components/SHealthComponent.h"
 
 void ATPSHud::DrawHUD()
 {

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CoopPlayerController.h"
+#include "Core/CoopPlayerController.h"
 #include "Interfaces/IInputComm.h"
 
 void ACoopPlayerController::SetupInputComponent()

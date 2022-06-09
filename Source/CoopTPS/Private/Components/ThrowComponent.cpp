@@ -75,11 +75,11 @@ void UThrowComponent::AddNewBeam(FVector newPoint1, FVector newPoint2)
 	BeamComponent->SetBeamTargetPoint(0,newPoint2,0);
 }
 
-void UThrowComponent::GetSegmentAtTime(const FVector LocStartLocation, const FVector LocInitialVelocity, const FVector Gravity,
+void UThrowComponent::GetSegmentAtTime(const FVector LocStartLocation, const FVector LocInitialVelocity, const FVector LocGravity,
                                        const float Time1, const float Time2, FVector& OutPoint1, FVector& OutPoint2)
 {
-	OutPoint1 = (LocStartLocation + (LocInitialVelocity*Time1) + (Gravity*(Time1*Time1*0.5f)));
-	OutPoint2 = (LocStartLocation + (LocInitialVelocity*Time2) + (Gravity*(Time2*Time2*0.5f)));
+	OutPoint1 = (LocStartLocation + (LocInitialVelocity*Time1) + (LocGravity*(Time1*Time1*0.5f)));
+	OutPoint2 = (LocStartLocation + (LocInitialVelocity*Time2) + (LocGravity*(Time2*Time2*0.5f)));
 }
 
 void UThrowComponent::DrawingTrajectory()

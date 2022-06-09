@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SGameMode.h"
-#include "SCharacter.h"
-#include "CoopPlayerController.h"
-#include "TPSHud.h"
-#include "SHealthComponent.h"
+#include "Core/SGameMode.h"
+#include "Entities/SCharacter.h"
+#include "Core/CoopPlayerController.h"
+#include "Core/TPSHud.h"
+#include "Components/SHealthComponent.h"
 #include "Engine/World.h" // FConstIterators
-#include "SGameState.h"
+#include "Core/SGameState.h"
 #include "EngineUtils.h"
-#include "SPlayerState.h"
+#include "Core/SPlayerState.h"
 #include "TimerManager.h"
 
 
