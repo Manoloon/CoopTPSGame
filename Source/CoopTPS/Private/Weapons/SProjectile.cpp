@@ -6,11 +6,8 @@
 #include "TimerManager.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-
-// Sets default values
 ASProjectile::ASProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	ProjectileComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
@@ -26,13 +23,12 @@ ASProjectile::ASProjectile()
 	RootComponent = MeshComp;
 }
 
-// Called when the game starts or when spawned
 void ASProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	ProjectileComp->SetVelocityInLocalSpace(InitialLocalVelocity);
 
-	GetWorldTimerManager().SetTimer(TimerHandler_Explode, this, &ASProjectile::Explode, Data.ExplodeDelay, false, Data.ExplodeDelay);
+	GetWorldTimerManager().SetTimer(ExplodeTH, this, &ASProjectile::Explode, Data.ExplodeDelay, false, Data.ExplodeDelay);
 }
 
 
@@ -51,12 +47,11 @@ void ASProjectile::Explode()
 		TArray<AActor*> IgnoredActors;
 		// TODO : add team players
 		IgnoredActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(this, Data.MaxDamage, GetActorLocation(), Data.DamageRadius,
-			nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, Data.MaxDamage, GetActorLocation(),
+			Data.DamageRadius,nullptr, IgnoredActors, this, GetInstigatorController(),
+																								true);
 	}
 }
-
-//network
 
 void ASProjectile::ServerExplode_Implementation()
 {

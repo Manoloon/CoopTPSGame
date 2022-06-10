@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "IHealthyActor.h"
+#include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Pawn.h"
 #include "STrackerBall.generated.h"
 

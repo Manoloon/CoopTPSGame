@@ -9,6 +9,5 @@
 UCLASS()
 class COOPTPS_API ALaunchableProjectile : public ASProjectile
 {
-	GENERATED_BODY()
-	
+	GENERATED_BODY()	
 };

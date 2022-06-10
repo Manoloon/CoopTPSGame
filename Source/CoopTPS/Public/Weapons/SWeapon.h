@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 //#include "ChaosEngineInterface.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
+#include "ST_WeaponData.h"
 #include "SWeapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -13,46 +15,6 @@ class UParticleSystem;
 class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
-
-USTRUCT(BlueprintType)
-struct FWeaponData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = 8, ClampMax = 30))
-	int32 MaxAmmo;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
-	float BulletSpread;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float BaseDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float FireRate;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float ReloadTime;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	FName MuzzleSocketName;
-
-	FWeaponData()
-	{
-		MaxAmmo = 30;
-		BulletSpread = 2.0f;
-		BaseDamage = 20.0f;
-		FireRate = 600;
-		ReloadTime = 3.0f;
-		MuzzleSocketName = "MuzzleSocket";
-	}
-};
-
-// Contains one Hitscan of the weapon Single trace.
-USTRUCT()
-struct FHitScanTrace 
-{
-GENERATED_BODY()
-
-	UPROPERTY()
-	TEnumAsByte<EPhysicalSurface> SurfaceType;
-	UPROPERTY()
-	FVector_NetQuantize TraceTo;
-};
 
 UCLASS()
 class COOPTPS_API ASWeapon : public AActor
@@ -71,37 +33,22 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponData WeaponConfig;
+	UPROPERTY(EditDefaultsOnly,Category = "Settings")
+		FWeaponFXData WeaponFXConfig;
+	
 	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Weapon")
-		const TSubclassOf<UDamageType> DamageType;
+	UPROPERTY(VisibleAnywhere,Category = "Component")
+		USphereComponent* SphereComp;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
 		int32 CurrentAmmo=30;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
-	// VFX
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem* MuzzleFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem* DefaultImpactFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem* FleshImpactFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem* TracerFX;	
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		TSubclassOf<UCameraShakeBase>FireCamShake;
-
-	// SFX
-	UPROPERTY(EditDefaultsOnly,Category = "Weapon")
-		USoundCue* ReloadSFX;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		USoundCue* NoAmmoSFX;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		USoundCue* FireSFX;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 		UAudioComponent* WeaponAudioComponent;
 
 	FTimerHandle TimeBetweenShotsTH;
@@ -124,4 +71,20 @@ protected:
 
 	UFUNCTION()
 		void ONREP_HitScanTrace();
+
+	UFUNCTION()
+	void OnSphereOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnSphereEndOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex);
 };

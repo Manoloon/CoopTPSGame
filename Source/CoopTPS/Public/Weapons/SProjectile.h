@@ -49,10 +49,10 @@ public:
 	// Sets default values for this actor's properties
 	ASProjectile();
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Default Settings")
-	UProjectileMovementComponent* ProjectileComp;
+		UProjectileMovementComponent* ProjectileComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Default Settings")
-		class UStaticMeshComponent* MeshComp;
+		UStaticMeshComponent* MeshComp;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Default Settings")
 		FVector InitialLocalVelocity;
@@ -62,12 +62,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Default DATA")
 		FProjectileData Data;
 
-	FTimerHandle TimerHandler_Explode;
+	FTimerHandle ExplodeTH;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerExplode();
 
-protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 };

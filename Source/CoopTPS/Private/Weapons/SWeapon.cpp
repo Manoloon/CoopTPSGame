@@ -22,6 +22,8 @@ ASWeapon::ASWeapon()
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
 	bReplicates = true;
+	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	SphereComp->SetupAttachment(MeshComp);
 
 	/* hace que el update de la red sea mas rapido, NO LAG*/
 	NetUpdateFrequency = 66.0f;
@@ -31,12 +33,26 @@ ASWeapon::ASWeapon()
 void ASWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	TimeBetweenShots = 60/ WeaponConfig.FireRate; // 10 balas por segundo;
+	if(HasAuthority())
+	{
+		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		SphereComp->OnComponentBeginOverlap.AddDynamic(this,&ASWeapon::OnSphereOverlap);
+		SphereComp->OnComponentEndOverlap.AddDynamic(this,&ASWeapon::OnSphereEndOverlap);
+	}
+	if(WeaponConfig.FireRate >0)
+	{
+		TimeBetweenShots = 60/ WeaponConfig.FireRate; // 10 balas por segundo;
+	}
+	else
+	{
+		UE_LOG(LogTemp,Error,TEXT("FireRate is less or equal To ZERO"));
+	}
 }
 
 void ASWeapon::Fire()
 {
-	// DE ESTA MANERA SOLO Corre todo el FIRE si es ROLE_AUTHORITY
+	// DE ESTA MANERA SOLO Corre FIRE si es ROLE_AUTHORITY
 	if(GetLocalRole() < ROLE_Authority)
 	{
 		ServerFire();
@@ -67,9 +83,9 @@ void ASWeapon::Fire()
 		
 		PlayVFX(TracerEndPoint);
 		//SFX
-		if (FireSFX)
+		if (WeaponFXConfig.FireSFX)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, EyeLocation);
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX, EyeLocation);
 		}
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
@@ -84,7 +100,7 @@ void ASWeapon::Fire()
 				ActualDamage *= 4.0f;
 			}
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit,
-										GetOwner()->GetInstigatorController(), GetOwner(), DamageType);
+										GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
 			
 			PlayImpactFX(SurfaceType,Hit.ImpactPoint);
 			TracerEndPoint = Hit.ImpactPoint;
@@ -147,16 +163,16 @@ void ASWeapon::StopFire()
 
 void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const
 {
-	UParticleSystem* SelectedFX = nullptr;
+	UParticleSystem* SelectedFX;
 	switch (NewSurfaceType)
 	{
 	case SURFACE_FLESHDEFAULT: //flesh default
 	case SURFACE_FLESHVULNERABLE: // flesh headshot
-		SelectedFX = FleshImpactFX;
+		SelectedFX = WeaponFXConfig.FleshImpactFX;
 		break;
 
 	default:
-		SelectedFX = DefaultImpactFX;
+		SelectedFX = WeaponFXConfig.DefaultImpactFX;
 		break;
 	}
 	if (SelectedFX)
@@ -170,12 +186,13 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 
 void ASWeapon::PlayVFX(const FVector TraceEnd)
 {
-	if (MuzzleFX)
+	if (WeaponFXConfig.MuzzleFX)
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzleFX, MeshComp, WeaponConfig.MuzzleSocketName);
+		UGameplayStatics::SpawnEmitterAttached(WeaponFXConfig.MuzzleFX, MeshComp, WeaponConfig.MuzzleSocketName);
 	}
 	const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
-	if (UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerFX, MuzzleLocation))
+	if (UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+																			WeaponFXConfig.TracerFX, MuzzleLocation))
 	{
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 	}
@@ -184,7 +201,7 @@ void ASWeapon::PlayVFX(const FVector TraceEnd)
 	{
 		if(APlayerController* PC = Cast<APlayerController>(MyOwner->GetController()))
 		{
-			PC->ClientStartCameraShake(FireCamShake);
+			PC->ClientStartCameraShake(WeaponFXConfig.FireCamShake);
 		}
 	}
 }
@@ -204,6 +221,20 @@ void ASWeapon::ONREP_HitScanTrace()
 	//Play cosmetic FX
 	PlayVFX(HitScanTrace.TraceTo);
 	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+
+void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// show widget to the player whos overlapping,
+	// OtherActor->ShowWidget(this) -> this function will show the proper widget
+	//only for the player who is overlapping.
+}
+
+void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	// OtherActor->ShowWidget(null)
 }
 
 void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

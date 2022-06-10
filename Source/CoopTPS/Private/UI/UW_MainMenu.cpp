@@ -19,7 +19,6 @@ UUW_MainMenu::UUW_MainMenu(const FObjectInitializer& ObjectInitializer)
 	}
 }
 
-// inicializa el widget y crea el binding con la funcion hostServer y al menu de join server.
 bool UUW_MainMenu::Initialize()
 {
 	const bool Success = Super::Initialize();
