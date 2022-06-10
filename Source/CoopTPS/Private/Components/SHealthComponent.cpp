@@ -32,7 +32,8 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
-	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
+	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
+																					DamageCauser);
 	bOwnerIsDead = Health <= 0.0f;
 
 	if (bOwnerIsDead)
@@ -70,18 +71,16 @@ bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 }
 
 /*NETWORKING*/
-
-// networking
 void USHealthComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// esto hace que se replique dicha variable a todos nuestros clientes.
 	DOREPLIFETIME(USHealthComponent, Health);
 }
 
 void USHealthComponent::ONREP_Health(float OldHealth)
 {
 	const float Damage = Health - OldHealth;
-	OnHealthChanged.Broadcast(this, Health,Damage, nullptr, nullptr, nullptr);
+	OnHealthChanged.Broadcast(this, Health,Damage, nullptr,
+														nullptr, nullptr);
 }

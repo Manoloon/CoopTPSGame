@@ -128,6 +128,7 @@ FVector ASTrackerBall::GetNextPathPoint()
 		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
 		if (!NavPath) { return GetActorLocation(); }
 		// Con esto busca desatorarse si asi fuera recalculando el path.
+		FTimerHandle RefreshPathTH;
 		GetWorldTimerManager().ClearTimer(RefreshPathTH);
 		GetWorldTimerManager().SetTimer(RefreshPathTH, this, &ASTrackerBall::RefreshPath, 5.0f, false);
 		
@@ -226,6 +227,7 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 			// we overlapped player
 			if (GetLocalRole() == ROLE_Authority)
 			{
+				FTimerHandle SelfDamageTH;
 				// set a timer that inflict damage to ourself until we self destruct --- ESTE TIMER se corre cada medio segundo , y aplica el daño de 10 a el mismo.
 				GetWorldTimerManager().SetTimer(SelfDamageTH, this, &ASTrackerBall::SelfDamage, SelfDamageInterval, true, 0.0f);
 				bStartedSelfDestruction = true;
@@ -233,4 +235,9 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 			UGameplayStatics::SpawnSoundAttached(FoundTargetSFX, RootComponent);
 		}		
 	}	
+}
+
+USHealthComponent* ASTrackerBall::I_GetHealthComp() const
+{
+	return HealthComp;
 }

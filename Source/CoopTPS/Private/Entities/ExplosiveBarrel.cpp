@@ -36,7 +36,7 @@ AExplosiveBarrel::AExplosiveBarrel()
 
 USHealthComponent* AExplosiveBarrel::I_GetHealthComp() const
 {
-	return  HealthComp;
+	return HealthComp;
 }
 
 void AExplosiveBarrel::PostInitializeComponents()

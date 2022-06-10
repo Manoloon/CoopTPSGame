@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "IHealthyActor.h"
 #include "GameFramework/Pawn.h"
 #include "STrackerBall.generated.h"
 
@@ -11,8 +12,8 @@ class USphereComponent;
 class USoundCue;
 class UAudioComponent;
 
-UCLASS()
-class COOPTPS_API ASTrackerBall : public APawn
+UCLASS(Abstract)
+class COOPTPS_API ASTrackerBall : public APawn, public IIHealthyActor
 {
 	GENERATED_BODY()
 
@@ -56,15 +57,11 @@ protected:
 	bool bStartedSelfDestruction;
 	float SelfDamageInterval = 0.25;
 
-	FTimerHandle SelfDamageTH;
-	FTimerHandle RefreshPathTH;
 	FTimerHandle HitShakeTH;
 
-protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector GetNextPathPoint();
-
 
 	void SelfDamage();
 
@@ -82,4 +79,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	virtual USHealthComponent* I_GetHealthComp() const override; 
 };
