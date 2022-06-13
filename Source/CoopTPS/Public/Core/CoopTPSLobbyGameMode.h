@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
 #include "CoopTPSLobbyGameMode.generated.h"
 
 UCLASS()
-class COOPTPS_API ACoopTPSLobbyGameMode final : public AGameModeBase
+class COOPTPS_API ACoopTPSLobbyGameMode final : public AGameMode
 {
 	GENERATED_BODY()
 

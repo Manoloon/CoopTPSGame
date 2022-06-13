@@ -36,8 +36,11 @@ void ACoopTPSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if(NumOfPlayers>=MaxNumPlayers)
 	{
 		FTimerHandle StartTravelTH;
-		GetWorldTimerManager().SetTimer(StartTravelTH, this,
-			&ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
+		if(!GetWorldTimerManager().IsTimerActive(StartTravelTH))
+		{
+			GetWorldTimerManager().SetTimer(StartTravelTH, this,
+				&ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
+		}
 	}
 }
 
@@ -53,10 +56,12 @@ void ACoopTPSLobbyGameMode::TravelToMap()
 	{
 		GameInstance->StartSession();
 	}
-	if(GetWorld()!= nullptr)
+	UWorld* World = GetWorld();
+	if(World!= nullptr)
 	{
 		bUseSeamlessTravel = true;
-		GetWorld()->ServerTravel("/Game/Map/M_Level?listen");
+		UE_LOG(LogTemp, Warning, TEXT("OnTravelToMap"));
+		World->ServerTravel(FString("/Game/Map/M_Level?listen"));
 	}
 }
 

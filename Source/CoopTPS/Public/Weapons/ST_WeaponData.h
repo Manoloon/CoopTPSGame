@@ -37,6 +37,18 @@ struct FWeaponFXData
 	USoundCue* NoAmmoSFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	USoundCue* FireSFX;
+
+	FWeaponFXData()
+	{
+		MuzzleFX=nullptr;
+		DefaultImpactFX=nullptr;
+		FleshImpactFX=nullptr;
+		TracerFX=nullptr;
+		FireCamShake=nullptr;
+		ReloadSFX=nullptr;
+		NoAmmoSFX=nullptr;
+		FireSFX=nullptr;
+	}
 };
 
 USTRUCT(BlueprintType)

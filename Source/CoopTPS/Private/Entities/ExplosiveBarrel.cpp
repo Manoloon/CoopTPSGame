@@ -12,11 +12,12 @@
 
 // debug
 static int32 DebugBarrelExp = 0;
+/*
 FAutoConsoleVariableRef CVARDebugBarrelExp(
 	TEXT("Coop.DebugBarrelExp"),
 	DebugBarrelExp,
 	TEXT("draw debug lines for Explosion Barrel"),
-	ECVF_Cheat);
+	ECVF_Cheat);*/
 
 AExplosiveBarrel::AExplosiveBarrel()
 {

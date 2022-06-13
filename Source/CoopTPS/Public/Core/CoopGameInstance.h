@@ -24,6 +24,8 @@ public:
 	UCoopGameInstance(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Init() override;
+	virtual void Shutdown() override;
+	virtual void StartGameInstance() override;
 	UFUNCTION()
 		virtual void Host(FString NewServerName) override;
 	UFUNCTION()

@@ -18,13 +18,15 @@
 #include "Engine/World.h"
 
 // debug
+
 static int32 DebugTrackballDraw = 0;
+/*
 FAutoConsoleVariableRef CVARDebugtrackballDraw(
 	TEXT("Coop.DebugTrackball"),
 	DebugTrackballDraw,
 	TEXT("draw debug lines for trackball"),
 	ECVF_Cheat);
-
+*/
 
 // Sets default values
 ASTrackerBall::ASTrackerBall()

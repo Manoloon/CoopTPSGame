@@ -35,7 +35,7 @@ void ACoopPlayerController::SetupInputComponent()
 void ACoopPlayerController::OnPossess(APawn* APawn)
 {
 	Super::OnPossess(APawn);
-	if(APawn->Implements<UIInputComm>())
+	if(GetPawn() && APawn->Implements<UIInputComm>())
 	{
 		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
@@ -43,7 +43,7 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 
 void ACoopPlayerController::StartRun()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StartRun();
 	}
@@ -51,76 +51,111 @@ void ACoopPlayerController::StartRun()
 
 void ACoopPlayerController::StopRun()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StopRun();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::MoveForward(float Value)
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_MoveForward(Value);
 	}
 	else
 	{
-		UE_LOG(LogTemp,Warning,TEXT("fail!"));
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
 		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::MoveRight(float Value)
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_MoveRight(Value);
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::TurnRate(float Value)
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_TurnRate(Value);
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::LookUpRate(float Value)
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_LookUpRate(Value);
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StartAds()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StartADS();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StopAds()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StopADS();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StartCrouch()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StartCrouch();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StopCrouch()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StopCrouch();
 	}
@@ -128,31 +163,46 @@ void ACoopPlayerController::StopCrouch()
 
 void ACoopPlayerController::StartFiring()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StartFire();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StopFiring()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StopFire();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::Reload()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_Reload();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::ChangeWeapon()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_ChangeWeapon();
 	}
@@ -160,24 +210,39 @@ void ACoopPlayerController::ChangeWeapon()
 
 void ACoopPlayerController::StartThrow()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StartThrow();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::StopThrow()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_StopThrow();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
 
 void ACoopPlayerController::Jump()
 {
-	if(PawnInterface)
+	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_Jump();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("fail to get my pawn!"));
+		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }

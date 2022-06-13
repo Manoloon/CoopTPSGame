@@ -32,6 +32,7 @@ UCoopGameInstance::UCoopGameInstance(const FObjectInitializer & ObjectInitialize
 
 void UCoopGameInstance::Init()
 {
+	Super::Init();
 	if(const IOnlineSubsystem* CoopOnlineSubsystem = IOnlineSubsystem::Get(); CoopOnlineSubsystem !=nullptr)
 	{
 		OnlineSessionInterface = CoopOnlineSubsystem->GetSessionInterface();
@@ -55,6 +56,16 @@ void UCoopGameInstance::Init()
 	{
 		GEngine->OnNetworkFailure().AddUObject(this, &UCoopGameInstance::OnNetworkFailure);
 	}
+}
+
+void UCoopGameInstance::Shutdown()
+{
+	Super::Shutdown();
+}
+
+void UCoopGameInstance::StartGameInstance()
+{
+	Super::StartGameInstance();
 }
 
 void UCoopGameInstance::Host(FString NewServerName)
@@ -185,6 +196,7 @@ void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoi
 	{
 		if (APlayerController* PlayerController = GetFirstLocalPlayerController(); PlayerController != nullptr)
 		{
+			UE_LOG(LogTemp, Error, TEXT("OnJoinSesionComplete"));
 			PlayerController->ClientTravel(RemoteSession, ETravelType::TRAVEL_Absolute);
 		}
 	}
@@ -201,8 +213,9 @@ void UCoopGameInstance::OnCreateSessionComplete(FName NewSessionName, const bool
 	{
 		MainMenu->Teardown();
 	}
-	// TODO : variable para cambiar de mapas segun session. 
-	GetWorld()->ServerTravel("/Game/Map/M_Lobby?listen");
+	// TODO : variable para cambiar de mapas segun session.
+	UE_LOG(LogTemp, Error, TEXT("OnCreateSesionComplete"));
+	GetWorld()->ServerTravel(FString("/Game/Map/M_Lobby?listen"));
 }
 
 void UCoopGameInstance::OnDestroySessionComplete(FName NewSessionName, const bool Success)
@@ -220,9 +233,6 @@ void UCoopGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, E
 }
 
 //////////////// END CALLBACKS
-
-
-
 void UCoopGameInstance::CreateSession() const
 {
 	FOnlineSessionSettings OnlineSessionSettings;
@@ -230,9 +240,17 @@ void UCoopGameInstance::CreateSession() const
 	UE_LOG(LogTemp,Warning,TEXT("Subsystem : %s"),*IOnlineSubsystem::Get()->GetSubsystemName().ToString());
 	OnlineSessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
 	OnlineSessionSettings.NumPublicConnections = 4;
+	
+	OnlineSessionSettings.bAllowJoinInProgress = true;
+	OnlineSessionSettings.bAllowJoinViaPresence = true;
+	
 	OnlineSessionSettings.bShouldAdvertise = true;
 	OnlineSessionSettings.bUsesPresence = true;
 	OnlineSessionSettings.Set(SERVER_NAME_SETTING_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
+	OnlineSessionSettings.BuildUniqueId =1;
+	OnlineSessionSettings.bUseLobbiesIfAvailable = true;
+
 	OnlineSessionInterface->CreateSession(0, SESSION_NAME, OnlineSessionSettings);
 }
 

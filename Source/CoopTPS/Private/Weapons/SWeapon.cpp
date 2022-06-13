@@ -14,8 +14,10 @@
 
 // console debuging
 static int32 DebugWeaponDrawing = 0;
-FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"),DebugWeaponDrawing,TEXT("Draw debug lines for weapon fire"),ECVF_Cheat);
-
+/*
+FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"),
+DebugWeaponDrawing,TEXT("Draw debug lines for weapon fire"),ECVF_Cheat);
+*/
 // Sets default values
 ASWeapon::ASWeapon()
 {
