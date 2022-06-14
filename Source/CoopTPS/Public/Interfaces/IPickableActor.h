@@ -12,5 +12,5 @@ class IIPickableActor
 {
 	GENERATED_BODY()
 public:
-   virtual void I_ShowWidget() const=0;
+   //virtual void I_ShowWidget() const=0;
 };

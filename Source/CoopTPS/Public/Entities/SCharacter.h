@@ -6,6 +6,7 @@
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
+#include "Components/WidgetComponent.h"
 #include "SCharacter.generated.h"
 
 // USTRUCT()
@@ -38,6 +39,8 @@ protected:
 		UDecalComponent* BeamEndPointDecal;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HealthComp")
 		class USHealthComponent* HealthComp;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+			UWidgetComponent* InfoWidgetComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 		bool bDied = false;
 	
@@ -84,7 +87,7 @@ public:
 		ASWeapon* PrimaryWeapon = nullptr;
 	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 		ASWeapon* SecondaryWeapon = nullptr;
-
+	
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
@@ -103,6 +106,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 		float ZoomedFOV = 65.0f;
 
+	UPROPERTY(EditAnywhere)
+		bool bShowRole=true;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

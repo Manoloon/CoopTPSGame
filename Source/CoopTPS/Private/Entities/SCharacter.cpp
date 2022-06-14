@@ -14,7 +14,15 @@
 #include "Components/SHealthComponent.h"
 #include "CoopTPS.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/RoleMessage.h"
 
+// console debugging
+static bool Debug = false;
+FAutoConsoleVariableRef CVarDebugGame(TEXT("Coop.ShowRole"), Debug,
+											TEXT("Show Pawn Role"), ECVF_Cheat);
+DECLARE_STATS_GROUP(TEXT("CoopGame"), STATGROUP_PlayerChar, STATCAT_Advanced);
+DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForDoors,STATGROUP_PlayerChar);
+DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForItems,STATGROUP_PlayerChar);
 // Sets default values
 ASCharacter::ASCharacter()
 {
@@ -41,6 +49,9 @@ ASCharacter::ASCharacter()
 	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
 	BeamEndPointDecal->SetVisibility(false);
 
+	InfoWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidgetcomp"));
+	InfoWidgetComp->SetupAttachment(RootComponent);
+	
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 }
 
@@ -70,6 +81,14 @@ void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if(bShowRole)
+	{
+		if(const auto WidgetRole =Cast<URoleMessage>(InfoWidgetComp->GetUserWidgetObject()))
+		{
+			WidgetRole->ShowPlayerNetRole(this);
+		}
+	}
+
 	DefaultFOV = CameraComp->FieldOfView;
 	// health start
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);

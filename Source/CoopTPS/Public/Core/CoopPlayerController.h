@@ -15,16 +15,20 @@ class COOPTPS_API ACoopPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	ACoopPlayerController();
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)
 	ASCharacter* MyPawn = nullptr;
-
+	UPROPERTY()
+	TSubclassOf<UUserWidget> HealthIndicator;
+	UPROPERTY()
+	UUserWidget* HealthWidget;
 	virtual void SetupInputComponent() override;
 protected:
 	IIInputComm* PawnInterface;
 	virtual void OnPossess(APawn* APawn) override;
-
+	virtual void OnUnPossess() override;
 	void StartRun();
 	void StopRun();
 	void MoveForward(float Value);

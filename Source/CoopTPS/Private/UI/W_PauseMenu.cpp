@@ -37,7 +37,7 @@ void UW_PauseMenu::BackToMainMenu()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("interface"));
 		Teardown();
-		MenuInterface->LoadMainMenu();
+		MenuInterface->I_LoadMainMenu();
 	}
 	UE_LOG(LogTemp, Warning, TEXT("no menu interface"));
 }

@@ -47,7 +47,7 @@ void UUW_MainMenu::HostServer()
 	if (MenuInterface != nullptr)
 	{
 		const FString newServerName = NameServerBox->Text.ToString();
-		MenuInterface->Host(newServerName);
+		MenuInterface->I_Host(newServerName);
 	}
 
 }
@@ -59,7 +59,7 @@ void UUW_MainMenu::OpenJoinMenu()
 	JoinWidgetSwitcher->SetActiveWidget(JoinMenu);
 	if(MenuInterface !=nullptr)
 	{
-		MenuInterface->RefreshServerList();
+		MenuInterface->I_RefreshServerList();
 	}
 }
 
@@ -76,7 +76,7 @@ void UUW_MainMenu::JoinServer()
 	{
 		if(MenuInterface != nullptr)
 		{
-			MenuInterface->Join(SelectedIndex.GetValue());
+			MenuInterface->I_Join(SelectedIndex.GetValue());
 		}
 	}
 }
@@ -85,7 +85,7 @@ void UUW_MainMenu::QuitGame()
 {
 	if (MenuInterface != nullptr)
 	{
-		MenuInterface->QuitGame();
+		MenuInterface->I_QuitGame();
 	}
 }
 

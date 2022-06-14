@@ -68,7 +68,7 @@ void UCoopGameInstance::StartGameInstance()
 	Super::StartGameInstance();
 }
 
-void UCoopGameInstance::Host(FString NewServerName)
+void UCoopGameInstance::I_Host(FString NewServerName)
 {
 	if (OnlineSessionInterface.IsValid()) 
 	{ 
@@ -85,7 +85,7 @@ void UCoopGameInstance::Host(FString NewServerName)
 	}	
 }
 
-void UCoopGameInstance::Join(uint32 NewIndex)
+void UCoopGameInstance::I_Join(uint32 NewIndex)
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
 	if (!OnlineSessionSearch.IsValid()) { return; }
@@ -96,7 +96,7 @@ void UCoopGameInstance::Join(uint32 NewIndex)
 	OnlineSessionInterface->JoinSession(0, SESSION_NAME, OnlineSessionSearch->SearchResults[NewIndex]);
 }
 
-void UCoopGameInstance::LoadMainMenu()
+void UCoopGameInstance::I_LoadMainMenu()
 {
 	if (APlayerController* PlayerController = GetFirstLocalPlayerController())
 	{
@@ -104,7 +104,7 @@ void UCoopGameInstance::LoadMainMenu()
 	}
 }
 
-void UCoopGameInstance::QuitGame()
+void UCoopGameInstance::I_QuitGame()
 {
 	if(APlayerController* PlayerController = GetFirstLocalPlayerController())
 	{
@@ -115,7 +115,7 @@ void UCoopGameInstance::QuitGame()
 	}
 }
 
-void UCoopGameInstance::RefreshServerList()
+void UCoopGameInstance::I_RefreshServerList()
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
 	OnlineSessionSearch = MakeShareable(new FOnlineSessionSearch);
@@ -228,7 +228,7 @@ void UCoopGameInstance::OnDestroySessionComplete(FName NewSessionName, const boo
 
 void UCoopGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-	LoadMainMenu();
+	I_LoadMainMenu();
 	//TODO : Mostrar cartel de error al usuario por desconexion.
 }
 

@@ -7,25 +7,26 @@
 #include "MainMenuInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI,meta=(CannotImplementInterfaceInBlueprint))
 class UMainMenuInterface : public UInterface
 {
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class COOPTPS_API IMainMenuInterface
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	// para que la funcion virtual funcione , tiene que llamarse igual que la implementacion en el game instance , por ejemplo. 
-	virtual void Host(FString newServerName) = 0;
-	virtual void Join(uint32 newIndex) = 0;
-	virtual void LoadMainMenu() = 0;
-	virtual void QuitGame() = 0;
-	virtual void RefreshServerList() = 0;
+	UFUNCTION()
+	virtual	void I_Host(FString newServerName)=0;
+	UFUNCTION()
+	virtual void I_Join(uint32 newIndex) = 0;
+	UFUNCTION()
+	virtual void I_LoadMainMenu() = 0;
+	UFUNCTION()
+	virtual void I_QuitGame() = 0;
+	UFUNCTION()
+	virtual void I_RefreshServerList() = 0;
 };

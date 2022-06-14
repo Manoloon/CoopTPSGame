@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "UI/MainMenuInterface.h"
+#include "Interfaces/MainMenuInterface.h"
 
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
@@ -26,16 +26,12 @@ public:
 	virtual void Init() override;
 	virtual void Shutdown() override;
 	virtual void StartGameInstance() override;
-	UFUNCTION()
-		virtual void Host(FString NewServerName) override;
-	UFUNCTION()
-		virtual void Join(uint32 NewIndex) override;
-	UFUNCTION()
-		virtual void LoadMainMenu() override;
-	UFUNCTION()
-		virtual void QuitGame() override;
-	UFUNCTION()
-		virtual void RefreshServerList() override;
+	
+	virtual void I_Host(FString NewServerName) override;
+	virtual void I_Join(uint32 NewIndex) override;
+	virtual void I_LoadMainMenu() override;
+	virtual void I_QuitGame() override;
+	virtual void I_RefreshServerList() override;
 
 	// son blueprint callables porque se los llama desde el level blueprint. 
 	UFUNCTION(BlueprintCallable)
