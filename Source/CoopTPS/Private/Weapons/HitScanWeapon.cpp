@@ -23,7 +23,8 @@ void AHitScanWeapon::Fire()
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
 		float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
-		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,
+																	HalfRad);
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 		FCollisionQueryParams QueryParams;
@@ -32,7 +33,7 @@ void AHitScanWeapon::Fire()
 		QueryParams.bTraceComplex = true;
 		QueryParams.bReturnPhysicalMaterial = true;
 		// particle "Target" parameter - la necesitamos por el hitpoint
-		FVector TracerEndPoint = TraceEnd;
+		FVector_NetQuantize TracerEndPoint = TraceEnd;
 		EPhysicalSurface SurfaceType = SurfaceType_Default;
 		PlayVFX(TracerEndPoint);
 		if (FHitResult Hit; GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd,

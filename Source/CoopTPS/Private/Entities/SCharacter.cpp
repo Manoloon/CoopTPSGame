@@ -26,7 +26,8 @@ DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForItems,STATGROUP_PlayerChar);
 // Sets default values
 ASCharacter::ASCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance
+ 	// if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	// spring arm
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
@@ -94,20 +95,23 @@ void ASCharacter::BeginPlay()
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 	if (HasAuthority())
 	{
-		// spawn initial weapon
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector,
+											FRotator::ZeroRotator, SpawnParams);
+		SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass,
+						FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 		if (CurrentWeapon)
 		{
 			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+			CurrentWeapon->AttachToComponent(GetMesh(),
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
 		}
 		if(SecondaryWeapon)
 		{
 			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
+			SecondaryWeapon->AttachToComponent(GetMesh(),
+				FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
 		}
 	}
 }
@@ -128,7 +132,8 @@ void ASCharacter::Tick(float DeltaTime)
 
 	// is true : first - false : second
 	float const TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
-	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime,
+																				ZoomInterpSpeed);
 	CameraComp->SetFieldOfView(NewFOV);
 }
 
@@ -228,12 +233,14 @@ void ASCharacter::Throw()
 	if (GranadaClass)
 	{
 		ClearBeam();
-		const auto& Grenade = GetWorld()->SpawnActorDeferred<ASProjectile>(GranadaClass, FTransform(SpawnRotation, StartLocation));
+		const auto& Grenade = GetWorld()->SpawnActorDeferred<ASProjectile>(GranadaClass,
+											FTransform(SpawnRotation, StartLocation));
 		
 		if (Grenade)
 		{
 		Grenade->InitialLocalVelocity = InitialLocalVelocity;
-		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation, StartLocation, SpawnScale));
+		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation,
+														StartLocation, SpawnScale));
 		}		
 	}
 }
@@ -263,7 +270,8 @@ for(auto Beam = BeamArray.CreateIterator(); Beam; ++Beam)
 
 void ASCharacter::AddNewBeam(FVector const NewPoint1, FVector const NewPoint2)
 {
-	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, NewPoint1, FRotator::ZeroRotator, true);
+	BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamFX, NewPoint1,
+											FRotator::ZeroRotator, true);
 	BeamArray.Add(BeamComp);
 	BeamComp->SetBeamSourcePoint(0, NewPoint1, 0);
 	BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
@@ -273,8 +281,10 @@ void ASCharacter::GetSegmentAtTime(const FVector LocalStartLocation, const FVect
 									const FVector LocalGravity, const float LocalTime1, const float LocalTime2,
 																FVector &OutPoint1, FVector &OutPoint2)
 {
-	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) + (LocalGravity*(LocalTime1*LocalTime1*0.5f)));
-	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) + (LocalGravity*(LocalTime2*LocalTime2*0.5f)));
+	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) +
+												(LocalGravity*(LocalTime1*LocalTime1*0.5f)));
+	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) +
+												(LocalGravity*(LocalTime2*LocalTime2*0.5f)));
 }
 
 void ASCharacter::DrawingTrajectory()
@@ -300,8 +310,10 @@ void ASCharacter::DrawingTrajectory()
 			FCollisionQueryParams QueryParams;
 			QueryParams.TraceTag = TraceTag;
 			FHitResult Hit;
-			GetSegmentAtTime(StartLocation, InitialVelocity, Gravity, Time1, Time2,Point1,Point2);
-			if (GetWorld()->LineTraceSingleByChannel(Hit, Point1, Point2, ECC_Visibility, QueryParams))
+			GetSegmentAtTime(StartLocation, InitialVelocity, Gravity, Time1, Time2,
+															Point1,Point2);
+			if (GetWorld()->LineTraceSingleByChannel(Hit, Point1, Point2,
+															ECC_Visibility, QueryParams))
 			{
 				BeamEndPointDecal->SetVisibility(true);
 				BeamEndPointDecal->SetWorldLocation(Hit.ImpactPoint);
@@ -314,7 +326,6 @@ void ASCharacter::DrawingTrajectory()
 		}
 	}
 }
-
 
 void ASCharacter::I_ChangeWeapon()
 {
@@ -342,7 +353,9 @@ void ASCharacter::OnRep_PlayerColor() const
 }
 
 // Cuando la energia del cliente cambia pero no ha muerto.-
-void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,
+	float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
+																		AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
 	{

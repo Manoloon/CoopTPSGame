@@ -7,10 +7,8 @@ USTRUCT()
 struct FHitScanTrace 
 {
 	GENERATED_BODY()
-
-	UPROPERTY()
+	
 	TEnumAsByte<EPhysicalSurface> SurfaceType;
-	UPROPERTY()
 	FVector_NetQuantize TraceTo;
 };
 
@@ -55,7 +53,7 @@ USTRUCT(BlueprintType)
 struct FWeaponData
 {
 	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 8, ClampMax = 30))
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 1, ClampMax = 30))
 	int32 MaxAmmo;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
 	float BulletSpread;

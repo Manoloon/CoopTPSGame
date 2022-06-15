@@ -56,11 +56,12 @@ void ASWeapon::Fire()
 		if (WeaponFXConfig.FireSFX)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX,GetActorLocation());
-		}		
+		}
 	}
 	else
 	{
 		StopFire();
+		// auto reload.
 		StartReloading();
 	}
 	LastFireTime = GetWorld()->TimeSeconds;
@@ -134,7 +135,7 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	}
 }
 
-void ASWeapon::PlayVFX(const FVector TraceEnd)
+void ASWeapon::PlayVFX(const FVector TraceEnd) const
 {
 	if (WeaponFXConfig.MuzzleFX)
 	{

@@ -66,7 +66,8 @@ protected:
 	void SelfDamage();
 
 	UFUNCTION()
-		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
+			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
 	void SelfDestruct();
 

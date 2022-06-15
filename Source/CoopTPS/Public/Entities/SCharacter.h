@@ -27,21 +27,21 @@ public:
 	ASCharacter();
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
+	UPROPERTY(VisibleAnywhere)
 		class UCameraComponent* CameraComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraComp")
+	UPROPERTY(VisibleAnywhere)
 		class USpringArmComponent* SpringArmComp;
-	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
 		UParticleSystem* BeamFX;
-	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
 		UParticleSystemComponent* BeamComp;
-	UPROPERTY(EditDefaultsOnly, Category = "GrenadeMode")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
 		UDecalComponent* BeamEndPointDecal;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HealthComp")
+	UPROPERTY(VisibleAnywhere, Category = "Settings|HealthComp")
 		class USHealthComponent* HealthComp;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 			UWidgetComponent* InfoWidgetComp;
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;
 	
 	UPROPERTY(EditAnywhere, Category = "Settings")
@@ -81,29 +81,29 @@ protected:
 
 	// current weapon
 public:
-	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, Transient)
 		class ASWeapon* CurrentWeapon= nullptr;
-	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, Transient)
 		ASWeapon* PrimaryWeapon = nullptr;
-	UPROPERTY(Replicated, Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, Transient)
 		ASWeapon* SecondaryWeapon = nullptr;
 	
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Weapon")
 		TSubclassOf<ASWeapon>SecondaryWeaponClass;
-	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+	UPROPERTY(VisibleDefaultsOnly, Category = "Settings|Weapon")
 		FName WeaponSocketName = "WeaponSocket";
-	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+	UPROPERTY(VisibleDefaultsOnly, Category = "Settings|Weapon")
 		FName SecondaryWeaponSocketName = "SecWeaponSocket";
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera",
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Camera",
 													meta = (ClampMin = 10.0,ClampMax = 40.0))
 		float ZoomInterpSpeed = 20.0f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Camera")
 		float ZoomedFOV = 65.0f;
 
 	UPROPERTY(EditAnywhere)

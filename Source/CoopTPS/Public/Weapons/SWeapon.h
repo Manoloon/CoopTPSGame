@@ -59,9 +59,7 @@ protected:
 	FTimerHandle TimeBetweenShotsTH;
 	FTimerHandle ReloadingTH;
 
-	//EPhysicalSurface SurfaceType;
-
-	void PlayVFX(FVector TraceEnd);
+	void PlayVFX(FVector TraceEnd) const;
 	virtual void Fire();
 	void Reload();
 	
