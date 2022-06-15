@@ -347,6 +347,10 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const flo
 	if (Health<=0.0f && !bDied)
 	{
 		bDied = true;
+		if(CurrentWeapon)
+		{
+			CurrentWeapon->StopFire();
+		}
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		DetachFromControllerPendingDestroy();
@@ -354,7 +358,6 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const flo
 	}
 }
 // networking --> 
-//Mantenemos actualizadas las variables en el cliente usando la macro DOREPLIFETIME
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

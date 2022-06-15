@@ -16,7 +16,7 @@ class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
 
-UCLASS()
+UCLASS(Abstract)
 class COOPTPS_API ASWeapon : public AActor
 {
 	GENERATED_BODY()
@@ -29,7 +29,10 @@ public:
 
 	virtual void StartFire();
 	virtual void StopFire();
-	void StartReloading();	
+	void StartReloading();
+private:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 protected:
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponData WeaponConfig;
@@ -51,9 +54,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 		UAudioComponent* WeaponAudioComponent;
 
-	FTimerHandle TimeBetweenShotsTH;
 	float LastFireTime;
 	float TimeBetweenShots;
+	FTimerHandle TimeBetweenShotsTH;
 	FTimerHandle ReloadingTH;
 
 	//EPhysicalSurface SurfaceType;
@@ -65,13 +68,7 @@ protected:
 	// newtworking se crea una implementation en cpp. 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerFire();
-
-	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
-		FHitScanTrace HitScanTrace;
-
-	UFUNCTION()
-		void ONREP_HitScanTrace();
-
+	
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -87,4 +84,6 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
+		
+		
 };

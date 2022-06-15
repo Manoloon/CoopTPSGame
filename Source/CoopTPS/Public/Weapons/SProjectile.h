@@ -28,7 +28,7 @@ struct FProjectileData
 		USoundCue* ExplosionSFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Default DATA")
 		UParticleSystem* DefaultExplosionFX;
-	//defaults
+
 	FProjectileData()
 	{
 		DamageRadius = 200.0f;
@@ -40,33 +40,30 @@ struct FProjectileData
 	}
 };
 
-UCLASS()
+UCLASS(Abstract)
 class COOPTPS_API ASProjectile : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ASProjectile();
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Default Settings")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Settings")
 		UProjectileMovementComponent* ProjectileComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Default Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 		UStaticMeshComponent* MeshComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Default Settings")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
 		FVector InitialLocalVelocity;
-
+	
 protected:
-	virtual void Explode();
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Default DATA")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|DATA")
 		FProjectileData Data;
-
-	FTimerHandle ExplodeTH;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerExplode();
 
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Explode();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

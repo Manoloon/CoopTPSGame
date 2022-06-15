@@ -57,7 +57,10 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 void ACoopPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	HealthWidget->RemoveFromParent();	
+	if(HealthWidget)
+	{
+		HealthWidget->RemoveFromParent();	
+	}	
 }
 
 void ACoopPlayerController::StartRun()

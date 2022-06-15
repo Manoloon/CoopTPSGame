@@ -12,13 +12,6 @@
 #include "Sound/SoundCue.h"
 #include "Net/UnrealNetwork.h"
 
-// console debuging
-static int32 DebugWeaponDrawing = 0;
-/*
-FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"),
-DebugWeaponDrawing,TEXT("Draw debug lines for weapon fire"),ECVF_Cheat);
-*/
-// Sets default values
 ASWeapon::ASWeapon()
 {
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
@@ -26,8 +19,7 @@ ASWeapon::ASWeapon()
 	bReplicates = true;
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetupAttachment(MeshComp);
-
-	/* hace que el update de la red sea mas rapido, NO LAG*/
+	
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 }
@@ -54,70 +46,17 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
-	// DE ESTA MANERA SOLO Corre FIRE si es ROLE_AUTHORITY
 	if(GetLocalRole() < ROLE_Authority)
 	{
 		ServerFire();
 	}
 	if (GetOwner() && CurrentAmmo > 0)
 	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
-		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-		// Bullet Spread - Override shotdirection.
-		FVector ShotDirection = EyeRotation.Vector();
-		float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
-		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
-
-		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(GetOwner());
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
-
-		// particle "Target" parameter - la necesitamos por el hitpoint
-		FVector TracerEndPoint = TraceEnd;
-		EPhysicalSurface SurfaceType = SurfaceType_Default;
-		FHitResult Hit;
-		
-		PlayVFX(TracerEndPoint);
 		//SFX
 		if (WeaponFXConfig.FireSFX)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX, EyeLocation);
-		}
-
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
-		{
-			AActor* HitActor = Hit.GetActor();
-			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-			float ActualDamage = WeaponConfig.BaseDamage;
-
-			if (SurfaceType == SURFACE_FLESHVULNERABLE)
-			{
-				ActualDamage *= 4.0f;
-			}
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit,
-										GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
-			
-			PlayImpactFX(SurfaceType,Hit.ImpactPoint);
-			TracerEndPoint = Hit.ImpactPoint;
-			
-		}
-		if (GetLocalRole() == ROLE_Authority)
-		{
-			HitScanTrace.TraceTo = TracerEndPoint;
-			HitScanTrace.SurfaceType = SurfaceType;
-		}
-		if(DebugWeaponDrawing>0)
-		{
-		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green, false, 1.0f);
-		}
-		
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX,GetActorLocation());
+		}		
 	}
 	else
 	{
@@ -130,6 +69,10 @@ void ASWeapon::Fire()
 
 void ASWeapon::Reload()
 {
+	if(WeaponFXConfig.ReloadSFX)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
+	}
 	CurrentAmmo = WeaponConfig.MaxAmmo;
 	bIsReloading = false;
 }
@@ -143,12 +86,17 @@ void ASWeapon::StartReloading()
 	}
 }
 
+void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+}
+
 void ASWeapon::StartFire()
 {
 	if (CurrentAmmo>1 && !GetWorldTimerManager().IsTimerActive(TimeBetweenShotsTH))
 	{
-		// busca un numero entre lo primero y cero , nunca dara negativo.
-		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds,0.0f); 
+		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
 		GetWorldTimerManager().SetTimer(TimeBetweenShotsTH, this, &ASWeapon::Fire,
 														TimeBetweenShots, true,FireDelay);
 	}
@@ -218,13 +166,6 @@ bool ASWeapon::ServerFire_Validate()
 	return true;
 }
 
-void ASWeapon::ONREP_HitScanTrace()
-{
-	//Play cosmetic FX
-	PlayVFX(HitScanTrace.TraceTo);
-	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
-}
-
 void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -238,10 +179,10 @@ void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 {
 	// OtherActor->ShowWidget(null)
 }
-
+/*
 void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
-}
+}*/
