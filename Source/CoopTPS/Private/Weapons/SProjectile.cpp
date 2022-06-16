@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
+#include "UnrealNetwork.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugProjectile(TEXT("COOP.Projectile"),
@@ -21,7 +22,10 @@ ASProjectile::ASProjectile()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCollisionObjectType(ECC_WorldDynamic);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
+	bReplicates = true;
+	SetReplicatingMovement(true);
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 	RootComponent = MeshComp;
 }
 
@@ -45,14 +49,6 @@ void ASProjectile::Explode()
 	{
 		ServerExplode();
 	}
-	if(Data.ExplosionSFX)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), Data.ExplosionSFX, GetActorLocation());
-	}
-	if(Data.DefaultExplosionFX)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Data.DefaultExplosionFX, GetActorLocation());
-	}
 	if(GetLocalRole() == ROLE_Authority)
 	{
 		TArray<AActor*> IgnoredActors;
@@ -62,7 +58,20 @@ void ASProjectile::Explode()
 		UGameplayStatics::ApplyRadialDamage(this, Data.MaxDamage,
 			GetActorLocation(),Data.DamageRadius,Data.DamageType, IgnoredActors,
 			this, GetInstigatorController(),true);
-		SetLifeSpan(1.0f);
+	}
+	Destroy();
+}
+
+void ASProjectile::Destroyed()
+{
+	Super::Destroyed();
+	if(Data.ExplosionSFX)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), Data.ExplosionSFX, GetActorLocation());
+	}
+	if(Data.DefaultExplosionFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Data.DefaultExplosionFX, GetActorLocation());
 	}
 }
 
@@ -70,6 +79,11 @@ void ASProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	GetWorldTimerManager().ClearAllTimersForObject(this);
+}
+
+void ASProjectile::ONREP_RepPacket()
+{
+	
 }
 
 void ASProjectile::ServerExplode_Implementation()
@@ -80,4 +94,10 @@ void ASProjectile::ServerExplode_Implementation()
 bool ASProjectile::ServerExplode_Validate()
 {
 	return true;
+}
+
+void ASProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(ASProjectile,ReplicationPacket,COND_SkipOwner);
 }

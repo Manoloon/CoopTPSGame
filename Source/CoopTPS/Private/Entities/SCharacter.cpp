@@ -116,7 +116,6 @@ void ASCharacter::BeginPlay()
 	}
 }
 
-// Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -341,6 +340,10 @@ void ASCharacter::I_ChangeWeapon()
 		                                 FAttachmentTransformRules::SnapToTargetIncludingScale,
 		                                 WeaponSocketName);
 	}
+	else
+	{
+		ServerChangeWeapon();
+	}
 }
 
 // Cambio del color del pawn segun el playercontroller que lo controle.
@@ -350,6 +353,19 @@ void ASCharacter::OnRep_PlayerColor() const
 	{
 		MeshID->SetVectorParameterValue(FName("BodyColor"), PlayerColor);
 	}
+}
+
+void ASCharacter::ServerChangeWeapon_Implementation()
+{
+	ASWeapon* TempWeapon = SecondaryWeapon;
+	SecondaryWeapon = CurrentWeapon;
+	SecondaryWeapon->AttachToComponent(GetMesh(),
+									   FAttachmentTransformRules::SnapToTargetIncludingScale,
+									   SecondaryWeaponSocketName);
+	CurrentWeapon = TempWeapon;
+	CurrentWeapon->AttachToComponent(GetMesh(),
+									 FAttachmentTransformRules::SnapToTargetIncludingScale,
+									 WeaponSocketName);
 }
 
 // Cuando la energia del cliente cambia pero no ha muerto.-

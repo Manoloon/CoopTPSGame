@@ -143,7 +143,7 @@ void ASWeapon::PlayShootVFX(const FVector TraceEnd) const
 	{
 		UGameplayStatics::SpawnEmitterAttached(WeaponFXConfig.MuzzleFX, MeshComp, WeaponConfig.MuzzleSocketName);
 	}
-	const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
+	const FVector_NetQuantize MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 	if (UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
 														WeaponFXConfig.TracerFX, MuzzleLocation))
 	{
@@ -182,13 +182,6 @@ void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 {
 	// OtherActor->ShowWidget(null)
 }
-/*
-void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
-}*/
 
 void ASWeapon::ONREP_HitScanTrace()
 {

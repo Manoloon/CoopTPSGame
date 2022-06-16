@@ -4,7 +4,6 @@
 #include "Weapons/HitScanWeapon.h"
 #include "CoopTPS.h"
 #include "PhysicalMaterial.h"
-#include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
 // console debuging
@@ -66,17 +65,3 @@ void AHitScanWeapon::Fire()
 		}
 	}
 }
-/*
-void AHitScanWeapon::ONREP_HitScanTrace()
-{
-	//Play cosmetic FX
-	PlayShootVFX(HitScanTrace.TraceTo);
-	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
-}
-// this is not declare on the header. Dont need to.
-void AHitScanWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(AHitScanWeapon, HitScanTrace,COND_SkipOwner);
-}*/

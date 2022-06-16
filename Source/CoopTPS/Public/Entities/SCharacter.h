@@ -59,7 +59,6 @@ protected:
 	//FVector InitialVelocity;
 	FVector InitialLocalVelocity;
 	FVector StartLocation;
-	//FVector ThrowRotateVector;
 	FVector SpawnScale = FVector(1.0f);
 	FRotator SpawnRotation;
 	FVector Point1;
@@ -125,7 +124,8 @@ protected:
 private:
 	UFUNCTION()
 	void OnRep_PlayerColor() const;
-
+	UFUNCTION(Server,Reliable)
+	void ServerChangeWeapon();
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -137,13 +137,6 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	virtual FVector GetPawnViewLocation() const override;
-
-	// Esto esta expuesto para poder usarse en el BT.
-	/**
-	UFUNCTION(BlueprintCallable,Category = "Player")
-	void  StartFire();
-	UFUNCTION(BlueprintCallable,Category = "Player")
-	void StopFire();*/
 
 	// Input interface
 	virtual void I_Jump() override;

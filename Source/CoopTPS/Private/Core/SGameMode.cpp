@@ -130,6 +130,7 @@ void ASGameMode::GameOver()
 {
 	EndWave();
 	SetWaveState(EWaveState::GameOver);
+	UE_LOG(LogTemp,Warning,TEXT("GAME OVER"));
 }
 
 void ASGameMode::SetWaveState(EWaveState NewWaveState)

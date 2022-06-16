@@ -82,7 +82,7 @@ protected:
 	void Reload();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerFire();
+		virtual void ServerFire();
 	UFUNCTION()
 		void ONREP_HitScanTrace();
 	UFUNCTION()

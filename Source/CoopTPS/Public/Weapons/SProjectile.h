@@ -10,6 +10,16 @@
 #include "SProjectile.generated.h"
 
 class UProjectileMovementComponent;
+USTRUCT()
+struct FRepPacket 
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float ServerFireTime;
+	UPROPERTY()
+	bool bCausedDamage;
+};
 
 USTRUCT(BlueprintType)
 struct FProjectileData
@@ -28,7 +38,7 @@ struct FProjectileData
 		USoundCue* ExplosionSFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Default DATA")
 		UParticleSystem* DefaultExplosionFX;
-
+	
 	FProjectileData()
 	{
 		DamageRadius = 200.0f;
@@ -57,6 +67,8 @@ public:
 		FVector InitialLocalVelocity;
 	
 protected:
+	UPROPERTY(ReplicatedUsing = ONREP_RepPacket)
+		FRepPacket ReplicationPacket;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|DATA")
 		FProjectileData Data;
 
@@ -65,5 +77,8 @@ protected:
 
 	virtual void BeginPlay() override;
 	virtual void Explode();
+	virtual void Destroyed() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	UFUNCTION()
+	void ONREP_RepPacket();
 };
