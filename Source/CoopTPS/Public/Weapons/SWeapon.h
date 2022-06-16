@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "ChaosEngineInterface.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "ST_WeaponData.h"
@@ -15,6 +14,23 @@ class UParticleSystem;
 class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
+
+USTRUCT()
+struct FHitScanTrace 
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float ServerFireTime;
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+	UPROPERTY()
+	bool bCausedDamage;
+	UPROPERTY()
+	FVector_NetQuantize ImpactPoint;
+	UPROPERTY()
+	FVector_NetQuantize ImpactNormal;
+};
 
 UCLASS(Abstract)
 class COOPTPS_API ASWeapon : public AActor
@@ -32,8 +48,10 @@ public:
 	void StartReloading();
 private:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
+
 protected:
+	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
+		FHitScanTrace HitScanTrace;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponData WeaponConfig;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
@@ -59,14 +77,14 @@ protected:
 	FTimerHandle TimeBetweenShotsTH;
 	FTimerHandle ReloadingTH;
 
-	void PlayVFX(FVector TraceEnd) const;
+	void PlayShootVFX(FVector TraceEnd) const;
 	virtual void Fire();
 	void Reload();
 	
-	// newtworking se crea una implementation en cpp. 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerFire();
-	
+	UFUNCTION()
+		void ONREP_HitScanTrace();
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -81,7 +99,5 @@ protected:
 		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);
-		
-		
+		int32 OtherBodyIndex);		
 };

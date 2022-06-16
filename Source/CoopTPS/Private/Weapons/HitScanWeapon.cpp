@@ -35,7 +35,7 @@ void AHitScanWeapon::Fire()
 		// particle "Target" parameter - la necesitamos por el hitpoint
 		FVector_NetQuantize TracerEndPoint = TraceEnd;
 		EPhysicalSurface SurfaceType = SurfaceType_Default;
-		PlayVFX(TracerEndPoint);
+		PlayShootVFX(TracerEndPoint);
 		if (FHitResult Hit; GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd,
 																	COLLISION_WEAPON, QueryParams))
 		{
@@ -56,7 +56,7 @@ void AHitScanWeapon::Fire()
 		}
 		if (GetLocalRole() == ROLE_Authority)
 		{
-			HitScanTrace.TraceTo = TracerEndPoint;
+			HitScanTrace.ImpactPoint = TracerEndPoint;
 			HitScanTrace.SurfaceType = SurfaceType;
 		}
 		if(DebugWeaponDrawing>0)
@@ -66,17 +66,17 @@ void AHitScanWeapon::Fire()
 		}
 	}
 }
-
+/*
+void AHitScanWeapon::ONREP_HitScanTrace()
+{
+	//Play cosmetic FX
+	PlayShootVFX(HitScanTrace.TraceTo);
+	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+// this is not declare on the header. Dont need to.
 void AHitScanWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(AHitScanWeapon, HitScanTrace,COND_SkipOwner);
-}
-
-void AHitScanWeapon::ONREP_HitScanTrace()
-{
-	//Play cosmetic FX
-	PlayVFX(HitScanTrace.TraceTo);
-	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
-}
+}*/

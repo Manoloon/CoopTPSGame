@@ -16,12 +16,13 @@ ASWeapon::ASWeapon()
 {
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
-	bReplicates = true;
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetupAttachment(MeshComp);
-	
+
+	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+	bReplicates =true;
 }
 
 void ASWeapon::BeginPlay()
@@ -131,11 +132,12 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 		const FVector MuzzleLoc = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 		FVector ShotDirection = ImpactPoint - MuzzleLoc;
 		ShotDirection.Normalize();
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint, ShotDirection.Rotation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint,
+																	ShotDirection.Rotation());
 	}
 }
 
-void ASWeapon::PlayVFX(const FVector TraceEnd) const
+void ASWeapon::PlayShootVFX(const FVector TraceEnd) const
 {
 	if (WeaponFXConfig.MuzzleFX)
 	{
@@ -143,7 +145,7 @@ void ASWeapon::PlayVFX(const FVector TraceEnd) const
 	}
 	const FVector MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 	if (UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
-																			WeaponFXConfig.TracerFX, MuzzleLocation))
+														WeaponFXConfig.TracerFX, MuzzleLocation))
 	{
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 	}
@@ -156,7 +158,7 @@ void ASWeapon::PlayVFX(const FVector TraceEnd) const
 		}
 	}
 }
-
+//call on client | execute on server 
 void ASWeapon::ServerFire_Implementation()
 {
 	Fire();
@@ -187,3 +189,17 @@ void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifet
 
 	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
 }*/
+
+void ASWeapon::ONREP_HitScanTrace()
+{
+	//Play cosmetic FX
+	PlayShootVFX(HitScanTrace.ImpactPoint);
+	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint);
+}
+// this is not declare on the header. Dont need to.
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
+}

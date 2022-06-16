@@ -3,15 +3,6 @@
 #include "GameFramework/DamageType.h"
 #include "ST_WeaponData.generated.h"
 
-USTRUCT()
-struct FHitScanTrace 
-{
-	GENERATED_BODY()
-	
-	TEnumAsByte<EPhysicalSurface> SurfaceType;
-	FVector_NetQuantize TraceTo;
-};
-
 USTRUCT(BlueprintType)
 struct FWeaponFXData
 {
