@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Entities/SCharacter.h"
+
+#include "CoopPlayerController.h"
 #include "Engine.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -13,6 +15,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SHealthComponent.h"
 #include "CoopTPS.h"
+#include "Core/TPSHud.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/RoleMessage.h"
 
@@ -127,8 +130,7 @@ void ASCharacter::Tick(float DeltaTime)
 		InitialLocalVelocity = FVector(LaunchDistance, 0.0f, LaunchDistance/2.0f);
 		DrawingTrajectory();
 	}
-
-
+	SetHUDCrosshairs(DeltaTime);
 	// is true : first - false : second
 	float const TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
 	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime,
@@ -366,6 +368,54 @@ void ASCharacter::ServerChangeWeapon_Implementation()
 	CurrentWeapon->AttachToComponent(GetMesh(),
 									 FAttachmentTransformRules::SnapToTargetIncludingScale,
 									 WeaponSocketName);
+}
+
+void ASCharacter::SetHUDCrosshairs(float DeltaTime)
+{
+	if(this->Controller == nullptr) return;
+	PlayerController = PlayerController == nullptr? Cast<ACoopPlayerController>(GetController())
+																	: PlayerController;
+	if(PlayerController)
+	{
+		HUD = HUD == nullptr? Cast<ATPSHud>(PlayerController->GetHUD()) : HUD;
+		if(HUD)
+		{
+			FHUDData HUDData;
+			if(CurrentWeapon)
+			{
+				HUDData.CrosshairsCenter = CurrentWeapon->GetCrosshairData().CrosshairsCenter;
+				HUDData.CrosshairsLeft = CurrentWeapon->GetCrosshairData().CrosshairsLeft;
+				HUDData.CrosshairsRight = CurrentWeapon->GetCrosshairData().CrosshairsRight;
+				HUDData.CrosshairsUp = CurrentWeapon->GetCrosshairData().CrosshairsUp;
+				HUDData.CrosshairsDown = CurrentWeapon->GetCrosshairData().CrosshairsDown;
+			}
+			else
+			{
+				HUDData.CrosshairsCenter = nullptr;
+				HUDData.CrosshairsLeft = nullptr;
+				HUDData.CrosshairsRight = nullptr;
+				HUDData.CrosshairsUp = nullptr;
+				HUDData.CrosshairsDown = nullptr;
+			}
+			const FVector2d WalkSpeedRange(0.0f, GetCharacterMovement()->MaxWalkSpeed);
+			const FVector2d VelocityMultiplierRange(0.0f,1.f);
+			FVector Velocity = GetVelocity();
+			Velocity.Z = 0.f;
+			CrosshairSpreadFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange,
+									VelocityMultiplierRange,Velocity.Size());
+			if(GetCharacterMovement()->IsFalling())
+			{
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,2.25f);
+			}
+			else
+			{
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,30.f);
+			}
+			
+			HUDData.CrosshairSpread = CrosshairSpreadFactor + CrossInAirFactor;
+			HUD->SetHUDData(HUDData);
+		}
+	}
 }
 
 // Cuando la energia del cliente cambia pero no ha muerto.-

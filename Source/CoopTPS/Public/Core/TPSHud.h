@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "UI/ST_HUDData.h"
 #include "TPSHud.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COOPTPS_API ATPSHud : public AHUD
 {
@@ -16,13 +14,16 @@ class COOPTPS_API ATPSHud : public AHUD
 	
 public:
 	float CrossHairExpandWeight;
-
-public:
 	virtual void DrawHUD() override;
-
+	FORCEINLINE void SetHUDData(const FHUDData& Data){HUDData = Data;}
 private:
-	void DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height);
-	void DrawCrosshair(const FLinearColor& Color, float TotalSize, float GapSize);
-	void DrawHealthBar(const FLinearColor& Color, float Height, float MaxHealth,float CurrentHealth);
+	FHUDData HUDData;
+	UPROPERTY(EditAnywhere)
+	float CrosshairSpreadMax=16.0f;
+	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread);
+	
+	//void DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height);
+	//void DrawCrosshair(const FLinearColor& Color, float TotalSize, float GapSize);
+	//void DrawHealthBar(const FLinearColor& Color, float Height, float MaxHealth,float CurrentHealth);
 
 };

@@ -88,6 +88,11 @@ void ASWeapon::StartReloading()
 	}
 }
 
+const FHUDData& ASWeapon::GetCrosshairData() const
+{
+	return CrossHairData;
+}
+
 void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);

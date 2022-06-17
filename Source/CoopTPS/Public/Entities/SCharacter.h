@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TPSHud.h"
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
@@ -109,7 +110,7 @@ protected:
 		bool bShowRole=true;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	void SetHUDCrosshairs(float DeltaTime);
 public:
 	UFUNCTION()
 	void AuthSetPlayerColor(const FLinearColor& NewColor);
@@ -120,8 +121,14 @@ protected:
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity,
 								float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
-
+	
 private:
+	float CrosshairSpreadFactor;
+	float CrossInAirFactor;
+	UPROPERTY()
+	ATPSHud* HUD =nullptr;
+	UPROPERTY()
+	class ACoopPlayerController* PlayerController=nullptr;
 	UFUNCTION()
 	void OnRep_PlayerColor() const;
 	UFUNCTION(Server,Reliable)

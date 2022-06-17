@@ -82,5 +82,5 @@ void ASLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ASLauncher,LauncherPacket);
+	DOREPLIFETIME_CONDITION(ASLauncher,LauncherPacket,COND_OwnerOnly);
 }

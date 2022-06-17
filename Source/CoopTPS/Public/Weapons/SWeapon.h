@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "ST_WeaponData.h"
+#include "UI/ST_HUDData.h"
 #include "SWeapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -42,16 +43,18 @@ public:
 	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		bool bIsReloading;
-
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
+	const FHUDData& GetCrosshairData() const;
 private:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
 		FHitScanTrace HitScanTrace;
+	UPROPERTY(EditDefaultsOnly,Category = "Settings")
+		FHUDData CrossHairData;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponData WeaponConfig;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
