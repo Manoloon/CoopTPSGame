@@ -53,6 +53,7 @@ void AExplosiveBarrel::PostInitializeComponents()
 	ExplosionRadius = 400.0f;
 	ExplosionImpulse = 400.0f;
 	bExploded = false;
+	HealthComp->TeamNum = 2;
 }
 
 void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health,

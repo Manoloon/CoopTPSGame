@@ -20,7 +20,7 @@ private:
 	FHUDData HUDData;
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax=16.0f;
-	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread);
+	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread, FLinearColor Color=FLinearColor::White);
 	
 	//void DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height);
 	//void DrawCrosshair(const FLinearColor& Color, float TotalSize, float GapSize);

@@ -25,6 +25,7 @@ protected:
 	UPROPERTY(EditInstanceOnly,Category = "PowerUP")
 	TSubclassOf<ASPowerUp>PowerupClass;
 
+	UPROPERTY()
 	ASPowerUp* PowerupInstance;
 	UPROPERTY(EditAnywhere, Category = "PowerUP")
 	float CooldDownDuraction;
@@ -37,6 +38,6 @@ protected:
 
 	void RespawnPowerUp();
 
-public:	
+public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

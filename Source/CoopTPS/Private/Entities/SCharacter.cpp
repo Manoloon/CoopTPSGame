@@ -6,7 +6,7 @@
 #include "Engine.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "GameFramework/Character.h"
 #include "Weapons/SWeapon.h"
 #include "Weapons/SProjectile.h"
 #include "Components/CapsuleComponent.h"
@@ -79,6 +79,11 @@ void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
 	PlayerColor = NewColor;
 	OnRep_PlayerColor();
+}
+
+const FHitResult& ASCharacter::GetHitTrace() const
+{
+	return TraceResult;
 }
 
 // Called when the game starts or when spawned
@@ -328,6 +333,38 @@ void ASCharacter::DrawingTrajectory()
 	}
 }
 
+FLinearColor ASCharacter::IterationTrace()
+{
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	GetActorEyesViewPoint(EyeLocation,EyeRotation);
+	const FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 2000);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.AddIgnoredActor(this);
+	if (FHitResult HitResult;GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd,
+	                                                               COLLISION_WEAPON, QueryParams))
+	{
+		if(CurrentWeapon)
+		{
+			CurrentWeapon->SetHitResult(HitResult);
+		}		
+		if(Debug)
+		{
+			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint,5.f,12,FColor::White,false,1.f,
+			0,3);
+		}
+		return(USHealthComponent::IsFriendly(this, HitResult.GetActor())) ?
+			FLinearColor::Green : FLinearColor::Red;
+	}
+	if(CurrentWeapon)
+	{
+		FHitResult HitResult;
+		CurrentWeapon->SetHitResult(HitResult);
+	}	
+	return FLinearColor::White;
+}
+
 void ASCharacter::I_ChangeWeapon()
 {
 	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
@@ -405,20 +442,22 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 									VelocityMultiplierRange,Velocity.Size());
 			if(GetCharacterMovement()->IsFalling())
 			{
-				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,2.25f);
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,
+																				2.25f);
 			}
 			else
 			{
-				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,30.f);
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,
+																				30.f);
 			}
 			
 			HUDData.CrosshairSpread = CrosshairSpreadFactor + CrossInAirFactor;
+			HUDData.CrosshairColor = IterationTrace();
 			HUD->SetHUDData(HUDData);
 		}
 	}
 }
 
-// Cuando la energia del cliente cambia pero no ha muerto.-
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,
 	float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
 																		AActor* DamageCauser)

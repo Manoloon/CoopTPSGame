@@ -18,6 +18,7 @@ struct FHUDData
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* CrosshairsDown;
 	float CrosshairSpread;
+	FLinearColor CrosshairColor;
 	FHUDData()
 	{
 		CrosshairsCenter=nullptr;
@@ -26,5 +27,6 @@ struct FHUDData
 		CrosshairsUp=nullptr;
 		CrosshairsDown=nullptr;
 		CrosshairSpread=10.0f;
+		CrosshairColor = FLinearColor::White;
 	};
 };

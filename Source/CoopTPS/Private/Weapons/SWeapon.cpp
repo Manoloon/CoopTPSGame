@@ -31,7 +31,8 @@ void ASWeapon::BeginPlay()
 	if(HasAuthority())
 	{
 		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,
+																ECollisionResponse::ECR_Overlap);
 		SphereComp->OnComponentBeginOverlap.AddDynamic(this,&ASWeapon::OnSphereOverlap);
 		SphereComp->OnComponentEndOverlap.AddDynamic(this,&ASWeapon::OnSphereEndOverlap);
 	}
@@ -91,6 +92,11 @@ void ASWeapon::StartReloading()
 const FHUDData& ASWeapon::GetCrosshairData() const
 {
 	return CrossHairData;
+}
+
+void ASWeapon::SetHitResult(const FHitResult& NewHitResult)
+{
+	TraceResult = NewHitResult;
 }
 
 void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)

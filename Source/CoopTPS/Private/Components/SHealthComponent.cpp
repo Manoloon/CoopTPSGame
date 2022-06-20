@@ -1,16 +1,28 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Components/SHealthComponent.h"
+
+#include "Core/NetworkManager.h"
 #include "Interfaces/IHealthyActor.h"
+#include "Core/NetworkManager.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "Core/SGameMode.h"
+#include "Kismet/GameplayStatics.h"
 
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	SetIsReplicated(true);
 	// Only on server --- Como es un componente , no tiene role, sino que su dueño lo tiene.
+	//** NetWork
+	NetworkManager = Cast<ANetworkManager>(UGameplayStatics::GetActorOfClass(
+															this,ANetworkManager::StaticClass()));
+	if(NetworkManager)
+	{
+		NetworkManager->RegisterActor(GetOwner(),Encode());
+	}
+
 	if(GetOwnerRole() == ROLE_Authority)
 	{
 		if (AActor* MyOwner = GetOwner())
@@ -19,6 +31,7 @@ void USHealthComponent::BeginPlay()
 		}
 	}	
 	Health = MaxHealth;
+	UE_LOG(LogTemp,Error,TEXT("on BeginPlay : health %f of %s"),Health,*GetOwner()->GetName());
 }
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
@@ -32,6 +45,7 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
+	UE_LOG(LogTemp,Warning,TEXT("taking damage : Health %f of %s"),Health,*GetOwner()->GetName());
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
 																					DamageCauser);
 	bOwnerIsDead = Health <= 0.0f;
@@ -42,6 +56,12 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 		{
 			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
 		}
+	}
+	//** NetWork
+	if(NetworkManager)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Health %f of %s"),Health,*GetOwner()->GetName());
+		NetworkManager->UpdateActor(GetOwner(),Encode());
 	}
 }
 
@@ -63,7 +83,7 @@ bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 	}
 	if(!ActorA->Implements<UIHealthyActor>() || !ActorB->Implements<UIHealthyActor>())
 	{
-		return true;
+		return false;
 	}
 	const USHealthComponent* HealthCompA = Cast<IIHealthyActor>(ActorA)->I_GetHealthComp();
 	const USHealthComponent* HealthCompB = Cast<IIHealthyActor>(ActorB)->I_GetHealthComp();
@@ -71,10 +91,11 @@ bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 }
 
 /*NETWORKING*/
+
 void USHealthComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	// TODO : maybe this should be ONLy for the owner
 	DOREPLIFETIME(USHealthComponent, Health);
 }
 
@@ -83,4 +104,28 @@ void USHealthComponent::ONREP_Health(float OldHealth)
 	const float Damage = Health - OldHealth;
 	OnHealthChanged.Broadcast(this, Health,Damage, nullptr,
 														nullptr, nullptr);
+}
+
+//** NETWORK MANAGER
+void USHealthComponent::PostReplication(TArray<uint8> Payload)
+{
+	Decode(Payload);
+	if (Health <=0)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("DIEEEE"));
+	}
+}
+// Server Function
+TArray<uint8> USHealthComponent::Encode()
+{
+	TArray<uint8> Payload;
+	FMemoryWriter Ar(Payload);
+	Ar << Health;
+	return Payload;
+}
+// Client Function
+void USHealthComponent::Decode(const TArray<uint8>& Payload)
+{
+	FMemoryReader Ar(Payload);
+	Ar << Health;
 }

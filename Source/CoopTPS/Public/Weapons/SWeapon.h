@@ -41,15 +41,15 @@ class COOPTPS_API ASWeapon : public AActor
 public:	
 	ASWeapon();
 	virtual void BeginPlay() override;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		bool bIsReloading;
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
 	const FHUDData& GetCrosshairData() const;
+	void SetHitResult(const FHitResult& NewHitResult);
 private:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
 protected:
 	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
 		FHitScanTrace HitScanTrace;
@@ -70,11 +70,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
 		int32 CurrentAmmo=30;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
 		UAudioComponent* WeaponAudioComponent;
 
+	FHitResult TraceResult;
 	float LastFireTime;
 	float TimeBetweenShots;
 	FTimerHandle TimeBetweenShotsTH;

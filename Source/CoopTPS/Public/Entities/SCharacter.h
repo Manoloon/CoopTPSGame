@@ -121,8 +121,9 @@ protected:
 	void GetSegmentAtTime(FVector StartLocation, FVector InitialVelocity, FVector Gravity,
 								float Time1, float Time2, FVector &OutPoint1, FVector &OutPoint2);
 	void DrawingTrajectory();
-	
+	FLinearColor IterationTrace();
 private:
+	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
 	float CrossInAirFactor;
 	UPROPERTY()
@@ -144,7 +145,8 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	virtual FVector GetPawnViewLocation() const override;
-
+	UFUNCTION()
+	const FHitResult& GetHitTrace()const;
 	// Input interface
 	virtual void I_Jump() override;
 	virtual void I_Reload() override;

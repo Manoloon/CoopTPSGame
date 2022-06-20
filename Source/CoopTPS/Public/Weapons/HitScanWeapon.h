@@ -11,6 +11,7 @@ UCLASS(Abstract)
 class COOPTPS_API AHitScanWeapon : public ASWeapon
 {
 	GENERATED_BODY()
+
 public:
 	virtual void Fire() override;
 };

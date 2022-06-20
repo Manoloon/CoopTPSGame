@@ -19,6 +19,7 @@ public:
 	USHealthComponent()=default;
 	
 	UPROPERTY(ReplicatedUsing=ONREP_Health, BlueprintReadOnly, Category = "Health")
+	//UPROPERTY(BlueprintReadOnly, Category = "Health")
 		float Health;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 		float MaxHealth = 100.0f;
@@ -35,11 +36,23 @@ public:
 	
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Team")
     	static bool IsFriendly(AActor* ActorA , AActor* ActorB);
+	//** NetworkManager
+	UFUNCTION()
+	void PostReplication(TArray<uint8> Payload);
+	TArray<uint8> Encode();
+	void Decode(const TArray<uint8>& Payload);
+	//***
+	UPROPERTY()
+	class ANetworkManager* NetworkManager;
+	
 protected:
 	virtual void BeginPlay() override;
 	UFUNCTION()
 	    void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
-	                                            class AController* InstigatedBy, AActor* DamageCauser);
+	                                           class AController* InstigatedBy, AActor* DamageCauser);
+
 	UFUNCTION()
 		void ONREP_Health(float OldHealth);	
 };
+
+

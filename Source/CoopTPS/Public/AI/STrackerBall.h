@@ -80,5 +80,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-	virtual USHealthComponent* I_GetHealthComp() const override; 
+	virtual USHealthComponent* I_GetHealthComp() const override;
 };

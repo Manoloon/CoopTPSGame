@@ -16,8 +16,8 @@ class UParticleSystem;
 class USoundCue;
 class UStaticMeshComponent;
 
-UCLASS()
-class COOPTPS_API AExplosiveBarrel final : public AActor, public IIHealthyActor
+UCLASS(Abstract)
+class COOPTPS_API AExplosiveBarrel : public AActor, public IIHealthyActor
 {
 	GENERATED_BODY()
 	

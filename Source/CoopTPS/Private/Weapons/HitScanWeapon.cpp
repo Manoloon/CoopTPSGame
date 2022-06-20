@@ -21,37 +21,30 @@ void AHitScanWeapon::Fire()
 		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 		// Bullet Spread - Override shotdirection.
 		FVector ShotDirection = EyeRotation.Vector();
-		float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
+		const float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
 		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,
 																	HalfRad);
-		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(GetOwner());
-		QueryParams.AddIgnoredActor(this);
-		QueryParams.bTraceComplex = true;
-		QueryParams.bReturnPhysicalMaterial = true;
+		const FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 		// particle "Target" parameter - la necesitamos por el hitpoint
 		FVector_NetQuantize TracerEndPoint = TraceEnd;
 		EPhysicalSurface SurfaceType = SurfaceType_Default;
 		PlayShootVFX(TracerEndPoint);
-		if (FHitResult Hit; GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd,
-																	COLLISION_WEAPON, QueryParams))
+		if(TraceResult.GetActor())
 		{
-			AActor* HitActor = Hit.GetActor();
-			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(
+															TraceResult.PhysMaterial.Get());
 
 			float ActualDamage = WeaponConfig.BaseDamage;
-
 			if (SurfaceType == SURFACE_FLESHVULNERABLE)
 			{
 				ActualDamage *= 4.0f;
 			}
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit,
+			UGameplayStatics::ApplyPointDamage(TraceResult.GetActor(), ActualDamage, ShotDirection, 
+			TraceResult,
 			GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
 			
-			PlayImpactFX(SurfaceType,Hit.ImpactPoint);
-			TracerEndPoint = Hit.ImpactPoint;			
+			PlayImpactFX(SurfaceType,TraceResult.ImpactPoint);
+			TracerEndPoint = TraceResult.ImpactPoint;	
 		}
 		if (GetLocalRole() == ROLE_Authority)
 		{
