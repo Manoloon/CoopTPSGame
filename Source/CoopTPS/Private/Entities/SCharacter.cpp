@@ -20,8 +20,8 @@
 #include "UI/RoleMessage.h"
 
 // console debugging
-static bool Debug = false;
-FAutoConsoleVariableRef CVarDebugGame(TEXT("Coop.ShowRole"), Debug,
+static bool DebugCharacter = false;
+FAutoConsoleVariableRef CVarDebugGame(TEXT("Coop.ShowRole"), DebugCharacter,
 											TEXT("Show Pawn Role"), ECVF_Cheat);
 DECLARE_STATS_GROUP(TEXT("CoopGame"), STATGROUP_PlayerChar, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForDoors,STATGROUP_PlayerChar);
@@ -374,7 +374,7 @@ FLinearColor ASCharacter::IterationTrace()
 		{
 			CurrentWeapon->SetHitResult(HitResult);
 		}		
-		if(Debug)
+		if(DebugCharacter)
 		{
 			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint,5.f,12,FColor::White,false,1.f,
 			0,3);

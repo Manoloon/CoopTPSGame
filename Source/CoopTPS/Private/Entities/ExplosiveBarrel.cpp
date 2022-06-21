@@ -11,9 +11,9 @@
 #include "PhysicsEngine/RadialForceComponent.h"
 
 // debug
-static bool Debug = false;
+static bool DebugBarrel = false;
 FAutoConsoleVariableRef CVARDebugBarrelExp(TEXT("Coop.DebugBarrelExp"),
-	Debug,TEXT("draw debug lines for Explosion Barrel"),ECVF_Cheat);
+	DebugBarrel,TEXT("draw debug lines for Explosion Barrel"),ECVF_Cheat);
 
 AExplosiveBarrel::AExplosiveBarrel()
 {
@@ -95,7 +95,7 @@ void AExplosiveBarrel::SelfDestruct()
 			GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors,
 							this, GetInstigatorController(), true);
 
-		if (Debug)
+		if (DebugBarrel)
 		{
 			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12,
 									FColor::Red, false, 2.0f, 3.0f);
