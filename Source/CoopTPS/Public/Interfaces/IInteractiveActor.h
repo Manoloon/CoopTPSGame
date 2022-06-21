@@ -1,16 +1,16 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "IPickableActor.generated.h"
+#include "IInteractiveActor.generated.h"
 
 UINTERFACE(MinimalAPI,meta=(CannotImplementInterfaceInBlueprint))
-class UIPickableActor : public UInterface
+class UIInteractiveActor : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class IIPickableActor
+class IIInteractiveActor
 {
 	GENERATED_BODY()
 public:
-   //virtual void I_ShowWidget() const=0;
+   virtual FLinearColor GetActorTypeColor()=0;
 };

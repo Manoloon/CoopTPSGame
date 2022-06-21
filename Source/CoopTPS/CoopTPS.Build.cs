@@ -15,7 +15,7 @@ public class CoopTPS : ModuleRules
         "GameplayCameras","AIModule", "GameplayTasks","NetCore"});
 
 		// Uncomment if you are using Slate UI
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "AnimGraphRuntime" });
 		
 		// Uncomment if you are using online features
 		PrivateDependencyModuleNames.Add("OnlineSubsystem");

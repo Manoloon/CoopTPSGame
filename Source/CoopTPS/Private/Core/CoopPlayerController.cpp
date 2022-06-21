@@ -123,7 +123,7 @@ void ACoopPlayerController::StartAds()
 {
 	if(GetPawn() && PawnInterface)
 	{
-		PawnInterface->I_StartADS();
+		PawnInterface->I_StartAiming();
 	}
 	else
 	{
@@ -136,7 +136,7 @@ void ACoopPlayerController::StopAds()
 {
 	if(GetPawn() && PawnInterface)
 	{
-		PawnInterface->I_StopADS();
+		PawnInterface->I_StopAiming();
 	}
 	else
 	{

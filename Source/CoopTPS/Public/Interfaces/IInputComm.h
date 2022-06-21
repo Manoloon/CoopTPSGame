@@ -18,8 +18,8 @@ public:
 	virtual void I_MoveRight(float Value)=0;
 	virtual void I_TurnRate(float Value)=0;
 	virtual void I_LookUpRate(float Value)=0;
-	virtual void I_StartADS()=0;
-	virtual void I_StopADS()=0;
+	virtual void I_StartAiming()=0;
+	virtual void I_StopAiming()=0;
 	virtual void I_StartCrouch()=0;
 	virtual void I_StopCrouch()=0;
 	virtual void I_StartFire()=0;

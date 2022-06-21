@@ -32,6 +32,7 @@ ASCharacter::ASCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance
  	// if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
 	// spring arm
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->bUsePawnControlRotation = true;
@@ -40,7 +41,7 @@ ASCharacter::ASCharacter()
 
 	// de esta manera la capsula no bloqueara nuestra arma.
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
-
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	// camera component
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
@@ -67,9 +68,16 @@ void ASCharacter::PostInitializeComponents()
 	if (PawnMesh)
 	{
 		MeshComponent->SetSkeletalMesh(PawnMesh);
+		MeshComponent->SetCollisionObjectType(COLLISION_PAWN);
+		MeshComponent->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+		MeshComponent->SetCollisionResponseToChannel(ECC_Visibility,ECR_Block);
+		MeshComponent->SetCollisionResponseToChannel(COLLISION_WEAPON,ECR_Block);
 		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
 		// this line is for crouch
 		GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+		bUseControllerRotationYaw=true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->MaxWalkSpeed=BaseWalkSpeed; 
 	}
 }
 
@@ -137,7 +145,7 @@ void ASCharacter::Tick(float DeltaTime)
 	}
 	SetHUDCrosshairs(DeltaTime);
 	// is true : first - false : second
-	float const TargetFOV = bIsZoomed ? ZoomedFOV : DefaultFOV;
+	float const TargetFOV = bIsAiming ? ZoomedFOV : DefaultFOV;
 	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime,
 																				ZoomInterpSpeed);
 	CameraComp->SetFieldOfView(NewFOV);
@@ -183,22 +191,39 @@ FVector ASCharacter::GetPawnViewLocation() const
 
 void ASCharacter::I_Jump()
 {
-	Jump();
+	if(CanJump())
+	{
+		Jump();
+	}
 }
 
-void ASCharacter::I_StartADS()
+void ASCharacter::I_StartAiming()
 {
-	bIsZoomed = true;
+	bIsAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed=AimWalkSpeed; 
+	ServerAiming(true);
 }
 
-void ASCharacter::I_StopADS()
+void ASCharacter::I_StopAiming()
 {
-	bIsZoomed = false;
+	bIsAiming = false;
+	GetCharacterMovement()->MaxWalkSpeed=BaseWalkSpeed; 
+	ServerAiming(false);
 }
 
 USHealthComponent* ASCharacter::I_GetHealthComp() const
 {
 	return HealthComp;
+}
+
+bool ASCharacter::IsWeaponEquipped() const
+{
+	return CurrentWeapon != nullptr;
+}
+
+bool ASCharacter::IsAiming() const
+{
+	return bIsAiming;
 }
 
 void ASCharacter::I_StartFire()
@@ -384,13 +409,27 @@ void ASCharacter::I_ChangeWeapon()
 		ServerChangeWeapon();
 	}
 }
-
+/*
+void ASCharacter::OnRep_Aiming()
+{
+	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? 300.f:600.f; 
+}
+*/
 // Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor() const
 {
 	if(MeshID)
 	{
 		MeshID->SetVectorParameterValue(FName("BodyColor"), PlayerColor);
+	}
+}
+
+void ASCharacter::OnRep_WeaponEquipped()
+{
+	if(CurrentWeapon)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
 	}
 }
 
@@ -458,9 +497,15 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 	}
 }
 
+void ASCharacter::ServerAiming_Implementation(const bool bAiming)
+{
+	bIsAiming = bAiming;
+	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
+}
+
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,
-	float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
-																		AActor* DamageCauser)
+                                  float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
+                                  AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
 	{
@@ -486,4 +531,5 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
+	DOREPLIFETIME(ASCharacter, bIsAiming);
 }

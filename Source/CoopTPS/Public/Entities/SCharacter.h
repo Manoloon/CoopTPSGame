@@ -38,18 +38,19 @@ protected:
 		UParticleSystemComponent* BeamComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
 		UDecalComponent* BeamEndPointDecal;
-	UPROPERTY(VisibleAnywhere, Category = "Settings|HealthComp")
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Settings|HealthComp")
 		class USHealthComponent* HealthComp;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 			UWidgetComponent* InfoWidgetComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;
-	
+	UPROPERTY(Replicated)
+		bool bIsAiming;
 	UPROPERTY(EditAnywhere, Category = "Settings")
 		USkeletalMesh* PawnMesh = nullptr;
 
 	// aiming variables
-	bool bIsZoomed;
+	
 	float DefaultFOV;
 
 	// grenade mode
@@ -81,7 +82,8 @@ protected:
 
 	// current weapon
 public:
-	UPROPERTY(Replicated, Transient)
+	// TODO : ver de quitar el tema de primario y current. Current y secondary deberia quedar.
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponEquipped, Transient)
 		class ASWeapon* CurrentWeapon= nullptr;
 	UPROPERTY(Replicated, Transient)
 		ASWeapon* PrimaryWeapon = nullptr;
@@ -91,6 +93,10 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Movement")
+		float BaseWalkSpeed=400.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Movement")
+		float AimWalkSpeed=200.0f;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Weapon")
 		TSubclassOf<ASWeapon>StarterWeaponClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Weapon")
@@ -130,13 +136,19 @@ private:
 	ATPSHud* HUD =nullptr;
 	UPROPERTY()
 	class ACoopPlayerController* PlayerController=nullptr;
+	//UFUNCTION()
+	//void OnRep_Aiming();
 	UFUNCTION()
 	void OnRep_PlayerColor() const;
+	UFUNCTION()
+	void OnRep_WeaponEquipped();
 	UFUNCTION(Server,Reliable)
 	void ServerChangeWeapon();
+	UFUNCTION(Server,Reliable)
+	void ServerAiming(bool bAiming);
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
-		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	// Called every frame
@@ -165,8 +177,14 @@ public:
 	virtual void I_MoveRight(float Value) override;
 	virtual void I_TurnRate(float Value) override;
 	virtual void I_LookUpRate(float Value) override;
-	virtual void I_StartADS() override;
-	virtual void I_StopADS() override;
+	virtual void I_StartAiming() override;
+	virtual void I_StopAiming() override;
 
 	virtual USHealthComponent* I_GetHealthComp() const override;
+
+public:
+	bool IsWeaponEquipped() const;
+	UFUNCTION(BlueprintCallable)
+	bool IsAiming()const;
+	
 };
