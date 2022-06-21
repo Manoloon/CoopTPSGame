@@ -36,14 +36,6 @@ public:
 	
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Team")
     	static bool IsFriendly(AActor* ActorA , AActor* ActorB);
-	//** NetworkManager
-	UFUNCTION()
-	void PostReplication(TArray<uint8> Payload);
-	TArray<uint8> Encode();
-	void Decode(const TArray<uint8>& Payload);
-	//***
-	UPROPERTY()
-	class ANetworkManager* NetworkManager;
 	
 protected:
 	virtual void BeginPlay() override;
