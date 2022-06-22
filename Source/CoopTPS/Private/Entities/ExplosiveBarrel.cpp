@@ -29,27 +29,28 @@ AExplosiveBarrel::AExplosiveBarrel()
 
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
+	RadialForceComp->Radius = ExplosionRadius;
+	RadialForceComp->ImpulseStrength = ExplosionImpulse;
 }
 
 USHealthComponent* AExplosiveBarrel::I_GetHealthComp() const
 {
-	return HealthComp;
+	if(HealthComp)
+	{
+		return HealthComp;
+	}
+	return nullptr;	
 }
 
 void AExplosiveBarrel::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	
-	RadialForceComp->Radius = ExplosionRadius;
 	RadialForceComp->bImpulseVelChange = true;
 	RadialForceComp->bAutoActivate = false;
 	RadialForceComp->bIgnoreOwningActor = true;
-
-	ExplosionDamage = 40.0f;
-	ExplosionRadius = 400.0f;
-	ExplosionImpulse = 400.0f;
 	bExploded = false;
-	HealthComp->TeamNum = 2;
+	HealthComp->TeamNum = 2;	
 }
 
 void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health,

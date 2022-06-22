@@ -6,9 +6,11 @@
 #include "TimerManager.h"
 #include "UnrealNetwork.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-static int32 DebugWeaponDrawing = 0;
+
+static bool DebugBarrel = false;
 FAutoConsoleVariableRef CVARDebugProjectile(TEXT("COOP.Projectile"),
-DebugWeaponDrawing,TEXT("Draw debug Projectile Explosion Radius"),ECVF_Cheat);
+DebugBarrel,TEXT("Draw debug Projectile Explosion Radius"),ECVF_Cheat);
+
 ASProjectile::ASProjectile()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -40,7 +42,7 @@ void ASProjectile::BeginPlay()
 
 void ASProjectile::Explode()
 {
-	if(DebugWeaponDrawing)
+	if(DebugBarrel)
 	{
 		DrawDebugSphere(GetWorld(),GetActorLocation(),Data.DamageRadius,12,
 						FColor::Orange,true,133.0f,0,12.f);

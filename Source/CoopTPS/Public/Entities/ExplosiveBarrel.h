@@ -27,30 +27,30 @@ public:
 protected:
 	virtual void PostInitializeComponents() override;
 	
-	UPROPERTY(Category = MeshComp, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,Category = "Components")
 		UStaticMeshComponent* MeshComp;
-	UPROPERTY(Category = Components, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,Category = "Components")
 		USHealthComponent* HealthComp;
-	UPROPERTY(Category = Components, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,Category = "Components")
 		URadialForceComponent* RadialForceComp;
-	UPROPERTY(Category = Components, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,Category = "Components")
 		UAudioComponent* AudioComp;
 	
-	UPROPERTY(Category = "FX", EditDefaultsOnly)
+	UPROPERTY(EditAnywhere,Category = "Settings")
+		float ExplosionRadius=300.f;
+	UPROPERTY(EditAnywhere,Category = "Settings")
+		float ExplosionDamage=60.f;
+	UPROPERTY(EditAnywhere,Category = "Settings")
+		float ExplosionImpulse=400.f;
+	UPROPERTY(EditAnywhere,Category = "Settings")
 		UParticleSystem* ExplosionFX;
-	UPROPERTY(Category = "Explosion", EditDefaultsOnly)
-		float ExplosionRadius;
-	UPROPERTY(Category = "Explosion", EditDefaultsOnly)
-		float ExplosionDamage;
-	UPROPERTY(Category = "Explosion", EditDefaultsOnly)
-		float ExplosionImpulse;
-	UPROPERTY(Category = "SFX", EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly,Category = "Settings|SFX")
 		USoundCue* ExplosionSFX;
-	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly,Category = "Settings|SFX")
 		USoundCue* HitSFX;
-	UPROPERTY(Category = "MatInst", EditDefaultsOnly)
+	UPROPERTY()//UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		UMaterialInstanceDynamic* MatInst;
-	UPROPERTY(Category = "MatInst", EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		UMaterial* ExplodedMaterial;
 
 private:

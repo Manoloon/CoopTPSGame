@@ -179,7 +179,7 @@ public:
 	virtual void I_LookUpRate(float Value) override;
 	virtual void I_StartAiming() override;
 	virtual void I_StopAiming() override;
-
+	
 	virtual USHealthComponent* I_GetHealthComp() const override;
 
 public:

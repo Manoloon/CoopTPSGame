@@ -13,5 +13,6 @@ class IIHealthyActor
 {
 	GENERATED_BODY()
 public:
+	UFUNCTION(BlueprintCallable)
    virtual USHealthComponent* I_GetHealthComp() const=0;
 };

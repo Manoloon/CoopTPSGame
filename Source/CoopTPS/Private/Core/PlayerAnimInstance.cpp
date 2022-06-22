@@ -6,6 +6,7 @@
 #include "SCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "SHealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -17,6 +18,10 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	if(PawnCharacter ==nullptr){return;}
 	bIsCrouched = PawnCharacter->bIsCrouched;
+	if(PawnCharacter->I_GetHealthComp())
+	{
+		bDie = PawnCharacter->I_GetHealthComp()->bOwnerIsDead;
+	}	
 	bIsInAir = PawnCharacter->GetCharacterMovement()->IsFalling();
 	FVector Velocity = PawnCharacter->GetVelocity();
 	Velocity.Z = 0.f;

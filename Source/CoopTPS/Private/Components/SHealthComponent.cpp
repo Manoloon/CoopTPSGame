@@ -7,6 +7,10 @@
 #include "Core/SGameMode.h"
 #include "Kismet/GameplayStatics.h"
 
+static bool DebugHealth = false;
+FAutoConsoleVariableRef CVARDebugHealthComponent(TEXT("COOP.Health"),
+DebugHealth,TEXT("Health component debug"),ECVF_Cheat);
+
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -20,7 +24,7 @@ void USHealthComponent::BeginPlay()
 		}
 	}	
 	Health = MaxHealth;
-	UE_LOG(LogTemp,Error,TEXT("on BeginPlay : health %f of %s"),Health,*GetOwner()->GetName());
+	//UE_LOG(LogTemp,Error,TEXT("on BeginPlay : health %f of %s"),Health,*GetOwner()->GetName());
 }
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
