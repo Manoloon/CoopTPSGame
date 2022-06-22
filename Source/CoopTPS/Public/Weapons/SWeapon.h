@@ -40,6 +40,7 @@ class COOPTPS_API ASWeapon : public AActor
 	
 public:	
 	ASWeapon();
+	bool IsReloading() const;
 	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		bool bIsReloading;

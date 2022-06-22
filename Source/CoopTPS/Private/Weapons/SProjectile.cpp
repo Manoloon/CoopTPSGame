@@ -7,9 +7,9 @@
 #include "UnrealNetwork.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-static bool DebugBarrel = false;
+static bool DebugProjectile = false;
 FAutoConsoleVariableRef CVARDebugProjectile(TEXT("COOP.Projectile"),
-DebugBarrel,TEXT("Draw debug Projectile Explosion Radius"),ECVF_Cheat);
+DebugProjectile,TEXT("Draw debug Projectile Explosion Radius"),ECVF_Cheat);
 
 ASProjectile::ASProjectile()
 {
@@ -42,7 +42,7 @@ void ASProjectile::BeginPlay()
 
 void ASProjectile::Explode()
 {
-	if(DebugBarrel)
+	if(DebugProjectile)
 	{
 		DrawDebugSphere(GetWorld(),GetActorLocation(),Data.DamageRadius,12,
 						FColor::Orange,true,133.0f,0,12.f);

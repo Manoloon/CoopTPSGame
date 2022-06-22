@@ -484,6 +484,12 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,
 																				2.25f);
 			}
+			else if (CurrentWeapon)
+			{
+				const float ReloadingFactor = CurrentWeapon->IsReloading() ? 5.f : 1.f;
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,ReloadingFactor,
+																	DeltaTime,2.25f);
+			}
 			else
 			{
 				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,

@@ -25,6 +25,11 @@ ASWeapon::ASWeapon()
 	bReplicates =true;
 }
 
+bool ASWeapon::IsReloading() const
+{
+	return bIsReloading;
+}
+
 void ASWeapon::BeginPlay()
 {
 	Super::BeginPlay();
