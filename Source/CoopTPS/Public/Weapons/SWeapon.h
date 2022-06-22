@@ -48,6 +48,8 @@ public:
 	virtual void StopFire();
 	void StartReloading();
 	const FHUDData& GetCrosshairData() const;
+	UAnimMontage* GetFireMontage() const;
+	UAnimMontage* GetReloadMontage() const;
 	void SetHitResult(const FHitResult& NewHitResult);
 private:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

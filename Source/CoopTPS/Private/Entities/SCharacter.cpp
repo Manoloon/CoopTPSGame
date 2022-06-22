@@ -231,6 +231,7 @@ void ASCharacter::I_StartFire()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->StartFire();
+		PlayMontage(CurrentWeapon->GetFireMontage());
 	}
 }
 
@@ -239,6 +240,7 @@ void ASCharacter::I_StopFire()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->StopFire();
+		GetMesh()->GetAnimInstance()->Montage_Stop(0.2);
 	}
 }
 
@@ -255,6 +257,7 @@ void ASCharacter::I_Reload()
 	if(CurrentWeapon)
 	{
 		CurrentWeapon->StartReloading();
+		PlayMontage(CurrentWeapon->GetReloadMontage());
 	}
 }
 
@@ -388,6 +391,17 @@ FLinearColor ASCharacter::IterationTrace()
 		CurrentWeapon->SetHitResult(HitResult);
 	}	
 	return FLinearColor::White;
+}
+
+void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(IsValid(AnimInstance) )
+	{
+		AnimInstance->Montage_Play(MontageToPlay);
+		const FName SectionName = bIsAiming? FName("Aiming") : FName("Hip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
 void ASCharacter::I_ChangeWeapon()

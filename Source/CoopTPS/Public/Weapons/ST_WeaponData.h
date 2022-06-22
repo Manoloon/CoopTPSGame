@@ -8,25 +8,31 @@ struct FWeaponFXData
 {
 	GENERATED_BODY()
 	// VFX
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	UParticleSystem* MuzzleFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	UParticleSystem* DefaultImpactFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	UParticleSystem* FleshImpactFX;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|VFX")
 	UParticleSystem* TracerFX;	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UCameraShakeBase>FireCamShake;
 
 	// SFX
-	UPROPERTY(EditDefaultsOnly,Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly,Category = "Weapon|SFX")
 	USoundCue* ReloadSFX;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|SFX")
 	USoundCue* NoAmmoSFX;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|SFX")
 	USoundCue* FireSFX;
 
+	// Montage
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animation")
+	UAnimMontage* ReloadMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animation")
+	UAnimMontage* FireMontage;
+	
 	FWeaponFXData()
 	{
 		MuzzleFX=nullptr;
@@ -37,6 +43,8 @@ struct FWeaponFXData
 		ReloadSFX=nullptr;
 		NoAmmoSFX=nullptr;
 		FireSFX=nullptr;
+		ReloadMontage=nullptr;
+		FireMontage=nullptr;
 	}
 };
 

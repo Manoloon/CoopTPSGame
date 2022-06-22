@@ -99,6 +99,16 @@ const FHUDData& ASWeapon::GetCrosshairData() const
 	return CrossHairData;
 }
 
+UAnimMontage* ASWeapon::GetFireMontage() const
+{
+	return WeaponFXConfig.FireMontage;
+}
+
+UAnimMontage* ASWeapon::GetReloadMontage() const
+{
+	return WeaponFXConfig.ReloadMontage;
+}
+
 void ASWeapon::SetHitResult(const FHitResult& NewHitResult)
 {
 	TraceResult = NewHitResult;

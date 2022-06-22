@@ -129,6 +129,7 @@ protected:
 	void DrawingTrajectory();
 	FLinearColor IterationTrace();
 private:
+	void PlayMontage(UAnimMontage* MontageToPlay) const;
 	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
 	float CrossInAirFactor;
