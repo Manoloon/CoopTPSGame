@@ -42,5 +42,6 @@ public:
 	FRotator DeltaRotation;
 	FRotator CharacterRotation;
 	FRotator CharacterRotationLastFrame;
+	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };
