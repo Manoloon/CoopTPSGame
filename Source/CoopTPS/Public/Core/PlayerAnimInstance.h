@@ -34,7 +34,11 @@ public:
 	bool bIsAiming=false;
 	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly,Category ="Settings")
 	bool bDie =false;
-
+	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly,Category ="Settings")
+	FVector2D AimOffsetData={0.0f,0.f};
+	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly,Category ="Settings")
+	FTransform LeftHandTransform;
+	
 	FRotator DeltaRotation;
 	FRotator CharacterRotation;
 	FRotator CharacterRotationLastFrame;

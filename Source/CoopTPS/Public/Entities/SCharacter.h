@@ -50,7 +50,9 @@ protected:
 		USkeletalMesh* PawnMesh = nullptr;
 
 	// aiming variables
-	
+	float AimOffsetYaw=0.0f;
+	float AimOffSetPitch=0.0f;
+	FRotator StartingAimRotation=FRotator::ZeroRotator;
 	float DefaultFOV;
 
 	// grenade mode
@@ -120,6 +122,7 @@ protected:
 public:
 	UFUNCTION()
 	void AuthSetPlayerColor(const FLinearColor& NewColor);
+	
 protected:
 	void Throw();
 	void ClearBeam();
@@ -129,6 +132,8 @@ protected:
 	void DrawingTrajectory();
 	FLinearColor IterationTrace();
 private:
+
+	void CalculateAimOffset();
 	void PlayMontage(UAnimMontage* MontageToPlay) const;
 	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
@@ -182,10 +187,12 @@ public:
 	virtual void I_StopAiming() override;
 	
 	virtual USHealthComponent* I_GetHealthComp() const override;
-
-public:
+	
 	bool IsWeaponEquipped() const;
 	UFUNCTION(BlueprintCallable)
 	bool IsAiming()const;
-	
+	UFUNCTION()
+	FTransform GetHandlingWeaponTransform() const;
+	UFUNCTION()
+	FVector2D GetAimOffsetData()const{return FVector2D(AimOffsetYaw,AimOffSetPitch);}
 };

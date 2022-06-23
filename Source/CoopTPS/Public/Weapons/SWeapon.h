@@ -51,6 +51,7 @@ public:
 	UAnimMontage* GetFireMontage() const;
 	UAnimMontage* GetReloadMontage() const;
 	void SetHitResult(const FHitResult& NewHitResult);
+	FTransform GetWeaponHandle()const;
 private:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 protected:

@@ -75,7 +75,7 @@ void ASCharacter::PostInitializeComponents()
 		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
 		// this line is for crouch
 		GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
-		bUseControllerRotationYaw=true;
+		//bUseControllerRotationYaw=true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->MaxWalkSpeed=BaseWalkSpeed; 
 	}
@@ -135,7 +135,7 @@ void ASCharacter::BeginPlay()
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	CalculateAimOffset();
 	// in grenade mode
 	if (bIsGranadaMode)
 	{
@@ -224,6 +224,15 @@ bool ASCharacter::IsWeaponEquipped() const
 bool ASCharacter::IsAiming() const
 {
 	return bIsAiming;
+}
+
+FTransform ASCharacter::GetHandlingWeaponTransform() const
+{
+	if(CurrentWeapon)
+	{
+		return CurrentWeapon->GetWeaponHandle();
+	}
+	return FTransform{};
 }
 
 void ASCharacter::I_StartFire()
@@ -393,6 +402,34 @@ FLinearColor ASCharacter::IterationTrace()
 	return FLinearColor::White;
 }
 
+void ASCharacter::CalculateAimOffset()
+{
+	if(CurrentWeapon == nullptr){return;}
+	if(GetVelocity().Size() == 0.f && !GetCharacterMovement()->IsFalling())
+	{
+		bUseControllerRotationYaw = false;
+		const FRotator CurrentAimRotation =  FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		const FRotator DeltaAimRot = UKismetMathLibrary::NormalizedDeltaRotator(
+												CurrentAimRotation,StartingAimRotation);
+		AimOffsetYaw = DeltaAimRot.Yaw;
+	}
+	else
+	{
+		bUseControllerRotationYaw = true;
+		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		AimOffsetYaw = 0.f;		
+	}
+	AimOffSetPitch = GetBaseAimRotation().Pitch;
+	if(AimOffSetPitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch from [270,360) to [-90,0)
+		const FVector2D InRange(270.f,360.f);
+		const FVector2D OutRange(-90.f,0.f);
+		AimOffSetPitch = FMath::GetMappedRangeValueClamped(InRange,OutRange,
+																					AimOffSetPitch);
+	}
+}
+
 void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -443,7 +480,7 @@ void ASCharacter::OnRep_WeaponEquipped()
 	if(CurrentWeapon)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
-		bUseControllerRotationYaw = true;
+		//bUseControllerRotationYaw = true;
 	}
 }
 

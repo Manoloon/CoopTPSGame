@@ -9,6 +9,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
 #include "TimerManager.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Sound/SoundCue.h"
 #include "Net/UnrealNetwork.h"
 
@@ -112,6 +113,15 @@ UAnimMontage* ASWeapon::GetReloadMontage() const
 void ASWeapon::SetHitResult(const FHitResult& NewHitResult)
 {
 	TraceResult = NewHitResult;
+}
+
+FTransform ASWeapon::GetWeaponHandle() const
+{
+	if(const auto Socket = MeshComp->GetSocketByName(FName("HandleSocket")); IsValid(Socket))
+	{
+		return MeshComp->GetSocketTransform(FName("HandleSocket"),RTS_World);
+	}
+	return FTransform{};
 }
 
 void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
