@@ -11,12 +11,10 @@
 #include "Core/SPlayerState.h"
 #include "TimerManager.h"
 
-
 ASGameMode::ASGameMode()
 {
-	TimeBetweenWaves = 2.0f;
-	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass
-										(TEXT("/Game/Blueprints/Player_Pawn"));
+	TimeBetweenWaves = 5.0f;
+	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
 	if(BPPlayerCharacterClass.Class != nullptr)
 	{
 		DefaultPawnClass = BPPlayerCharacterClass.Class;
@@ -41,8 +39,7 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 	Super::SetPlayerDefaults(PlayerPawn);
 	if (ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn))
 	{
-		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1)
-												% PlayerColors.Num();
+		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
 		if (PlayerColors.IsValidIndex(PlayerColorIndex))
 		{
 			CoopPawn->AuthSetPlayerColor(PlayerColors[PlayerColorIndex]);
@@ -51,24 +48,39 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 	}
 }
 
+void ASGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	// TODO : send a notification for this , not using tick- maybe dispatcher from entities.
+	CheckWaveState();
+	CheckAnyPlayerAlive();
+}
+
 void ASGameMode::StartWave()
 {
+	//TODO : show sign to all players about the count
 	WaveCount++;
 	NumBotsToSpawn = 2 * WaveCount;
-
-	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this,
-		&ASGameMode::SpawnBotTimerElapsed, 1.0f,true,0.0f);
+	GetWorldTimerManager().SetTimer(TH_SpawnBots, this,&ASGameMode::SpawnBotTimerElapsed, 1.0f,
+																						true,0.0f);
 	SetWaveState(EWaveState::WaveInProgress);
 }
 
 void ASGameMode::EndWave()
 {
-	GetWorldTimerManager().ClearTimer(TimerHandle_SpawnBots);
+	//TODO : show sign to all players about stats
+	GetWorldTimerManager().ClearTimer(TH_SpawnBots);
 	SetWaveState(EWaveState::WaveComplete);
+}
+
+void ASGameMode::RestartWave()
+{
+	GetWorldTimerManager().ClearTimer(TH_SpawnBots);	
 }
 
 void ASGameMode::PrepareNextWave()
 {
+	UE_LOG(LogTemp,Warning,TEXT("Preparing next wave"));
 	GetWorldTimerManager().SetTimer(TH_NextWaveStart, this,
 			&ASGameMode::StartWave, TimeBetweenWaves, false);
 	SetWaveState(EWaveState::WaitingToStart);
@@ -82,26 +94,8 @@ void ASGameMode::CheckWaveState()
 	{
 		return;
 	}
-
-	bool bIsAnyBotAlive = false;
-
-	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
-	{
-		const APawn* TestPawn = *PawnIterator;
-		if(TestPawn == nullptr || TestPawn->IsPlayerControlled())
-		{
-		continue;
-		}
-
-		if (const USHealthComponent* HealthComp =Cast<USHealthComponent>
-			(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-			HealthComp && HealthComp->GetHealth() >0.0f)
-		{
-			bIsAnyBotAlive = true;
-			break;
-		}
-	}
-	if (!bIsAnyBotAlive)
+	// TODO : better solution to this iterations?
+	if (!IsAnyEnemyAlive() && IsAnyPlayerAlive())
 	{
 		PrepareNextWave();
 	}
@@ -109,21 +103,10 @@ void ASGameMode::CheckWaveState()
 
 void ASGameMode::CheckAnyPlayerAlive()
 {
-	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator();It;++It)
+	if(!IsAnyPlayerAlive())
 	{
-		if(const APlayerController* PC = It->Get(); PC && PC->GetPawn())
-		{
-			const APawn* PlayerPawn = PC->GetPawn();
-			const USHealthComponent* HealthComp = Cast<USHealthComponent>
-			(PlayerPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-			//TODO hacer un null system asi no se corta el juego.
-			if(HealthComp && HealthComp->Health > 0.0f )
-			{
-				return;
-			}
-		}
-	}
-	GameOver();
+		GameOver();
+	}	
 }
 
 void ASGameMode::GameOver()
@@ -171,11 +154,42 @@ void ASGameMode::SpawnBotTimerElapsed()
 	}
 }
 
-void ASGameMode::Tick(float DeltaTime)
+bool ASGameMode::IsAnyPlayerAlive() const
 {
-	Super::Tick(DeltaTime);
-	// TODO : send a notification for this , not using tick-
-	CheckWaveState();
-	CheckAnyPlayerAlive();
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator();It;++It)
+	{
+		if(const APlayerController* PC = It->Get(); PC && PC->GetPawn())
+		{
+			const APawn* PlayerPawn = PC->GetPawn();
+			//TODO hacer un null system asi no se corta el juego.
+			if(const IIHealthyActor* I = Cast<IIHealthyActor>(PlayerPawn);
+				I->I_GetHealthComp()->GetHealth() > 0.0f )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
+bool ASGameMode::IsAnyEnemyAlive() const
+{
+	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
+	{
+		const APawn* TestPawn = *PawnIterator;
+		if(TestPawn == nullptr || TestPawn->IsPlayerControlled())
+		{
+			continue;
+		}
+		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);
+			I->I_GetHealthComp()->GetHealth() > 0.0f)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void ASGameMode::DestroyAllEnemies()
+{
+}
