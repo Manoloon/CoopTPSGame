@@ -10,7 +10,7 @@
 #include "Weapons/SWeapon.h"
 #include "Weapons/SProjectile.h"
 #include "Components/CapsuleComponent.h"
-
+#include "Components/WidgetComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SHealthComponent.h"
@@ -120,14 +120,14 @@ void ASCharacter::BeginPlay()
 		if (CurrentWeapon)
 		{
 			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(),
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+			CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+																									WeaponSocketName);
 		}
 		if(SecondaryWeapon)
 		{
 			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->AttachToComponent(GetMesh(),
-				FAttachmentTransformRules::SnapToTargetIncludingScale, SecondaryWeaponSocketName);
+			SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																							SecondaryWeaponSocketName);
 		}
 	}
 }
@@ -146,8 +146,7 @@ void ASCharacter::Tick(float DeltaTime)
 	SetHUDCrosshairs(DeltaTime);
 	// is true : first - false : second
 	float const TargetFOV = bIsAiming ? ZoomedFOV : DefaultFOV;
-	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime,
-																				ZoomInterpSpeed);
+	float const NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime,ZoomInterpSpeed);
 	CameraComp->SetFieldOfView(NewFOV);
 }
 
@@ -282,8 +281,7 @@ void ASCharacter::Throw()
 		if (Grenade)
 		{
 		Grenade->InitialLocalVelocity = InitialLocalVelocity;
-		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation,
-														StartLocation, SpawnScale));
+		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation,StartLocation, SpawnScale));
 		}		
 	}
 }
@@ -324,10 +322,8 @@ void ASCharacter::GetSegmentAtTime(const FVector LocalStartLocation, const FVect
 									const FVector LocalGravity, const float LocalTime1, const float LocalTime2,
 																FVector &OutPoint1, FVector &OutPoint2)
 {
-	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) +
-												(LocalGravity*(LocalTime1*LocalTime1*0.5f)));
-	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) +
-												(LocalGravity*(LocalTime2*LocalTime2*0.5f)));
+	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) + (LocalGravity*(LocalTime1*LocalTime1*0.5f)));
+	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) + (LocalGravity*(LocalTime2*LocalTime2*0.5f)));
 }
 
 void ASCharacter::DrawingTrajectory()
@@ -388,8 +384,8 @@ FLinearColor ASCharacter::IterationTrace()
 		}		
 		if(DebugCharacter)
 		{
-			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint,5.f,12,FColor::White,false,1.f,
-			0,3);
+			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint,5.f,12,FColor::White,false,
+																				1.f,0,3);
 		}
 		return(USHealthComponent::IsFriendly(this, HitResult.GetActor())) ?
 			FLinearColor::Green : FLinearColor::Red;
@@ -402,22 +398,48 @@ FLinearColor ASCharacter::IterationTrace()
 	return FLinearColor::White;
 }
 
+void ASCharacter::TurnInPlace()
+{
+	if(AimOffsetYaw > 90.f)
+	{
+		bTurnInPlace=true;
+	}
+	else if (AimOffsetYaw < -90.f)
+	{
+		bTurnInPlace=true;
+	}
+	if(bTurnInPlace)
+	{
+		InterpAimYaw = FMath::FInterpTo(InterpAimYaw,0.f,GetWorld()->GetDeltaSeconds(),5.f);
+		AimOffsetYaw = InterpAimYaw;
+		if(FMath::Abs(AimOffsetYaw)<15.f)
+		{
+			bTurnInPlace = false;
+			StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		}
+	}
+}
+
 void ASCharacter::CalculateAimOffset()
 {
 	if(CurrentWeapon == nullptr){return;}
 	if(GetVelocity().Size() == 0.f && !GetCharacterMovement()->IsFalling())
 	{
-		bUseControllerRotationYaw = false;
 		const FRotator CurrentAimRotation =  FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
-		const FRotator DeltaAimRot = UKismetMathLibrary::NormalizedDeltaRotator(
-												CurrentAimRotation,StartingAimRotation);
+		const FRotator DeltaAimRot = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation,
+																				StartingAimRotation);
 		AimOffsetYaw = DeltaAimRot.Yaw;
+		if(!bTurnInPlace)
+		{
+			InterpAimYaw = AimOffsetYaw;
+		}
+		TurnInPlace();
 	}
 	else
 	{
-		bUseControllerRotationYaw = true;
 		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
-		AimOffsetYaw = 0.f;		
+		AimOffsetYaw = 0.f;
+		bTurnInPlace=false;
 	}
 	AimOffSetPitch = GetBaseAimRotation().Pitch;
 	if(AimOffSetPitch > 90.f && !IsLocallyControlled())
@@ -425,8 +447,7 @@ void ASCharacter::CalculateAimOffset()
 		// map pitch from [270,360) to [-90,0)
 		const FVector2D InRange(270.f,360.f);
 		const FVector2D OutRange(-90.f,0.f);
-		AimOffSetPitch = FMath::GetMappedRangeValueClamped(InRange,OutRange,
-																					AimOffSetPitch);
+		AimOffSetPitch = FMath::GetMappedRangeValueClamped(InRange,OutRange,AimOffSetPitch);
 	}
 }
 
@@ -447,25 +468,18 @@ void ASCharacter::I_ChangeWeapon()
 	{
 		ASWeapon* TempWeapon = SecondaryWeapon;
 		SecondaryWeapon = CurrentWeapon;
-		SecondaryWeapon->AttachToComponent(GetMesh(),
-		                                   FAttachmentTransformRules::SnapToTargetIncludingScale,
-		                                   SecondaryWeaponSocketName);
+		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																						SecondaryWeaponSocketName);
 		CurrentWeapon = TempWeapon;
-		CurrentWeapon->AttachToComponent(GetMesh(),
-		                                 FAttachmentTransformRules::SnapToTargetIncludingScale,
-		                                 WeaponSocketName);
+		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																								WeaponSocketName);
 	}
 	else
 	{
 		ServerChangeWeapon();
 	}
 }
-/*
-void ASCharacter::OnRep_Aiming()
-{
-	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? 300.f:600.f; 
-}
-*/
+
 // Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor() const
 {
@@ -480,7 +494,6 @@ void ASCharacter::OnRep_WeaponEquipped()
 	if(CurrentWeapon)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
-		//bUseControllerRotationYaw = true;
 	}
 }
 
@@ -488,20 +501,17 @@ void ASCharacter::ServerChangeWeapon_Implementation()
 {
 	ASWeapon* TempWeapon = SecondaryWeapon;
 	SecondaryWeapon = CurrentWeapon;
-	SecondaryWeapon->AttachToComponent(GetMesh(),
-									   FAttachmentTransformRules::SnapToTargetIncludingScale,
-									   SecondaryWeaponSocketName);
+	SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																					SecondaryWeaponSocketName);
 	CurrentWeapon = TempWeapon;
-	CurrentWeapon->AttachToComponent(GetMesh(),
-									 FAttachmentTransformRules::SnapToTargetIncludingScale,
-									 WeaponSocketName);
+	CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																								WeaponSocketName);
 }
 
 void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 {
 	if(this->Controller == nullptr) return;
-	PlayerController = PlayerController == nullptr? Cast<ACoopPlayerController>(GetController())
-																	: PlayerController;
+	PlayerController = PlayerController == nullptr? Cast<ACoopPlayerController>(GetController())	: PlayerController;
 	if(PlayerController)
 	{
 		HUD = HUD == nullptr? Cast<ATPSHud>(PlayerController->GetHUD()) : HUD;
@@ -532,19 +542,16 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 									VelocityMultiplierRange,Velocity.Size());
 			if(GetCharacterMovement()->IsFalling())
 			{
-				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,
-																				2.25f);
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,2.25f,DeltaTime,2.25f);
 			}
 			else if (CurrentWeapon)
 			{
 				const float ReloadingFactor = CurrentWeapon->IsReloading() ? 5.f : 1.f;
-				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,ReloadingFactor,
-																	DeltaTime,2.25f);
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,ReloadingFactor,DeltaTime,2.25f);
 			}
 			else
 			{
-				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,
-																				30.f);
+				CrossInAirFactor = FMath::FInterpTo(CrossInAirFactor,0.f,DeltaTime,30.f);
 			}
 			
 			HUDData.CrosshairSpread = CrosshairSpreadFactor + CrossInAirFactor;
@@ -560,9 +567,8 @@ void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
 }
 
-void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,
-                                  float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
-                                  AActor* DamageCauser)
+void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
+					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
 	{

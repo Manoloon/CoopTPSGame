@@ -3,11 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TPSHud.h"
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
-#include "Components/WidgetComponent.h"
 #include "SCharacter.generated.h"
 
 // USTRUCT()
@@ -41,7 +39,7 @@ protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Settings|HealthComp")
 		class USHealthComponent* HealthComp;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
-			UWidgetComponent* InfoWidgetComp;
+		class UWidgetComponent* InfoWidgetComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;
 	UPROPERTY(Replicated)
@@ -50,8 +48,10 @@ protected:
 		USkeletalMesh* PawnMesh = nullptr;
 
 	// aiming variables
-	float AimOffsetYaw=0.0f;
-	float AimOffSetPitch=0.0f;
+	bool bTurnInPlace=false;
+	float InterpAimYaw=0.f;
+	float AimOffsetYaw=0.f;
+	float AimOffSetPitch=0.f;
 	FRotator StartingAimRotation=FRotator::ZeroRotator;
 	float DefaultFOV;
 
@@ -132,14 +132,14 @@ protected:
 	void DrawingTrajectory();
 	FLinearColor IterationTrace();
 private:
-
+	void TurnInPlace();
 	void CalculateAimOffset();
 	void PlayMontage(UAnimMontage* MontageToPlay) const;
 	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
 	float CrossInAirFactor;
 	UPROPERTY()
-	ATPSHud* HUD =nullptr;
+	class ATPSHud* HUD =nullptr;
 	UPROPERTY()
 	class ACoopPlayerController* PlayerController=nullptr;
 	//UFUNCTION()
