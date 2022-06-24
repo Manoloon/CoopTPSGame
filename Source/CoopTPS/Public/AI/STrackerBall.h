@@ -16,10 +16,13 @@ UCLASS(Abstract)
 class COOPTPS_API ASTrackerBall : public APawn, public IIHealthyActor
 {
 	GENERATED_BODY()
-
 public:
 	// Sets default values for this pawn's properties
 	ASTrackerBall();
+
+	virtual void Tick(float DeltaTime) override;
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	virtual USHealthComponent* I_GetHealthComp() const override;
 protected: 
 	UPROPERTY(Category = "Componentes", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USHealthComponent* HealthComp = nullptr;
@@ -29,9 +32,9 @@ protected:
 		UAudioComponent* AudioComp = nullptr;
 	UPROPERTY(Category = "Componentes", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UStaticMeshComponent* MeshComp = nullptr;
+	
 	UPROPERTY(Category = "FX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 		UParticleSystem* ExplosionFX = nullptr;
-	
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 		USoundCue* ExplosionSFX = nullptr;
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
@@ -56,29 +59,17 @@ protected:
 	bool bExploded;
 	bool bStartedSelfDestruction;
 	float SelfDamageInterval = 0.25;
-
-	FTimerHandle HitShakeTH;
-
-	// Called when the game starts or when spawned
+	FTimerHandle TH_HitShake;
+	
 	virtual void BeginPlay() override;
-	FVector GetNextPathPoint();
-
-	void SelfDamage();
-
+	
 	UFUNCTION()
 		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-	
+	FVector GetNextPathPoint();
+	void SelfDamage();
 	void SelfDestruct();
-
 	void RefreshPath();
-
+	//TODO NO SE USA
 	void StartHitShake();
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-	virtual USHealthComponent* I_GetHealthComp() const override;
 };

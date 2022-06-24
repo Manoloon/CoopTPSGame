@@ -38,7 +38,6 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
-	UE_LOG(LogTemp,Warning,TEXT("taking damage : Health %f of %s"),Health,*GetOwner()->GetName());
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
 																					DamageCauser);
 	bOwnerIsDead = Health <= 0.0f;

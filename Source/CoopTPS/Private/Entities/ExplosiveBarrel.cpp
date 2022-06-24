@@ -77,24 +77,25 @@ void AExplosiveBarrel::SelfDestruct()
 	if (bExploded) { return; }
 
 	bExploded = true;
-	const UWorld* World = GetWorld();
-	UGameplayStatics::SpawnEmitterAtLocation(World, ExplosionFX, GetActorLocation());
-	UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+	if(ExplosionFX && ExplosionSFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+	}
 	
 	// push the barrel upward! 
 	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
 	MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 	MeshComp->SetMaterial(0, ExplodedMaterial);
 	RadialForceComp->FireImpulse();
-	
 
 	if (GetLocalRole()== ROLE_Authority)
 	{
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage,
-			GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors,
-							this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage,GetActorLocation(),
+			ExplosionRadius, nullptr, IgnoredActors,this, GetInstigatorController(),
+																							true);
 
 		if (DebugBarrel)
 		{

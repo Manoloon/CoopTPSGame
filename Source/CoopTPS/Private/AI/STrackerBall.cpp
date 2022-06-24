@@ -19,14 +19,12 @@
 
 // debug
 
-static int32 DebugTrackballDraw = 0;
-/*
+static int32 DebugTrackballDraw = 1;
 FAutoConsoleVariableRef CVARDebugtrackballDraw(
 	TEXT("Coop.DebugTrackball"),
 	DebugTrackballDraw,
 	TEXT("draw debug lines for trackball"),
 	ECVF_Cheat);
-*/
 
 // Sets default values
 ASTrackerBall::ASTrackerBall()
@@ -40,6 +38,7 @@ ASTrackerBall::ASTrackerBall()
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealhComp"));
+	HealthComp->TeamNum = 255;
 	
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetSphereRadius(200);
@@ -55,25 +54,23 @@ ASTrackerBall::ASTrackerBall()
 	bVelocityChanged = false;
 	bExploded = false;
 	bStartedSelfDestruction = false;
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 }
 
 // Called when the game starts or when spawned
 void ASTrackerBall::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 	if(HasAuthority())
 	{
 		NextPathPoint = GetNextPathPoint();
 	}
-	// health
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 }
-
 
 void ASTrackerBall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//TODO : quitar todo esto de tick
 	if (HasAuthority() && !bExploded)
 	{
 		const float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
@@ -105,7 +102,7 @@ void ASTrackerBall::Tick(float DeltaTime)
 FVector ASTrackerBall::GetNextPathPoint()
 {
 	AActor* BestTarget = nullptr;
-	float NearestTargetDistance = FLT_MAX; // asignamos el maximo en float con ese macro.
+	float NearestTargetDistance = FLT_MAX;
 
 	for (TActorIterator<APawn>PawnIterator(GetWorld()); PawnIterator; ++PawnIterator)
 	{
@@ -114,9 +111,7 @@ FVector ASTrackerBall::GetNextPathPoint()
 		{
 			continue;
 		}
-		const USHealthComponent*  TestPawnHealthComp = Cast<USHealthComponent>(
-							TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-		if(TestPawnHealthComp && TestPawnHealthComp->GetHealth()>0.0)
+		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);I->I_GetHealthComp()->GetHealth() > 0.0f)
 		{
 			const float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
 			if(Distance < NearestTargetDistance)
@@ -155,18 +150,18 @@ void ASTrackerBall::SelfDamage()
 void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	/*
  	if(MeshMaterialInstance == nullptr)
  	{
- 	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+ 	MeshMaterialInstance = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0,
+ 																	MeshComp->GetMaterial(0));
  	}
  	if(MeshMaterialInstance)
  	{
  	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
  	}
 	// si hittimer not playing
-	//GetWorldTimerManager().SetTimer(HitShakeTH,this, &ThisClass::StartHitShake, 0.0f, false);
-	*/
+	GetWorldTimerManager().SetTimer(TH_HitShake,this, &ASTrackerBall::StartHitShake, 0.0f, false);
+
 	if(Health <=0.0f)
 	{
 		SelfDestruct();
@@ -200,7 +195,6 @@ void ASTrackerBall::SelfDestruct()
 			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12,
 								FColor::Red, false, 2.0f, 3.0f);
 		}
-	 // en vez de Destroy() , usamos lifespan para que le de tiempo al cliente de ver la explosion.
 	SetLifeSpan(2.0f);
 	}
 }
@@ -223,7 +217,7 @@ void ASTrackerBall::StartHitShake()
 		MeshMaterialInstance->SetScalarParameterValue("DamageTaken", DamageHit);
 		if(DamageHit == 0.0f)
 		{
-			GetWorldTimerManager().ClearTimer(HitShakeTH);
+			GetWorldTimerManager().ClearTimer(TH_HitShake);
 		}
 	}
 }
@@ -239,10 +233,8 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 			// we overlapped player
 			if (GetLocalRole() == ROLE_Authority)
 			{
-				FTimerHandle SelfDamageTH;
-				// set a timer that inflict damage to ourself until we self destruct ---
-				// ESTE TIMER se corre cada medio segundo , y aplica el daño de 10 a el mismo.
-				GetWorldTimerManager().SetTimer(SelfDamageTH, this, &ASTrackerBall::SelfDamage,
+				FTimerHandle TH_SelfDamage;
+				GetWorldTimerManager().SetTimer(TH_SelfDamage, this, &ASTrackerBall::SelfDamage,
 											SelfDamageInterval, true, 0.0f);
 				bStartedSelfDestruction = true;
 			}			

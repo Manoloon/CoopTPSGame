@@ -82,6 +82,14 @@
 				"IOS",
 				"TVOS"
 			]
+		},
+		{
+			"Name": "OnlineSubsystemEOS",
+			"Enabled": true
+		},
+		{
+			"Name": "EOSShared",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

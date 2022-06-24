@@ -181,8 +181,7 @@ bool ASGameMode::IsAnyEnemyAlive() const
 		{
 			continue;
 		}
-		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);
-			I->I_GetHealthComp()->GetHealth() > 0.0f)
+		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);I->I_GetHealthComp()->GetHealth() > 0.0f)
 		{
 			return true;
 		}
