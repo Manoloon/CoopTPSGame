@@ -19,7 +19,7 @@
 
 // debug
 
-static int32 DebugTrackballDraw = 1;
+static int32 DebugTrackballDraw = 0;
 FAutoConsoleVariableRef CVARDebugtrackballDraw(
 	TEXT("Coop.DebugTrackball"),
 	DebugTrackballDraw,
@@ -128,9 +128,9 @@ FVector ASTrackerBall::GetNextPathPoint()
 							this, GetActorLocation(), BestTarget);
 		if (!NavPath) { return GetActorLocation(); }
 		// Con esto busca desatorarse si asi fuera recalculando el path.
-		FTimerHandle RefreshPathTH;
-		GetWorldTimerManager().ClearTimer(RefreshPathTH);
-		GetWorldTimerManager().SetTimer(RefreshPathTH, this, &ASTrackerBall::RefreshPath,
+		FTimerHandle TH_RefreshPath;
+		GetWorldTimerManager().ClearTimer(TH_RefreshPath);
+		GetWorldTimerManager().SetTimer(TH_RefreshPath, this, &ASTrackerBall::RefreshPath,
 																		5.0f, false);
 		
 		if (NavPath && NavPath->PathPoints.Num() > 1)
@@ -160,7 +160,10 @@ void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float H
  	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
  	}
 	// si hittimer not playing
-	GetWorldTimerManager().SetTimer(TH_HitShake,this, &ASTrackerBall::StartHitShake, 0.0f, false);
+	if(!GetWorldTimerManager().IsTimerActive(TH_HitShake))
+	{
+		GetWorldTimerManager().SetTimer(TH_HitShake,this, &ASTrackerBall::StartHitShake, 0.0f, false);
+	}
 
 	if(Health <=0.0f)
 	{
@@ -187,7 +190,7 @@ void ASTrackerBall::SelfDestruct()
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
 	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(),
-		ExplosionRadius, nullptr, IgnoredActors, this,GetInstigatorController(),
+		ExplosionRadius, LocDamageType, IgnoredActors, this,GetInstigatorController(),
 																			true);
 
 		if(DebugTrackballDraw)

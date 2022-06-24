@@ -52,6 +52,8 @@ protected:
 		float MovementForce = 7000.0f;
 	UPROPERTY(Category = "Settings", EditAnywhere,BlueprintReadOnly)
 		float RequireDistanceToTarget = 100.0f;
+	UPROPERTY(Category = "Settings", EditAnywhere,BlueprintReadOnly)
+		TSubclassOf<UDamageType> LocDamageType;
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly)
 		UMaterialInstanceDynamic* MeshMaterialInstance = nullptr;
 

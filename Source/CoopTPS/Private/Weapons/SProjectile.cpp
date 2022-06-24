@@ -35,8 +35,8 @@ void ASProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	ProjectileComp->SetVelocityInLocalSpace(InitialLocalVelocity);
-	FTimerHandle ExplodeTH;
-	GetWorldTimerManager().SetTimer(ExplodeTH, this, &ASProjectile::Explode,
+	FTimerHandle TH_Explode;
+	GetWorldTimerManager().SetTimer(TH_Explode, this, &ASProjectile::Explode,
 									Data.ExplodeDelay, false, Data.ExplodeDelay);
 }
 
