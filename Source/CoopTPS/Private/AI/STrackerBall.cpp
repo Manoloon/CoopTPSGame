@@ -17,28 +17,24 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 
-// debug
-
 static int32 DebugTrackballDraw = 0;
-FAutoConsoleVariableRef CVARDebugtrackballDraw(
+FAutoConsoleVariableRef CVarDebugTrackballDraw(
 	TEXT("Coop.DebugTrackball"),
 	DebugTrackballDraw,
 	TEXT("draw debug lines for trackball"),
 	ECVF_Cheat);
 
-// Sets default values
 ASTrackerBall::ASTrackerBall()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCanEverAffectNavigation(false);
-	//MeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealhComp"));
 	HealthComp->TeamNum = 255;
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 	
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetSphereRadius(200);
@@ -54,10 +50,8 @@ ASTrackerBall::ASTrackerBall()
 	bVelocityChanged = false;
 	bExploded = false;
 	bStartedSelfDestruction = false;
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 }
 
-// Called when the game starts or when spawned
 void ASTrackerBall::BeginPlay()
 {
 	Super::BeginPlay();	
@@ -67,10 +61,8 @@ void ASTrackerBall::BeginPlay()
 	}
 }
 
-void ASTrackerBall::Tick(float DeltaTime)
+void ASTrackerBall::CalculateMovement()
 {
-	Super::Tick(DeltaTime);
-	//TODO : quitar todo esto de tick
 	if (HasAuthority() && !bExploded)
 	{
 		const float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
@@ -84,7 +76,6 @@ void ASTrackerBall::Tick(float DeltaTime)
 		}
 		else
 		{
-			// keep going toward goal
 			FVector ForceDirection = NextPathPoint - GetActorLocation();
 			ForceDirection.Normalize();
 			ForceDirection *= MovementForce;
@@ -94,9 +85,15 @@ void ASTrackerBall::Tick(float DeltaTime)
 		if (DebugTrackballDraw)
 		{
 			DrawDebugSphere(GetWorld(), NextPathPoint, 10, 12, FColor::Yellow,
-									false, 1.0f, 0, 3.0f);
+			                false, 1.0f, 0, 3.0f);
 		}
 	}
+}
+
+void ASTrackerBall::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	CalculateMovement();
 }
 
 FVector ASTrackerBall::GetNextPathPoint()
@@ -113,8 +110,8 @@ FVector ASTrackerBall::GetNextPathPoint()
 		}
 		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);I->I_GetHealthComp()->GetHealth() > 0.0f)
 		{
-			const float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
-			if(Distance < NearestTargetDistance)
+			if(const float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
+				Distance < NearestTargetDistance)
 			{
 				BestTarget = TestPawn;
 				NearestTargetDistance = Distance;
@@ -127,7 +124,7 @@ FVector ASTrackerBall::GetNextPathPoint()
 		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(
 							this, GetActorLocation(), BestTarget);
 		if (!NavPath) { return GetActorLocation(); }
-		// Con esto busca desatorarse si asi fuera recalculando el path.
+		/*unstuck method*/
 		FTimerHandle TH_RefreshPath;
 		GetWorldTimerManager().ClearTimer(TH_RefreshPath);
 		GetWorldTimerManager().SetTimer(TH_RefreshPath, this, &ASTrackerBall::RefreshPath,
@@ -159,7 +156,6 @@ void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float H
  	{
  	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
  	}
-	// si hittimer not playing
 	if(!GetWorldTimerManager().IsTimerActive(TH_HitShake))
 	{
 		GetWorldTimerManager().SetTimer(TH_HitShake,this, &ASTrackerBall::StartHitShake, 0.0f, false);
@@ -180,7 +176,6 @@ void ASTrackerBall::SelfDestruct()
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
 		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	}	
-	// escondemos el mesh al morir -> y el true es para la propagacion. 
 	MeshComp->SetVisibility(false, true); 
 	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);

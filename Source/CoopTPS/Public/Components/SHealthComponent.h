@@ -18,10 +18,11 @@ class COOPTPS_API USHealthComponent final : public UActorComponent
 public:	
 	USHealthComponent()=default;
 	
-	UPROPERTY(ReplicatedUsing=ONREP_Health, BlueprintReadOnly, Category = "Health")
-	//UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(ReplicatedUsing=ONREP_Health, BlueprintReadOnly, Category = "Settings")
 		float Health;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+		bool bCanAutoHeal=false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
 		float MaxHealth = 100.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Team")

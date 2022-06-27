@@ -15,14 +15,18 @@ ASGameMode::ASGameMode()
 {
 	TimeBetweenWaves = 5.0f;
 	static ConstructorHelpers::FClassFinder<APawn>BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
+	static ConstructorHelpers::FClassFinder<ATPSHud>BPTpsHUDClass(TEXT("/Game/Blueprints/BP_TPSHUD"));
 	if(BPPlayerCharacterClass.Class != nullptr)
 	{
 		DefaultPawnClass = BPPlayerCharacterClass.Class;
 	}
+	if(BPTpsHUDClass.Class !=nullptr)
+	{
+		HUDClass = BPTpsHUDClass.Class;
+	}
 	GameStateClass = ASGameState::StaticClass();
 	PlayerStateClass = ASPlayerState::StaticClass();
 	PlayerControllerClass = ACoopPlayerController::StaticClass();
-	HUDClass = ATPSHud::StaticClass();	
 	
 	PlayerColors.Add(FLinearColor::Blue);
 	PlayerColors.Add(FLinearColor::Red);
@@ -32,6 +36,7 @@ ASGameMode::ASGameMode()
 	
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.0f;
+	OnActorKilled.AddDynamic(this,&ASGameMode::ActorGetKilled);
 }
 
 void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
@@ -98,6 +103,34 @@ void ASGameMode::CheckWaveState()
 	if (!IsAnyEnemyAlive() && IsAnyPlayerAlive())
 	{
 		PrepareNextWave();
+	}
+}
+
+void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, AController* VictimController,
+																					AController* KillerController)
+{
+	ASPlayerState* KillerPlayerState = KillerController ? Cast<ASPlayerState>(KillerController->PlayerState) : nullptr;
+	const ASPlayerState* VictimPlayerState = VictimController ?
+			Cast<ASPlayerState>(VictimController->PlayerState) : nullptr;
+	if(KillerPlayerState && KillerPlayerState != VictimPlayerState)
+	{
+		KillerPlayerState->AddToScore(100);
+	}
+	if(VictimActor->Implements<UIHealthyActor>())
+	{
+		const auto I = Cast<IIHealthyActor>(VictimActor);
+		if(!I->I_GetHealthComp()->IsFriendly(VictimActor,KillerActor))
+		{
+			if(const auto PController = Cast<ACoopPlayerController>(KillerController);
+				IsValid(PController))
+			{
+				PController->SetHUDScore(KillerPlayerState->GetScore());
+			}			
+		}
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("We kill a friend"));
+		}
 	}
 }
 

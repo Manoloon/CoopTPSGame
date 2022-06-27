@@ -1,9 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Core/CoopPlayerController.h"
 
+#include "TextBlock.h"
+#include "TPSHud.h"
+#include "UI/UPlayerUI.h"
 #include "UserWidget.h"
+#include "GameFramework/PlayerState.h"
 #include "Interfaces/IInputComm.h"
 
 ACoopPlayerController::ACoopPlayerController()
@@ -43,14 +46,44 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ChangeWeapon);
 }
 
+void ACoopPlayerController::SetHUDScore(int Score)
+{
+	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetPlayerUI() && PlayerHUD->GetPlayerUI()->ScoreVal)
+	{
+		const FString ScoreText = FString::Printf(TEXT("%d"),Score);
+		PlayerHUD->GetPlayerUI()->ScoreVal->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ACoopPlayerController::SetHUDHealth(float Health)
+{
+	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetHealthIndicator())
+	{
+		
+	}
+}
+
+void ACoopPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void ACoopPlayerController::OnPossess(APawn* APawn)
 {
 	Super::OnPossess(APawn);
 	if(GetPawn() && APawn->Implements<UIInputComm>())
 	{
 		PawnInterface = Cast<IIInputComm>(GetPawn());
-		HealthWidget = CreateWidget<UUserWidget>(GetWorld(), HealthIndicator);
-		HealthWidget->AddToViewport();
+		PlayerHUD = (PlayerHUD==nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+		if(PlayerHUD)
+		{
+			PlayerHUD->AddPlayerUI();
+			SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
+			PlayerHUD->AddHealthIndicator();
+			//SetHUDHealth()
+		}
 	}
 }
 

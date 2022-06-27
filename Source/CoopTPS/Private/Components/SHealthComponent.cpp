@@ -31,7 +31,6 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Damage <= 0.0f || bOwnerIsDead) {return; }
-	// if friendly , no damage, But can do SelfDamage (trackball self destruct)
 	if(DamagedActor != DamageCauser && IsFriendly(DamagedActor,DamageCauser))
 	{
 		return;
@@ -46,10 +45,15 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	{
 		if (const ASGameMode* GamMode =Cast<ASGameMode>(GetWorld()->GetAuthGameMode()))
 		{
-			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,InstigatedBy);
+			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,GetOwner()->GetInstigatorController(),InstigatedBy);
 		}
 	}
+	else if(bCanAutoHeal)
+	{
+		// refill the health by seconds.
+	}
 }
+
 
 float USHealthComponent::GetHealth() const{	return Health; }
 

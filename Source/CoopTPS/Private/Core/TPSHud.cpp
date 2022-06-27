@@ -3,6 +3,8 @@
 
 #include "Core/TPSHud.h"
 #include "Engine/Canvas.h"
+#include "UserWidget.h"
+#include "UI/UPlayerUI.h"
 #include "Entities/SCharacter.h"
 
 void ATPSHud::DrawHUD()
@@ -39,6 +41,44 @@ void ATPSHud::DrawHUD()
 			const FVector2d Spread(0.f,SpreadScaled);
 			DrawCrosshair(HUDData.CrosshairsDown,ViewportCenter,Spread,HUDData.CrosshairColor);
 		}
+	}
+}
+
+UUPlayerUI* ATPSHud::GetPlayerUI() const
+{
+	return PlayerUI;
+}
+
+UUserWidget* ATPSHud::GetHealthIndicator() const
+{
+	return HealthIndicator;
+}
+
+void ATPSHud::AddPlayerUI()
+{
+	if(GetOwningPlayerController() && PlayerUIClass)
+	{
+		PlayerUI = CreateWidget<UUPlayerUI>(GetOwningPlayerController(),PlayerUIClass);
+		
+		PlayerUI->AddToViewport();
+	}
+}
+
+void ATPSHud::AddHealthIndicator()
+{
+	if(GetOwningPlayerController() && HealthIndicatorClass)
+	{
+		HealthIndicator = CreateWidget<UUserWidget>(GetWorld(),HealthIndicatorClass);
+		HealthIndicator->AddToViewport();
+	}
+}
+
+void ATPSHud::AddAnnouncement()
+{
+	if(GetOwningPlayerController() && AnnouncementClass)
+	{
+		// create widget de announcement
+		// add to viewport
 	}
 }
 

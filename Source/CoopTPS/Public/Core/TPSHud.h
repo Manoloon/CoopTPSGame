@@ -11,19 +11,31 @@ UCLASS()
 class COOPTPS_API ATPSHud : public AHUD
 {
 	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,Category = "Settings")
+	TSubclassOf<UUserWidget> PlayerUIClass;
+	UPROPERTY(EditAnywhere,Category = "Settings")
+	TSubclassOf<UUserWidget> AnnouncementClass;
+	UPROPERTY(EditAnywhere,Category = "Settings")
+	TSubclassOf<UUserWidget> HealthIndicatorClass;
 	
+	UPROPERTY()
+	class UUPlayerUI* PlayerUI;
+	UPROPERTY()
+	UUserWidget* HealthIndicator; 
+	// announcement pointer.
+	
+	FHUDData HUDData;
+	UPROPERTY(EditAnywhere)
+	float CrosshairSpreadMax=16.0f;
+	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread,
+													FLinearColor Color=FLinearColor::White);
 public:
 	float CrossHairExpandWeight;
 	virtual void DrawHUD() override;
 	FORCEINLINE void SetHUDData(const FHUDData& Data){HUDData = Data;}
-private:
-	FHUDData HUDData;
-	UPROPERTY(EditAnywhere)
-	float CrosshairSpreadMax=16.0f;
-	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread, FLinearColor Color=FLinearColor::White);
-	
-	//void DrawPlayerColorBar(const FLinearColor& Color,const bool bBottom,const float Height);
-	//void DrawCrosshair(const FLinearColor& Color, float TotalSize, float GapSize);
-	//void DrawHealthBar(const FLinearColor& Color, float Height, float MaxHealth,float CurrentHealth);
-
+	UUPlayerUI* GetPlayerUI() const;
+	UUserWidget* GetHealthIndicator()const;
+	void AddPlayerUI();
+	void AddHealthIndicator();
+	void AddAnnouncement();
 };

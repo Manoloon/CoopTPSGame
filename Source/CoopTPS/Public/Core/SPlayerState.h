@@ -10,11 +10,12 @@ UCLASS()
 class COOPTPS_API ASPlayerState final : public APlayerState
 {
 	GENERATED_BODY()
-	
+	UPROPERTY()
+	class ASCharacter* PlayerCharacter;
+	UPROPERTY()
+	class ACoopPlayerController* PlayerController;
 public:
-
-	UFUNCTION(BlueprintCallable,Category = "Score" )
-		void AddScore(const float ScoreDelta);
-	
-	
+	virtual void OnRep_Score() override;
+	UFUNCTION(BlueprintCallable)
+		void AddToScore(const float ScoreDelta);
 };

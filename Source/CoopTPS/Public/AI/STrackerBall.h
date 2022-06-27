@@ -62,12 +62,13 @@ protected:
 	bool bStartedSelfDestruction;
 	float SelfDamageInterval = 0.25;
 	FTimerHandle TH_HitShake;
-	
+		
 	virtual void BeginPlay() override;
-	
+
 	UFUNCTION()
 		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	void CalculateMovement();
 	FVector GetNextPathPoint();
 	void SelfDamage();
 	void SelfDestruct();

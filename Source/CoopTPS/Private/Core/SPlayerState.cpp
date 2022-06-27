@@ -2,7 +2,35 @@
 
 #include "Core/SPlayerState.h"
 
-void ASPlayerState::AddScore(const float ScoreDelta)
+#include "CoopPlayerController.h"
+#include "SCharacter.h"
+
+void ASPlayerState::OnRep_Score()
+{
+	Super::OnRep_Score();
+	PlayerCharacter = (PlayerCharacter == nullptr)? Cast<ASCharacter>(GetPawn()) : PlayerCharacter;
+	if(PlayerCharacter)
+	{
+		PlayerController = (PlayerController == nullptr)? Cast<ACoopPlayerController>(PlayerCharacter->GetController())
+														: PlayerController;
+		if(PlayerController)
+		{
+			PlayerController->SetHUDScore(GetScore());
+		}
+	}
+}
+
+void ASPlayerState::AddToScore(const float ScoreDelta)
 {
 	SetScore(GetScore() + ScoreDelta);
+	PlayerCharacter = (PlayerCharacter == nullptr)? Cast<ASCharacter>(GetPawn()) : PlayerCharacter;
+	if(PlayerCharacter)
+	{
+		PlayerController = (PlayerController == nullptr)? Cast<ACoopPlayerController>(PlayerCharacter->GetController())
+														: PlayerController;
+		if(PlayerController)
+		{
+			PlayerController->SetHUDScore(GetScore());
+		}
+	}
 }

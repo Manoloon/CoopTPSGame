@@ -8,8 +8,8 @@
 
 enum class EWaveState : uint8;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*,
-	VictimActor, AActor*, KillerActor, AController*, KillerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorKilled, AActor*,
+	VictimActor, AActor*, KillerActor,AController*, VictimController ,AController*, KillerController);
 
 UCLASS()
 class COOPTPS_API ASGameMode : public AGameModeBase
@@ -48,6 +48,8 @@ protected:
 	void RestartWave();
 	void PrepareNextWave();
 	void CheckWaveState();
+	UFUNCTION()
+	void ActorGetKilled(AActor*	VictimActor, AActor* KillerActor,AController* VictimController, AController* KillerController);
 	void CheckAnyPlayerAlive();
 	void GameOver();
 	void SetWaveState(EWaveState NewWaveState);

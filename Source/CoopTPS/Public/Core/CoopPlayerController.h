@@ -13,7 +13,9 @@ UCLASS()
 class COOPTPS_API ACoopPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-
+	UPROPERTY()
+	class ATPSHud* PlayerHUD;
+	
 public:
 	ACoopPlayerController();
 	UPROPERTY(BlueprintReadWrite)
@@ -25,8 +27,13 @@ public:
 	UPROPERTY()
 	UUserWidget* HealthWidget;
 	virtual void SetupInputComponent() override;
+
+	void SetHUDScore(int Score);
+	void SetHUDHealth(float Health);
+	
 protected:
 	IIInputComm* PawnInterface;
+	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* APawn) override;
 	virtual void OnUnPossess() override;
 	void StartRun();
