@@ -61,7 +61,7 @@ void ACoopPlayerController::SetHUDHealth(float Health)
 	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetHealthIndicator())
 	{
-		
+		// TODO : Falta setear la salud en el hud
 	}
 }
 
@@ -82,7 +82,7 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 			PlayerHUD->AddPlayerUI();
 			SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
 			PlayerHUD->AddHealthIndicator();
-			//SetHUDHealth()
+			//TODO: SetHUDHealth()
 		}
 	}
 }
