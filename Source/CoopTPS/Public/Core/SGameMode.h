@@ -8,16 +8,18 @@
 
 enum class EWaveState : uint8;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorKilled, AActor*,
-	VictimActor, AActor*, KillerActor,AController*, VictimController ,AController*, KillerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnActorKilled, AActor*,VictimActor, AActor*, KillerActor,
+									const AController*, VictimController ,AController*, KillerController);
 
 UCLASS()
-class COOPTPS_API ASGameMode : public AGameModeBase
+class COOPTPS_API ASGameMode final : public AGameModeBase
 {
 	GENERATED_BODY()
 public:
 	ASGameMode();
-	virtual void StartPlay() override;
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//virtual void StartPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
@@ -28,14 +30,13 @@ public:
 	int32 LastPlayerColorIndex;
 
 private:
-	FTimerHandle TH_SpawnBots;
-	FTimerHandle TH_NextWaveStart;
+	FTimerHandle Th_SpawnBots;
+	FTimerHandle Th_NextWaveStart;
 	int32 NumBotsToSpawn;
 	int32 WaveCount;
 	// Helper function
 	bool IsAnyPlayerAlive() const;
 	bool IsAnyEnemyAlive() const;
-	void DestroyAllEnemies();
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
 		float TimeBetweenWaves;
@@ -49,9 +50,10 @@ protected:
 	void PrepareNextWave();
 	void CheckWaveState();
 	UFUNCTION()
-	void ActorGetKilled(AActor*	VictimActor, AActor* KillerActor,AController* VictimController, AController* KillerController);
+	void ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const AController* VictimController,
+																AController* KillerController);
 	void CheckAnyPlayerAlive();
 	void GameOver();
-	void SetWaveState(EWaveState NewWaveState);
+	void SetWaveState(EWaveState NewWaveState) const;
 	void RestoreDeadPlayer();
 };

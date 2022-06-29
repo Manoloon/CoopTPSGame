@@ -36,7 +36,19 @@ ASGameMode::ASGameMode()
 	
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.0f;
-	OnActorKilled.AddDynamic(this,&ASGameMode::ActorGetKilled);
+	OnActorKilled.AddDynamic(this,&ASGameMode::ActorGetKilled);	
+}
+
+void ASGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	PrepareNextWave();
+}
+
+void ASGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	OnActorKilled.RemoveDynamic(this,&ASGameMode::ActorGetKilled);
 }
 
 void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
@@ -66,7 +78,7 @@ void ASGameMode::StartWave()
 	//TODO : show sign to all players about the count
 	WaveCount++;
 	NumBotsToSpawn = 2 * WaveCount;
-	GetWorldTimerManager().SetTimer(TH_SpawnBots, this,&ASGameMode::SpawnBotTimerElapsed, 1.0f,
+	GetWorldTimerManager().SetTimer(Th_SpawnBots, this,&ASGameMode::SpawnBotTimerElapsed, 1.0f,
 																						true,0.0f);
 	SetWaveState(EWaveState::WaveInProgress);
 }
@@ -74,19 +86,19 @@ void ASGameMode::StartWave()
 void ASGameMode::EndWave()
 {
 	//TODO : show sign to all players about stats
-	GetWorldTimerManager().ClearTimer(TH_SpawnBots);
+	GetWorldTimerManager().ClearTimer(Th_SpawnBots);
 	SetWaveState(EWaveState::WaveComplete);
 }
 
 void ASGameMode::RestartWave()
 {
-	GetWorldTimerManager().ClearTimer(TH_SpawnBots);	
+	GetWorldTimerManager().ClearTimer(Th_SpawnBots);	
 }
 
 void ASGameMode::PrepareNextWave()
 {
 	UE_LOG(LogTemp,Warning,TEXT("Preparing next wave"));
-	GetWorldTimerManager().SetTimer(TH_NextWaveStart, this,
+	GetWorldTimerManager().SetTimer(Th_NextWaveStart, this,
 			&ASGameMode::StartWave, TimeBetweenWaves, false);
 	SetWaveState(EWaveState::WaitingToStart);
 	RestoreDeadPlayer();
@@ -94,7 +106,7 @@ void ASGameMode::PrepareNextWave()
 
 void ASGameMode::CheckWaveState()
 {
-	if (const bool bIsPreparingForWave = GetWorldTimerManager().IsTimerActive(TH_NextWaveStart);
+	if (const bool bIsPreparingForWave = GetWorldTimerManager().IsTimerActive(Th_NextWaveStart);
 		NumBotsToSpawn > 0 || bIsPreparingForWave)
 	{
 		return;
@@ -106,13 +118,14 @@ void ASGameMode::CheckWaveState()
 	}
 }
 
-void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, AController* VictimController,
-																					AController* KillerController)
+// ReSharper disable once CppMemberFunctionMayBeConst
+void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const AController* VictimController,
+                                AController* KillerController)
 {
 	ASPlayerState* KillerPlayerState = KillerController ? Cast<ASPlayerState>(KillerController->PlayerState) : nullptr;
-	const ASPlayerState* VictimPlayerState = VictimController ?
-			Cast<ASPlayerState>(VictimController->PlayerState) : nullptr;
-	if(KillerPlayerState && KillerPlayerState != VictimPlayerState)
+	if(const ASPlayerState* VictimPlayerState = VictimController ?
+		Cast<ASPlayerState>(VictimController->PlayerState) : nullptr;
+		KillerPlayerState && KillerPlayerState != VictimPlayerState)
 	{
 		KillerPlayerState->AddToScore(100);
 	}
@@ -149,7 +162,7 @@ void ASGameMode::GameOver()
 	UE_LOG(LogTemp,Warning,TEXT("GAME OVER"));
 }
 
-void ASGameMode::SetWaveState(EWaveState NewWaveState)
+void ASGameMode::SetWaveState(const EWaveState NewWaveState) const
 {
 	if (ASGameState* GS = GetGameState<ASGameState>();
 		ensureAlways(GS))
@@ -167,13 +180,6 @@ void ASGameMode::RestoreDeadPlayer()
 			RestartPlayer(PC);
 		}
 	}
-}
-
-void ASGameMode::StartPlay()
-{
-	Super::StartPlay();
-
-	PrepareNextWave();
 }
 
 void ASGameMode::SpawnBotTimerElapsed()
@@ -220,8 +226,4 @@ bool ASGameMode::IsAnyEnemyAlive() const
 		}
 	}
 	return false;
-}
-
-void ASGameMode::DestroyAllEnemies()
-{
 }

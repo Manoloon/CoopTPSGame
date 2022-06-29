@@ -34,7 +34,6 @@ ASTrackerBall::ASTrackerBall()
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealhComp"));
 	HealthComp->TeamNum = 255;
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::OnHealthChanged);
 	
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetSphereRadius(200);
@@ -54,11 +53,22 @@ ASTrackerBall::ASTrackerBall()
 
 void ASTrackerBall::BeginPlay()
 {
-	Super::BeginPlay();	
-	if(HasAuthority())
+	Super::BeginPlay();
+	if(HealthComp)
+	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBall::HealthChanged);	
+	}
+	if( HasAuthority())
 	{
 		NextPathPoint = GetNextPathPoint();
 	}
+}
+
+void ASTrackerBall::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	HealthComp->OnHealthChanged.RemoveDynamic(this,&ASTrackerBall::HealthChanged);
+	
 }
 
 void ASTrackerBall::CalculateMovement()
@@ -144,7 +154,7 @@ void ASTrackerBall::SelfDamage()
 														this, nullptr);
 }
 
-void ASTrackerBall::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
+void ASTrackerBall::HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
  	if(MeshMaterialInstance == nullptr)
@@ -231,8 +241,8 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 			// we overlapped player
 			if (GetLocalRole() == ROLE_Authority)
 			{
-				FTimerHandle TH_SelfDamage;
-				GetWorldTimerManager().SetTimer(TH_SelfDamage, this, &ASTrackerBall::SelfDamage,
+				FTimerHandle Th_SelfDamage;
+				GetWorldTimerManager().SetTimer(Th_SelfDamage, this, &ASTrackerBall::SelfDamage,
 											SelfDamageInterval, true, 0.0f);
 				bStartedSelfDestruction = true;
 			}			

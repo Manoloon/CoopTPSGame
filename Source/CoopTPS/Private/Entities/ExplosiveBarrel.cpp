@@ -4,29 +4,29 @@
 #include "Particles/ParticleSystem.h"
 #include "Components/SHealthComponent.h"
 #include "DrawDebugHelpers.h"
+#include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Sound/SoundCue.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
-// debug
 static bool DebugBarrel = false;
-FAutoConsoleVariableRef CVARDebugBarrelExp(TEXT("Coop.DebugBarrelExp"),
+FAutoConsoleVariableRef CVarDebugBarrelExp(TEXT("Coop.DebugBarrelExp"),
 	DebugBarrel,TEXT("draw debug lines for Explosion Barrel"),ECVF_Cheat);
 
 AExplosiveBarrel::AExplosiveBarrel()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
+	bReplicates=true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-	HealthComp->OnHealthChanged.AddDynamic(this, &AExplosiveBarrel::OnHealthChanged);
-
+	HealthComp->TeamNum = 2;
+	
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
 	RadialForceComp->Radius = ExplosionRadius;
@@ -50,13 +50,27 @@ void AExplosiveBarrel::PostInitializeComponents()
 	RadialForceComp->bAutoActivate = false;
 	RadialForceComp->bIgnoreOwningActor = true;
 	bExploded = false;
-	HealthComp->TeamNum = 2;	
+}
+void AExplosiveBarrel::BeginPlay()
+{
+	Super::BeginPlay();
+	SetReplicateMovement(true);
+	if(HealthComp && HasAuthority())
+	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &AExplosiveBarrel::HealthChanged);
+	}
 }
 
-void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health,
-			float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
-																		AActor* DamageCauser)
+void AExplosiveBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+	HealthComp->OnHealthChanged.RemoveDynamic(this,&AExplosiveBarrel::HealthChanged);
+}
+
+void AExplosiveBarrel::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
+                                     const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
+{
+	UE_LOG(LogTemp,Warning,TEXT("TAKING DAMAGE"));
 	if(MatInst == nullptr)
 	{
 		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0,
@@ -77,6 +91,7 @@ void AExplosiveBarrel::SelfDestruct()
 	if (bExploded) { return; }
 
 	bExploded = true;
+	OnRep_Exploded();
 	if(ExplosionFX && ExplosionSFX)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
@@ -105,3 +120,18 @@ void AExplosiveBarrel::SelfDestruct()
 	}
 }
 
+void AExplosiveBarrel::OnRep_Exploded() const
+{
+	if(ExplosionFX && ExplosionSFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+		MeshComp->SetMaterial(0, ExplodedMaterial);
+	}
+}
+
+void AExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AExplosiveBarrel,bExploded);
+}

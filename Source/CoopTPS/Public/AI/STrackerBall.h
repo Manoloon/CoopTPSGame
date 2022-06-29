@@ -17,7 +17,6 @@ class COOPTPS_API ASTrackerBall : public APawn, public IIHealthyActor
 {
 	GENERATED_BODY()
 public:
-	// Sets default values for this pawn's properties
 	ASTrackerBall();
 
 	virtual void Tick(float DeltaTime) override;
@@ -64,9 +63,10 @@ protected:
 	FTimerHandle TH_HitShake;
 		
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 	UFUNCTION()
-		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
+		void HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	void CalculateMovement();
 	FVector GetNextPathPoint();
