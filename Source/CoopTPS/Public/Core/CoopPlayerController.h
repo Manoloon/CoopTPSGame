@@ -26,12 +26,11 @@ public:
 	TSubclassOf<UUserWidget> HealthIndicator;
 	UPROPERTY()
 	UUserWidget* HealthWidget;
-	virtual void SetupInputComponent() override;
-
 	void SetHUDScore(int Score);
 	void SetHUDHealth(float Health);
 	
 protected:
+	virtual void SetupInputComponent() override;
 	IIInputComm* PawnInterface;
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* APawn) override;

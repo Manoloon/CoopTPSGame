@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Core/CoopPlayerController.h"
-
 #include "TextBlock.h"
 #include "TPSHud.h"
 #include "UI/UPlayerUI.h"
@@ -76,14 +75,12 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 	if(GetPawn() && APawn->Implements<UIInputComm>())
 	{
 		PawnInterface = Cast<IIInputComm>(GetPawn());
-		PlayerHUD = (PlayerHUD==nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
-		if(PlayerHUD)
-		{
-			PlayerHUD->AddPlayerUI();
-			SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
-			PlayerHUD->AddHealthIndicator();
-			//TODO: SetHUDHealth()
-		}
+	}
+	PlayerHUD = (PlayerHUD==nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetPlayerUI())
+	{
+		//set the score when respawn player.
+		SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
 	}
 }
 
@@ -96,6 +93,7 @@ void ACoopPlayerController::OnUnPossess()
 	}	
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartRun()
 {
 	if(GetPawn() && PawnInterface)
@@ -103,7 +101,7 @@ void ACoopPlayerController::StartRun()
 		PawnInterface->I_StartRun();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StopRun()
 {
 	if(GetPawn() && PawnInterface)
@@ -123,7 +121,7 @@ void ACoopPlayerController::MoveForward(float Value)
 		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::MoveRight(float Value)
 {
 	if(GetPawn() && PawnInterface)
@@ -143,7 +141,7 @@ void ACoopPlayerController::TurnRate(float Value)
 		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::LookUpRate(float Value)
 {
 	if(GetPawn() && PawnInterface)
@@ -177,7 +175,7 @@ void ACoopPlayerController::StopAds()
 		PawnInterface = Cast<IIInputComm>(GetPawn());
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartCrouch()
 {
 	if(GetPawn() && PawnInterface)
@@ -185,7 +183,7 @@ void ACoopPlayerController::StartCrouch()
 		PawnInterface->I_StartCrouch();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StopCrouch()
 {
 	if(GetPawn() && PawnInterface)
@@ -193,7 +191,7 @@ void ACoopPlayerController::StopCrouch()
 		PawnInterface->I_StopCrouch();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartFiring()
 {
 	if(GetPawn() && PawnInterface)
@@ -201,7 +199,7 @@ void ACoopPlayerController::StartFiring()
 		PawnInterface->I_StartFire();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StopFiring()
 {
 	if(GetPawn() && PawnInterface)
@@ -209,7 +207,7 @@ void ACoopPlayerController::StopFiring()
 		PawnInterface->I_StopFire();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::Reload()
 {
 	if(GetPawn() && PawnInterface)
@@ -217,7 +215,7 @@ void ACoopPlayerController::Reload()
 		PawnInterface->I_Reload();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::ChangeWeapon()
 {
 	if(GetPawn() && PawnInterface)
@@ -225,7 +223,7 @@ void ACoopPlayerController::ChangeWeapon()
 		PawnInterface->I_ChangeWeapon();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartThrow()
 {
 	if(GetPawn() && PawnInterface)
@@ -233,7 +231,7 @@ void ACoopPlayerController::StartThrow()
 		PawnInterface->I_StartThrow();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StopThrow()
 {
 	if(GetPawn() && PawnInterface)
@@ -241,7 +239,7 @@ void ACoopPlayerController::StopThrow()
 		PawnInterface->I_StopThrow();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::Jump()
 {
 	if(GetPawn() && PawnInterface)
