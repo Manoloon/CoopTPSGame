@@ -10,7 +10,6 @@
 #include "Weapons/SWeapon.h"
 #include "Weapons/SProjectile.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/WidgetComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SHealthComponent.h"
@@ -21,28 +20,23 @@
 
 // console debugging
 static bool DebugCharacter = false;
-FAutoConsoleVariableRef CVarDebugGame(TEXT("Coop.ShowRole"), DebugCharacter,
-											TEXT("Show Pawn Role"), ECVF_Cheat);
+FAutoConsoleVariableRef CVarDebugPawn(TEXT("Coop.DebugPawn"), DebugCharacter,
+											TEXT("Show Pawn Debug"), ECVF_Cheat);
 DECLARE_STATS_GROUP(TEXT("CoopGame"), STATGROUP_PlayerChar, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForDoors,STATGROUP_PlayerChar);
 DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForItems,STATGROUP_PlayerChar);
-// Sets default values
+
 ASCharacter::ASCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance
- 	// if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
-	// spring arm
+
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
 
-
-	// de esta manera la capsula no bloqueara nuestra arma.
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-	// camera component
+
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
@@ -53,13 +47,22 @@ ASCharacter::ASCharacter()
 
 	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
 	BeamEndPointDecal->SetVisibility(false);
-
-	InfoWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidgetcomp"));
-	InfoWidgetComp->SetupAttachment(RootComponent);
 	
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
+	HealthComp->TeamNum = 0;
 }
-
+// networking --> 
+void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, PrimaryWeapon);
+	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
+	DOREPLIFETIME(ASCharacter, PlayerColor);
+	DOREPLIFETIME(ASCharacter, bDied);
+	DOREPLIFETIME(ASCharacter, bIsAiming);
+}
 void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -73,9 +76,7 @@ void ASCharacter::PostInitializeComponents()
 		MeshComponent->SetCollisionResponseToChannel(ECC_Visibility,ECR_Block);
 		MeshComponent->SetCollisionResponseToChannel(COLLISION_WEAPON,ECR_Block);
 		MeshID = MeshComponent->CreateDynamicMaterialInstance(0);
-		// this line is for crouch
 		GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
-		//bUseControllerRotationYaw=true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->MaxWalkSpeed=BaseWalkSpeed; 
 	}
@@ -84,7 +85,6 @@ void ASCharacter::PostInitializeComponents()
 // Esta funcion es llamada desde el Gamemode para señalar el cambio de color segun el player controller. 
 void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 {
-	checkf(HasAuthority(), TEXT("ASCharacter::AuthSetPlayerColor called on Client"));
 	PlayerColor = NewColor;
 	OnRep_PlayerColor();
 }
@@ -94,23 +94,14 @@ const FHitResult& ASCharacter::GetHitTrace() const
 	return TraceResult;
 }
 
-// Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	if(bShowRole)
-	{
-		if(const auto WidgetRole =Cast<URoleMessage>(InfoWidgetComp->GetUserWidgetObject()))
-		{
-			WidgetRole->ShowPlayerNetRole(this);
-		}
-	}
 
 	DefaultFOV = CameraComp->FieldOfView;
-	// health start
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 	if (HasAuthority())
 	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::HealthChanged);
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector,
@@ -129,7 +120,16 @@ void ASCharacter::BeginPlay()
 			SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
 																							SecondaryWeaponSocketName);
 		}
+		OnRep_WeaponEquipped();
 	}
+}
+
+void ASCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if(CurrentWeapon){CurrentWeapon->Destroy();}
+	if(SecondaryWeapon){SecondaryWeapon->Destroy();}
+	HealthComp->OnHealthChanged.RemoveDynamic(this,&ASCharacter::HealthChanged);
 }
 
 void ASCharacter::Tick(float DeltaTime)
@@ -199,14 +199,14 @@ void ASCharacter::I_Jump()
 void ASCharacter::I_StartAiming()
 {
 	bIsAiming = true;
-	GetCharacterMovement()->MaxWalkSpeed=AimWalkSpeed; 
+	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
 	ServerAiming(true);
 }
 
 void ASCharacter::I_StopAiming()
 {
 	bIsAiming = false;
-	GetCharacterMovement()->MaxWalkSpeed=BaseWalkSpeed; 
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	ServerAiming(false);
 }
 
@@ -266,19 +266,36 @@ void ASCharacter::I_Reload()
 	{
 		CurrentWeapon->StartReloading();
 		PlayMontage(CurrentWeapon->GetReloadMontage());
+		ServerReload();
 	}
 }
 
+void ASCharacter::I_ChangeWeapon()
+{
+	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
+	{
+		ASWeapon* TempWeapon = SecondaryWeapon;
+		SecondaryWeapon = CurrentWeapon;
+		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																						SecondaryWeaponSocketName);
+		CurrentWeapon = TempWeapon;
+		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																								WeaponSocketName);
+	}
+	else
+	{
+		ServerChangeWeapon();
+	}
+}
 // TODO : make a Throwing Actor Component
 void ASCharacter::Throw()
 {
 	if (GranadaClass)
 	{
 		ClearBeam();
-		const auto& Grenade = GetWorld()->SpawnActorDeferred<ASProjectile>(GranadaClass,
-											FTransform(SpawnRotation, StartLocation));
-		
-		if (Grenade)
+
+		if (const auto& Grenade = GetWorld()->SpawnActorDeferred<ASProjectile>(GranadaClass,
+														FTransform(SpawnRotation, StartLocation)))
 		{
 		Grenade->InitialLocalVelocity = InitialLocalVelocity;
 		UGameplayStatics::FinishSpawningActor(Grenade, FTransform(SpawnRotation,StartLocation, SpawnScale));
@@ -318,9 +335,10 @@ void ASCharacter::AddNewBeam(FVector const NewPoint1, FVector const NewPoint2)
 	BeamComp->SetBeamTargetPoint(0, NewPoint2, 0);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
 void ASCharacter::GetSegmentAtTime(const FVector LocalStartLocation, const FVector LocalInitialVelocity,
-									const FVector LocalGravity, const float LocalTime1, const float LocalTime2,
-																FVector &OutPoint1, FVector &OutPoint2)
+                                   const FVector LocalGravity, const float LocalTime1, const float LocalTime2,
+                                   FVector &OutPoint1, FVector &OutPoint2)
 {
 	OutPoint1 = (LocalStartLocation + (LocalInitialVelocity*LocalTime1) + (LocalGravity*(LocalTime1*LocalTime1*0.5f)));
 	OutPoint2 = (LocalStartLocation + (LocalInitialVelocity*LocalTime2) + (LocalGravity*(LocalTime2*LocalTime2*0.5f)));
@@ -348,11 +366,10 @@ void ASCharacter::DrawingTrajectory()
 			const FName TraceTag("TraceTag");
 			FCollisionQueryParams QueryParams;
 			QueryParams.TraceTag = TraceTag;
-			FHitResult Hit;
 			GetSegmentAtTime(StartLocation, InitialVelocity, Gravity, Time1, Time2,
-															Point1,Point2);
-			if (GetWorld()->LineTraceSingleByChannel(Hit, Point1, Point2,
-															ECC_Visibility, QueryParams))
+																Point1,Point2);
+			if (FHitResult Hit; GetWorld()->LineTraceSingleByChannel(Hit, Point1, Point2,
+			                                                         ECC_Visibility, QueryParams))
 			{
 				BeamEndPointDecal->SetVisibility(true);
 				BeamEndPointDecal->SetWorldLocation(Hit.ImpactPoint);
@@ -378,10 +395,6 @@ FLinearColor ASCharacter::IterationTrace()
 	if (FHitResult HitResult;GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd,
 	                                                               COLLISION_WEAPON, QueryParams))
 	{
-		if(CurrentWeapon)
-		{
-			CurrentWeapon->SetHitResult(HitResult);
-		}		
 		if(DebugCharacter)
 		{
 			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint,5.f,12,FColor::White,false,
@@ -390,11 +403,6 @@ FLinearColor ASCharacter::IterationTrace()
 		return(USHealthComponent::IsFriendly(this, HitResult.GetActor())) ?
 			FLinearColor::Green : FLinearColor::Red;
 	}
-	if(CurrentWeapon)
-	{
-		FHitResult HitResult;
-		CurrentWeapon->SetHitResult(HitResult);
-	}	
 	return FLinearColor::White;
 }
 
@@ -453,30 +461,12 @@ void ASCharacter::CalculateAimOffset()
 
 void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(IsValid(AnimInstance) )
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		IsValid(AnimInstance) )
 	{
 		AnimInstance->Montage_Play(MontageToPlay);
 		const FName SectionName = bIsAiming? FName("Aiming") : FName("Hip");
 		AnimInstance->Montage_JumpToSection(SectionName);
-	}
-}
-
-void ASCharacter::I_ChangeWeapon()
-{
-	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
-	{
-		ASWeapon* TempWeapon = SecondaryWeapon;
-		SecondaryWeapon = CurrentWeapon;
-		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																						SecondaryWeaponSocketName);
-		CurrentWeapon = TempWeapon;
-		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																								WeaponSocketName);
-	}
-	else
-	{
-		ServerChangeWeapon();
 	}
 }
 
@@ -494,7 +484,22 @@ void ASCharacter::OnRep_WeaponEquipped()
 	if(CurrentWeapon)
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+																								WeaponSocketName);
 	}
+	if(SecondaryWeapon)
+	{
+		SecondaryWeapon->SetOwner(this);
+		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
+																						SecondaryWeaponSocketName);
+	}
+}
+
+void ASCharacter::ServerReload_Implementation()
+{
+	CurrentWeapon->StartReloading();
+	PlayMontage(CurrentWeapon->GetReloadMontage());
 }
 
 void ASCharacter::ServerChangeWeapon_Implementation()
@@ -567,7 +572,7 @@ void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
 }
 
-void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
+void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
 					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
 	if (Health<=0.0f && !bDied)
@@ -582,17 +587,4 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, const flo
 		DetachFromControllerPendingDestroy();
 		SetLifeSpan(10);
 	}
-}
-// networking --> 
-void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// esto hace que se replique dicha variable a todos nuestros clientes.
-	DOREPLIFETIME(ASCharacter, CurrentWeapon);
-	DOREPLIFETIME(ASCharacter, PrimaryWeapon);
-	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
-	DOREPLIFETIME(ASCharacter, PlayerColor);
-	DOREPLIFETIME(ASCharacter, bDied);
-	DOREPLIFETIME(ASCharacter, bIsAiming);
 }

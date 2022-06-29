@@ -22,7 +22,6 @@ class COOPTPS_API ASCharacter final : public ACharacter, public IIInputComm, pub
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ASCharacter();
 
 protected:
@@ -38,8 +37,6 @@ protected:
 		UDecalComponent* BeamEndPointDecal;
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Settings|HealthComp")
 		class USHealthComponent* HealthComp;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
-		class UWidgetComponent* InfoWidgetComp;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;
 	UPROPERTY(Replicated)
@@ -113,11 +110,8 @@ protected:
 		float ZoomInterpSpeed = 20.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Camera")
 		float ZoomedFOV = 65.0f;
-
-	UPROPERTY(EditAnywhere)
-		bool bShowRole=true;
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void SetHUDCrosshairs(float DeltaTime);
 public:
 	UFUNCTION()
@@ -142,8 +136,6 @@ private:
 	class ATPSHud* HUD =nullptr;
 	UPROPERTY()
 	class ACoopPlayerController* PlayerController=nullptr;
-	//UFUNCTION()
-	//void OnRep_Aiming();
 	UFUNCTION()
 	void OnRep_PlayerColor() const;
 	UFUNCTION()
@@ -151,17 +143,16 @@ private:
 	UFUNCTION(Server,Reliable)
 	void ServerChangeWeapon();
 	UFUNCTION(Server,Reliable)
+	void ServerReload();
+	UFUNCTION(Server,Reliable)
 	void ServerAiming(bool bAiming);
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
+	void HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void PostInitializeComponents() override;
-
 	virtual FVector GetPawnViewLocation() const override;
 	UFUNCTION()
 	const FHitResult& GetHitTrace()const;
