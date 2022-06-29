@@ -16,16 +16,15 @@ class COOPTPS_API USHealthComponent final : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	USHealthComponent()=default;
+	USHealthComponent();
 	
-	UPROPERTY(ReplicatedUsing=ONREP_Health, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadOnly, Category = "Settings")
 		float Health;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
 		bool bCanAutoHeal=false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
 		float MaxHealth = 100.0f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Team")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 		uint8 TeamNum = 255;
 
 	bool bOwnerIsDead=false;
@@ -45,7 +44,7 @@ protected:
 	                                           class AController* InstigatedBy, AActor* DamageCauser);
 
 	UFUNCTION()
-		void ONREP_Health(float OldHealth);	
+		void OnRep_Health(float OldHealth);	
 };
 
 

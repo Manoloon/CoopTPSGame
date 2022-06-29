@@ -8,13 +8,18 @@
 #include "Kismet/GameplayStatics.h"
 
 static bool DebugHealth = false;
-FAutoConsoleVariableRef CVARDebugHealthComponent(TEXT("COOP.Health"),
+FAutoConsoleVariableRef CVarDebugHealthComponent(TEXT("COOP.Health"),
 DebugHealth,TEXT("Health component debug"),ECVF_Cheat);
+
+USHealthComponent::USHealthComponent()
+{
+	SetIsReplicatedByDefault(true);
+}
 
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 
 	if(GetOwnerRole() == ROLE_Authority)
 	{
@@ -24,7 +29,6 @@ void USHealthComponent::BeginPlay()
 		}
 	}	
 	Health = MaxHealth;
-	//UE_LOG(LogTemp,Error,TEXT("on BeginPlay : health %f of %s"),Health,*GetOwner()->GetName());
 }
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
@@ -33,19 +37,21 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	if (Damage <= 0.0f || bOwnerIsDead) {return; }
 	if(DamagedActor != DamageCauser && IsFriendly(DamagedActor,DamageCauser))
 	{
+		UE_LOG(LogTemp,Warning,TEXT("IS FRIENDLY"));
 		return;
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth);
-	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
-																					DamageCauser);
 	bOwnerIsDead = Health <= 0.0f;
-
+	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
+																				DamageCauser);
+	UE_LOG(LogTemp,Error,TEXT("Fire client Damage %f"),Damage);
 	if (bOwnerIsDead)
 	{
 		if (const ASGameMode* GamMode =Cast<ASGameMode>(GetWorld()->GetAuthGameMode()))
 		{
-			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,GetOwner()->GetInstigatorController(),InstigatedBy);
+			GamMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser,
+						GetOwner()->GetInstigatorController(),InstigatedBy);
 		}
 	}
 	else if(bCanAutoHeal)
@@ -53,7 +59,6 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 		// refill the health by seconds.
 	}
 }
-
 
 float USHealthComponent::GetHealth() const{	return Health; }
 
@@ -88,10 +93,9 @@ void USHealthComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 	DOREPLIFETIME(USHealthComponent, Health);
 }
 
-void USHealthComponent::ONREP_Health(float OldHealth)
+void USHealthComponent::OnRep_Health(float OldHealth)
 {
 	const float Damage = Health - OldHealth;
-	OnHealthChanged.Broadcast(this, Health,Damage, nullptr,
-														nullptr, nullptr);
+	OnHealthChanged.Broadcast(this, Health,Damage, nullptr,nullptr, nullptr);
 }
 
