@@ -7,8 +7,8 @@
 #include "TextBlock.h"
 #include "RoleMessage.generated.h"
 
-UCLASS()
-class URoleMessage : public UUserWidget
+UCLASS(Abstract)
+class URoleMessage final : public UUserWidget
 {
 	GENERATED_BODY()
 public:
