@@ -23,16 +23,14 @@ struct FLauncherPacket
 };
 /* Projectile weapon */
 UCLASS(Abstract)
-class COOPTPS_API ASLauncher : public ASWeapon
+class COOPTPS_API ASLauncher final : public ASWeapon
 {
 	GENERATED_BODY()
 
 protected:
 	UPROPERTY(ReplicatedUsing=OnRep_LauncherPacket)
 	FLauncherPacket LauncherPacket;
-	//FVector InitialLocalVelocity;
-	//FVector InitialVelocity;
-	FTimerHandle ChargingProjectileTH;
+	FTimerHandle Th_ChargingProjectile;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Setup")
 	float LaunchDistance = 100.0f;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Setup")
@@ -43,7 +41,7 @@ protected:
 	virtual void StopFire() override;
 	virtual void Tick(float DeltaSeconds) override;
 	UFUNCTION()
-	void OnRep_LauncherPacket();
+	void OnRep_LauncherPacket() const;
 	UFUNCTION(Server,Reliable,WithValidation)
 	void ServerLaunchProjectile();
 	/* NO CREO QUE NECESITEMOS UN RPC para esto -> habra que ver como actualizar la variable
@@ -52,7 +50,4 @@ protected:
 	UFUNCTION(Server,Reliable,WithValidation)
 	void ServerUpdateThrow();
 	void UpdateThrow();
-	//void LaunchProjectile() const;
-public : 
-	//virtual void Fire() override;
 };

@@ -4,57 +4,87 @@
 #include "Weapons/HitScanWeapon.h"
 #include "CoopTPS.h"
 #include "PhysicalMaterial.h"
+#include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
-// console debuging
 static int32 DebugWeaponDrawing = 0;
-FAutoConsoleVariableRef CVARDebugWeaponHitScan(TEXT("COOP.DebugHitScan"),
+FAutoConsoleVariableRef CVarDebugWeaponHitScan(TEXT("COOP.DebugHitScan"),
 DebugWeaponDrawing,TEXT("Draw debug lines for weapon fire"),ECVF_Cheat);
+
+void AHitScanWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AHitScanWeapon, HitScanTrace,COND_SkipOwner);
+}
 
 void AHitScanWeapon::Fire()
 {
-	Super::Fire();
-	if(GetOwner() && CurrentAmmo >0)
+	if(GetOwner())
 	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
-		GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-		// Bullet Spread - Override shotdirection.
-		FVector ShotDirection = EyeRotation.Vector();
-		const float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
-		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,
-																	HalfRad);
-		const FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-		// particle "Target" parameter - la necesitamos por el hitpoint
-		FVector_NetQuantize TracerEndPoint = TraceEnd;
-		EPhysicalSurface SurfaceType = SurfaceType_Default;
-		PlayShootVFX(TracerEndPoint);
-		if(TraceResult.GetActor())
+		Super::Fire();
+		if(CurrentAmmo >0)
 		{
-			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(
-															TraceResult.PhysMaterial.Get());
+			FVector EyeLocation;
+			FRotator EyeRotation;
+			GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+			// Bullet Spread - Override shotdirection.
+			FVector ShotDirection = EyeRotation.Vector();
+			const float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
+			ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,	HalfRad);
+			const FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
+			// particle "Target" parameter - la necesitamos por el hitpoint
+			FVector_NetQuantize TracerEndPoint = TraceEnd;
+			EPhysicalSurface SurfaceType = SurfaceType_Default;
+			PlayShootVfx(TracerEndPoint);
 
-			float ActualDamage = WeaponConfig.BaseDamage;
-			if (SurfaceType == SURFACE_FLESHVULNERABLE)
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(GetOwner());
+			QueryParams.AddIgnoredActor(this);
+			QueryParams.bTraceComplex = true;
+			QueryParams.bReturnPhysicalMaterial = true;
+			FHitResult Hit;
+			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 			{
-				ActualDamage *= 4.0f;
+ 				SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+				float ActualDamage = WeaponConfig.BaseDamage;
+				if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				{
+					ActualDamage *= 4.0f;
+				}
+
+				UGameplayStatics::ApplyPointDamage(Hit.GetActor(), ActualDamage, ShotDirection, Hit, 
+				GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
+
+				PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
+
+				TracerEndPoint = Hit.ImpactPoint;
+
 			}
-			UGameplayStatics::ApplyPointDamage(TraceResult.GetActor(), ActualDamage, ShotDirection, 
-			TraceResult,
-			GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
-			
-			PlayImpactFX(SurfaceType,TraceResult.ImpactPoint);
-			TracerEndPoint = TraceResult.ImpactPoint;	
+			if (HasAuthority())
+			{
+				HitScanTrace.ImpactPoint = TracerEndPoint;
+				HitScanTrace.ImpactNormal =Hit.ImpactNormal;
+				HitScanTrace.SurfaceType = SurfaceType;
+			}
+			if(DebugWeaponDrawing>0)
+			{
+				DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green,false, 1.0f);
+				DrawDebugSphere(GetWorld(),TracerEndPoint,10.0f,12,FColor::Emerald,false,
+																1.f,0,2);
+			}
+			LastFireTime = GetWorld()->TimeSeconds;
+			CurrentAmmo -= 1;
 		}
-		if (GetLocalRole() == ROLE_Authority)
-		{
-			HitScanTrace.ImpactPoint = TracerEndPoint;
-			HitScanTrace.SurfaceType = SurfaceType;
-		}
-		if(DebugWeaponDrawing>0)
-		{
-			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green,
-																false, 1.0f);
-		}
+	}
+}
+
+void AHitScanWeapon::OnRep_HitScanTrace() const
+{
+	if(!HitScanTrace.ImpactNormal.IsZero())
+	{
+		PlayShootVfx(HitScanTrace.ImpactPoint);
+		PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint,HitScanTrace.ImpactNormal);
 	}
 }

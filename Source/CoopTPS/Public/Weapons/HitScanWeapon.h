@@ -6,12 +6,31 @@
 #include "Weapons/SWeapon.h"
 #include "HitScanWeapon.generated.h"
 
-
-UCLASS(Abstract)
-class COOPTPS_API AHitScanWeapon : public ASWeapon
+USTRUCT()
+struct FHitScanTrace 
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	float ServerFireTime;
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+	UPROPERTY()
+	bool bCausedDamage;
+	UPROPERTY()
+	FVector_NetQuantize ImpactPoint;
+	UPROPERTY()
+	FVector_NetQuantize ImpactNormal;
+};
+
+UCLASS(Abstract)
+class COOPTPS_API AHitScanWeapon final : public ASWeapon
+{
+	GENERATED_BODY()
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
+	UFUNCTION()
+	void OnRep_HitScanTrace() const;
 public:
 	virtual void Fire() override;
 };

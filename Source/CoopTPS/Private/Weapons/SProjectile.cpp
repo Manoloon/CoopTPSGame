@@ -8,7 +8,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 
 static bool DebugProjectile = false;
-FAutoConsoleVariableRef CVARDebugProjectile(TEXT("COOP.Projectile"),
+FAutoConsoleVariableRef CVarDebugProjectile(TEXT("COOP.Projectile"),
 DebugProjectile,TEXT("Draw debug Projectile Explosion Radius"),ECVF_Cheat);
 
 ASProjectile::ASProjectile()
@@ -27,16 +27,22 @@ ASProjectile::ASProjectile()
 	bReplicates = true;
 	SetReplicatingMovement(true);
 	NetUpdateFrequency = 66.0f;
-	MinNetUpdateFrequency = 33.0f;
+	MinNetUpdateFrequency = 3.0f;
 	RootComponent = MeshComp;
+}
+
+void ASProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(ASProjectile,ReplicationPacket,COND_SkipOwner);
 }
 
 void ASProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	ProjectileComp->SetVelocityInLocalSpace(InitialLocalVelocity);
-	FTimerHandle TH_Explode;
-	GetWorldTimerManager().SetTimer(TH_Explode, this, &ASProjectile::Explode,
+	FTimerHandle Th_Explode;
+	GetWorldTimerManager().SetTimer(Th_Explode, this, &ASProjectile::Explode,
 									Data.ExplodeDelay, false, Data.ExplodeDelay);
 }
 
@@ -83,11 +89,6 @@ void ASProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
 
-void ASProjectile::ONREP_RepPacket()
-{
-	
-}
-
 void ASProjectile::ServerExplode_Implementation()
 {
 	Explode();
@@ -96,10 +97,4 @@ void ASProjectile::ServerExplode_Implementation()
 bool ASProjectile::ServerExplode_Validate()
 {
 	return true;
-}
-
-void ASProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME_CONDITION(ASProjectile,ReplicationPacket,COND_SkipOwner);
 }

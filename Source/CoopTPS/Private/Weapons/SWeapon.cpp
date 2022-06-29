@@ -2,7 +2,6 @@
 
 #include "Weapons/SWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -19,11 +18,11 @@ ASWeapon::ASWeapon()
 	RootComponent = MeshComp;
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetupAttachment(MeshComp);
-
+	bReplicates =true;
+	bNetUseOwnerRelevancy = true;
 	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
-	MinNetUpdateFrequency = 33.0f;
-	bReplicates =true;
+	MinNetUpdateFrequency = 33.0f;	
 }
 
 bool ASWeapon::IsReloading() const
@@ -54,30 +53,19 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
-	if(GetLocalRole() < ROLE_Authority)
+	if(!HasAuthority())
 	{
 		ServerFire();
 	}
-	if (GetOwner() && CurrentAmmo > 0)
-	{
-		//SFX
-		if (WeaponFXConfig.FireSFX)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX,GetActorLocation());
-		}
-	}
-	else
-	{
-		StopFire();
-		// auto reload.
-		StartReloading();
-	}
-	LastFireTime = GetWorld()->TimeSeconds;
-	CurrentAmmo -= 1;
 }
 
 void ASWeapon::Reload()
 {
+	if(!HasAuthority())
+	{
+		ServerReload();
+		UE_LOG(LogTemp,Error,TEXT("RELoading server"))
+	}
 	if(WeaponFXConfig.ReloadSFX)
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
@@ -91,7 +79,7 @@ void ASWeapon::StartReloading()
 	if (CurrentAmmo < WeaponConfig.MaxAmmo && !bIsReloading) 
 	{
 	bIsReloading = true;
-	GetWorldTimerManager().SetTimer(ReloadingTH, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
+	GetWorldTimerManager().SetTimer(Th_Reloading, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
 	}
 }
 
@@ -108,11 +96,6 @@ UAnimMontage* ASWeapon::GetFireMontage() const
 UAnimMontage* ASWeapon::GetReloadMontage() const
 {
 	return WeaponFXConfig.ReloadMontage;
-}
-
-void ASWeapon::SetHitResult(const FHitResult& NewHitResult)
-{
-	TraceResult = NewHitResult;
 }
 
 FTransform ASWeapon::GetWeaponHandle() const
@@ -132,10 +115,10 @@ void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASWeapon::StartFire()
 {
-	if (CurrentAmmo>1 && !GetWorldTimerManager().IsTimerActive(TimeBetweenShotsTH))
+	if (CurrentAmmo>1 && !GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
 	{
 		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
-		GetWorldTimerManager().SetTimer(TimeBetweenShotsTH, this, &ASWeapon::Fire,
+		GetWorldTimerManager().SetTimer(Th_TimeBetweenShots, this, &ASWeapon::Fire,
 														TimeBetweenShots, true,FireDelay);
 	}
 	else if(!bIsReloading)
@@ -146,11 +129,12 @@ void ASWeapon::StartFire()
 
 void ASWeapon::StopFire()
 {
-	GetWorldTimerManager().ClearTimer(TimeBetweenShotsTH);
+	GetWorldTimerManager().ClearTimer(Th_TimeBetweenShots);
 }
 
-void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const
+void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector& ImpactPoint, const FVector& ImpactNormal) const
 {
+	const FRotator ImpactRotation = ImpactNormal.ToOrientationRotator();
 	UParticleSystem* SelectedFX;
 	switch (NewSurfaceType)
 	{
@@ -165,15 +149,11 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	}
 	if (SelectedFX)
 	{
-		const FVector MuzzleLoc = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
-		FVector ShotDirection = ImpactPoint - MuzzleLoc;
-		ShotDirection.Normalize();
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint,
-																	ShotDirection.Rotation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint,ImpactRotation); //ShotDirection.Rotation()
 	}
 }
 
-void ASWeapon::PlayShootVFX(const FVector TraceEnd) const
+void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 {
 	if (WeaponFXConfig.MuzzleFX)
 	{
@@ -194,7 +174,8 @@ void ASWeapon::PlayShootVFX(const FVector TraceEnd) const
 		}
 	}
 }
-//call on client | execute on server 
+
+//call on client | execute on server
 void ASWeapon::ServerFire_Implementation()
 {
 	Fire();
@@ -205,30 +186,28 @@ bool ASWeapon::ServerFire_Validate()
 	return true;
 }
 
-void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ASWeapon::ServerReload_Implementation()
 {
-	// show widget to the player whos overlapping,
+	Reload();
+}
+
+bool ASWeapon::ServerReload_Validate()
+{
+	return true;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// show widget to the player who is overlapping,
 	// OtherActor->ShowWidget(this) -> this function will show the proper widget
 	//only for the player who is overlapping.
 }
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
 void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	// OtherActor->ShowWidget(null)
-}
-
-void ASWeapon::ONREP_HitScanTrace()
-{
-	//Play cosmetic FX
-	PlayShootVFX(HitScanTrace.ImpactPoint);
-	PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint);
-}
-// this is not declare on the header. Dont need to.
-void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace,COND_SkipOwner);
 }

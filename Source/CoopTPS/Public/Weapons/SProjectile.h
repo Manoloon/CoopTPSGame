@@ -67,7 +67,7 @@ public:
 		FVector InitialLocalVelocity;
 	
 protected:
-	UPROPERTY(ReplicatedUsing = ONREP_RepPacket)
+	UPROPERTY(Replicated)
 		FRepPacket ReplicationPacket;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|DATA")
 		FProjectileData Data;
@@ -79,6 +79,4 @@ protected:
 	virtual void Explode();
 	virtual void Destroyed() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	UFUNCTION()
-	void ONREP_RepPacket();
 };

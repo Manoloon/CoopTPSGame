@@ -16,32 +16,16 @@ class UMatineeCameraShake;
 class USoundCue;
 class UAudioComponent;
 
-USTRUCT()
-struct FHitScanTrace 
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	float ServerFireTime;
-	UPROPERTY()
-	TEnumAsByte<EPhysicalSurface> SurfaceType;
-	UPROPERTY()
-	bool bCausedDamage;
-	UPROPERTY()
-	FVector_NetQuantize ImpactPoint;
-	UPROPERTY()
-	FVector_NetQuantize ImpactNormal;
-};
-
 UCLASS(Abstract)
 class COOPTPS_API ASWeapon : public AActor
 {
 	GENERATED_BODY()
 	
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:	
 	ASWeapon();
 	bool IsReloading() const;
-	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		bool bIsReloading;
 	virtual void StartFire();
@@ -50,13 +34,8 @@ public:
 	const FHUDData& GetCrosshairData() const;
 	UAnimMontage* GetFireMontage() const;
 	UAnimMontage* GetReloadMontage() const;
-	void SetHitResult(const FHitResult& NewHitResult);
 	FTransform GetWeaponHandle()const;
-private:
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 protected:
-	UPROPERTY(ReplicatedUsing = ONREP_HitScanTrace)
-		FHitScanTrace HitScanTrace;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FHUDData CrossHairData;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
@@ -64,7 +43,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponFXData WeaponFXConfig;
 	
-	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector ImpactPoint) const;
+	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector& ImpactPoint, const FVector& ImpactNormal) const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		USkeletalMeshComponent* MeshComp;
@@ -78,21 +57,22 @@ protected:
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
 		UAudioComponent* WeaponAudioComponent;
+	
 
-	FHitResult TraceResult;
 	float LastFireTime;
 	float TimeBetweenShots;
-	FTimerHandle TimeBetweenShotsTH;
-	FTimerHandle ReloadingTH;
+	FTimerHandle Th_TimeBetweenShots;
+	FTimerHandle Th_Reloading;
 
-	void PlayShootVFX(FVector TraceEnd) const;
+	void PlayShootVfx(FVector TraceEnd) const;
 	virtual void Fire();
 	void Reload();
-	
+
+	UFUNCTION(Server,Reliable,WithValidation)
+		virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerFire();
-	UFUNCTION()
-		void ONREP_HitScanTrace();
+	
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
