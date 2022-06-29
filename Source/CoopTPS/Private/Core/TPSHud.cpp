@@ -5,8 +5,10 @@
 #include "Engine/Canvas.h"
 #include "UserWidget.h"
 #include "UI/UPlayerUI.h"
-#include "Entities/SCharacter.h"
-
+#include "UI/RoleMessage.h"
+static bool DebugRole = true;
+FAutoConsoleVariableRef CVarDebugRole(TEXT("Coop.ShowPawnRole"), DebugRole,
+											TEXT("Show Pawn Role"), ECVF_Cheat);
 void ATPSHud::DrawHUD()
 {
 	Super::DrawHUD();
@@ -44,6 +46,17 @@ void ATPSHud::DrawHUD()
 	}
 }
 
+void ATPSHud::BeginPlay()
+{
+	Super::BeginPlay();
+	AddPlayerUI();
+	AddHealthIndicator();
+	if(DebugRole)
+	{
+		AddRoleMessage();
+	}
+}
+
 UUPlayerUI* ATPSHud::GetPlayerUI() const
 {
 	return PlayerUI;
@@ -54,12 +67,27 @@ UUserWidget* ATPSHud::GetHealthIndicator() const
 	return HealthIndicator;
 }
 
+URoleMessage* ATPSHud::GetRoleMessage() const
+{
+	return RoleMessage;
+}
+
+void ATPSHud::AddRoleMessage()
+{
+	if(GetOwningPlayerController() && DebugRoleMessageClass)
+	{
+		RoleMessage = CreateWidget<URoleMessage>(GetWorld(),DebugRoleMessageClass);
+		RoleMessage->AddToViewport(0);
+		RoleMessage->ShowPlayerNetRole(GetOwningPawn());
+	}
+}
+
 void ATPSHud::AddPlayerUI()
 {
-	if(GetOwningPlayerController() && PlayerUIClass)
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if(GetOwningPlayerController() &&PlayerUIClass)
 	{
-		PlayerUI = CreateWidget<UUPlayerUI>(GetOwningPlayerController(),PlayerUIClass);
-		
+		PlayerUI = CreateWidget<UUPlayerUI>(PlayerController,PlayerUIClass);
 		PlayerUI->AddToViewport();
 	}
 }
@@ -77,8 +105,8 @@ void ATPSHud::AddAnnouncement()
 {
 	if(GetOwningPlayerController() && AnnouncementClass)
 	{
-		// create widget de announcement
-		// add to viewport
+		Announcements =CreateWidget<UUserWidget>(GetWorld(),AnnouncementClass);
+		Announcements->AddToViewport();
 	}
 }
 

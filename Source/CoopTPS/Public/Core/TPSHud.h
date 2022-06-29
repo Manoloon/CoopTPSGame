@@ -8,7 +8,7 @@
 #include "TPSHud.generated.h"
 
 UCLASS()
-class COOPTPS_API ATPSHud : public AHUD
+class COOPTPS_API ATPSHud final : public AHUD
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere,Category = "Settings")
@@ -17,13 +17,18 @@ class COOPTPS_API ATPSHud : public AHUD
 	TSubclassOf<UUserWidget> AnnouncementClass;
 	UPROPERTY(EditAnywhere,Category = "Settings")
 	TSubclassOf<UUserWidget> HealthIndicatorClass;
-	
+	UPROPERTY(EditAnywhere,Category = "Settings")
+	TSubclassOf<UUserWidget> DebugRoleMessageClass;
 	UPROPERTY()
 	class UUPlayerUI* PlayerUI;
 	UPROPERTY()
-	UUserWidget* HealthIndicator; 
+	UUserWidget* HealthIndicator;
+	UPROPERTY()
+	class URoleMessage* RoleMessage;
+	UPROPERTY()
+	UUserWidget* Announcements;
 	// announcement pointer.
-	
+	virtual void BeginPlay() override;
 	FHUDData HUDData;
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax=16.0f;
@@ -35,7 +40,10 @@ public:
 	FORCEINLINE void SetHUDData(const FHUDData& Data){HUDData = Data;}
 	UUPlayerUI* GetPlayerUI() const;
 	UUserWidget* GetHealthIndicator()const;
+	URoleMessage* GetRoleMessage() const;
+	void AddRoleMessage();
 	void AddPlayerUI();
 	void AddHealthIndicator();
 	void AddAnnouncement();
+	//void HideAllWidgets();
 };
