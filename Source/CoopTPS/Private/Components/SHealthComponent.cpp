@@ -19,7 +19,6 @@ USHealthComponent::USHealthComponent()
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	//SetIsReplicated(true);
 
 	if(GetOwnerRole() == ROLE_Authority)
 	{
@@ -45,7 +44,6 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	bOwnerIsDead = Health <= 0.0f;
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy,
 																				DamageCauser);
-	UE_LOG(LogTemp,Error,TEXT("Fire client Damage %f"),Damage);
 	if (bOwnerIsDead)
 	{
 		if (const ASGameMode* GamMode =Cast<ASGameMode>(GetWorld()->GetAuthGameMode()))
@@ -89,7 +87,6 @@ bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 void USHealthComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	// TODO : maybe this should be ONLy for the owner
 	DOREPLIFETIME(USHealthComponent, Health);
 }
 
