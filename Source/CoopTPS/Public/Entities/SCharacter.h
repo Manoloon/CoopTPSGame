@@ -92,6 +92,8 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Animations")
+	UAnimMontage* HitReactMontage=nullptr;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Movement")
 		float BaseWalkSpeed=400.0f;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Movement")
@@ -128,7 +130,9 @@ protected:
 private:
 	void TurnInPlace();
 	void CalculateAimOffset();
-	void PlayMontage(UAnimMontage* MontageToPlay) const;
+	UFUNCTION(NetMulticast,Unreliable)
+	void Multicast_PlayMontage(UAnimMontage* MontageToPlay) const;
+	//void PlayMontage(UAnimMontage* MontageToPlay) const;
 	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
 	float CrossInAirFactor;
@@ -186,4 +190,5 @@ public:
 	FTransform GetHandlingWeaponTransform() const;
 	UFUNCTION()
 	FVector2D GetAimOffsetData()const{return FVector2D(AimOffsetYaw,AimOffSetPitch);}
+	FORCEINLINE bool PlayerIsDead()const{return bDied;}
 };

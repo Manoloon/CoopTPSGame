@@ -2,11 +2,9 @@
 
 
 #include "Core/PlayerAnimInstance.h"
-
 #include "SCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
-#include "SHealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UPlayerAnimInstance::NativeBeginPlay()
@@ -23,10 +21,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		PawnCharacter = Cast<ASCharacter>(TryGetPawnOwner());
 	}
 	if(PawnCharacter ==nullptr){return;}
-	if(PawnCharacter->I_GetHealthComp())
-	{
-		bDie = PawnCharacter->I_GetHealthComp()->bOwnerIsDead;
-	}
+	bDie = PawnCharacter->PlayerIsDead();
 	if(!bDie)
 	{
 		bIsCrouched = PawnCharacter->bIsCrouched;

@@ -29,7 +29,7 @@ DECLARE_CYCLE_STAT(TEXT("CoopGame"),STAT_RayForItems,STATGROUP_PlayerChar);
 ASCharacter::ASCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	bUseControllerRotationYaw=false;
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
@@ -239,7 +239,7 @@ void ASCharacter::I_StartFire()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->StartFire();
-		PlayMontage(CurrentWeapon->GetFireMontage());
+		Multicast_PlayMontage(CurrentWeapon->GetFireMontage());
 	}
 }
 
@@ -265,7 +265,7 @@ void ASCharacter::I_Reload()
 	if(CurrentWeapon)
 	{
 		CurrentWeapon->StartReloading();
-		PlayMontage(CurrentWeapon->GetReloadMontage());
+		//Multicast_PlayMontage(CurrentWeapon->GetReloadMontage());
 		ServerReload();
 	}
 }
@@ -441,12 +441,14 @@ void ASCharacter::CalculateAimOffset()
 		{
 			InterpAimYaw = AimOffsetYaw;
 		}
+		bUseControllerRotationYaw=true;
 		TurnInPlace();
 	}
 	else
 	{
 		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
 		AimOffsetYaw = 0.f;
+		bUseControllerRotationYaw=true;
 		bTurnInPlace=false;
 	}
 	AimOffSetPitch = GetBaseAimRotation().Pitch;
@@ -459,6 +461,17 @@ void ASCharacter::CalculateAimOffset()
 	}
 }
 
+void ASCharacter::Multicast_PlayMontage_Implementation(UAnimMontage* MontageToPlay) const
+{
+	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	IsValid(AnimInstance) )
+	{
+		AnimInstance->Montage_Play(MontageToPlay);
+		const FName SectionName = bIsAiming? FName("Aiming") : FName("Hip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+/*
 void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
 {
 	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -469,7 +482,7 @@ void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
-
+*/
 // Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor() const
 {
@@ -499,7 +512,7 @@ void ASCharacter::OnRep_WeaponEquipped()
 void ASCharacter::ServerReload_Implementation()
 {
 	CurrentWeapon->StartReloading();
-	PlayMontage(CurrentWeapon->GetReloadMontage());
+	Multicast_PlayMontage(CurrentWeapon->GetReloadMontage());
 }
 
 void ASCharacter::ServerChangeWeapon_Implementation()
@@ -575,6 +588,8 @@ void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
 					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
+	Multicast_PlayMontage(HitReactMontage);
+	
 	if (Health<=0.0f && !bDied)
 	{
 		bDied = true;
