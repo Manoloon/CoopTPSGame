@@ -42,6 +42,14 @@ ASGameMode::ASGameMode()
 void ASGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	for (FConstPlayerControllerIterator It= GetWorld()->GetPlayerControllerIterator();It;++It)
+	{
+		if(APlayerController* PC = It->Get(); PC && PC->GetPawn() == nullptr)
+		{
+			RestartPlayer(PC);
+		}
+	}
 	PrepareNextWave();
 }
 
@@ -49,6 +57,7 @@ void ASGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	OnActorKilled.RemoveDynamic(this,&ASGameMode::ActorGetKilled);
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
 
 void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
@@ -68,9 +77,6 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 void ASGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// TODO : send a notification for this , not using tick- maybe dispatcher from entities.
-	CheckWaveState();
-	CheckAnyPlayerAlive();
 }
 
 void ASGameMode::StartWave()
@@ -97,11 +103,10 @@ void ASGameMode::RestartWave()
 
 void ASGameMode::PrepareNextWave()
 {
-	UE_LOG(LogTemp,Warning,TEXT("Preparing next wave"));
+	UE_LOG(LogTemp,Warning,TEXT("GAMEMODE : Preparing next wave"));
 	GetWorldTimerManager().SetTimer(Th_NextWaveStart, this,
 			&ASGameMode::StartWave, TimeBetweenWaves, false);
 	SetWaveState(EWaveState::WaitingToStart);
-	RestoreDeadPlayer();
 }
 
 void ASGameMode::CheckWaveState()
@@ -142,17 +147,41 @@ void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const 
 		}
 		else
 		{
-			UE_LOG(LogTemp,Warning,TEXT("We kill a friend"));
+			UE_LOG(LogTemp,Warning,TEXT("GAMEMODE : We kill a friend"));
 		}
 	}
 }
 
-void ASGameMode::CheckAnyPlayerAlive()
+void ASGameMode::RestartPlayerDeferred(AController* NewPlayer)
 {
 	if(!IsAnyPlayerAlive())
 	{
 		GameOver();
+	}
+	else
+	{
+		Super::RestartPlayer(NewPlayer);
 	}	
+}
+
+void ASGameMode::RespawnPlayer(const APlayerController* PlayerController)
+{
+	if(!IsAnyPlayerAlive()){GameOver();}
+	if(PlayerController)
+	{
+		FTimerHandle Th_Respawn;
+		if(!GetWorldTimerManager().IsTimerActive(Th_Respawn))
+		{
+			FTimerDelegate TimerDel;
+			TimerDel.BindUFunction(this,FName(TEXT("RestartPlayerDeferred")),
+															PlayerController);
+			GetWorldTimerManager().SetTimer(Th_Respawn,TimerDel,6.f,false);
+		}
+	}
+	else
+	{
+		GameOver();
+	}
 }
 
 void ASGameMode::GameOver()
@@ -160,6 +189,7 @@ void ASGameMode::GameOver()
 	EndWave();
 	SetWaveState(EWaveState::GameOver);
 	UE_LOG(LogTemp,Warning,TEXT("GAME OVER"));
+	//TODO : show restart game panel.
 }
 
 void ASGameMode::SetWaveState(const EWaveState NewWaveState) const
@@ -168,17 +198,6 @@ void ASGameMode::SetWaveState(const EWaveState NewWaveState) const
 		ensureAlways(GS))
 	{
 		GS->SetWaveState(NewWaveState);
-	}
-}
-
-void ASGameMode::RestoreDeadPlayer()
-{
-	for (FConstPlayerControllerIterator It= GetWorld()->GetPlayerControllerIterator();It;++It)
-	{
-		if(APlayerController* PC = It->Get(); PC && PC->GetPawn() == nullptr)
-		{
-			RestartPlayer(PC);
-		}
 	}
 }
 
@@ -191,18 +210,22 @@ void ASGameMode::SpawnBotTimerElapsed()
 	{
 		EndWave();
 	}
+	else
+	{
+		if(!GetWorldTimerManager().IsTimerActive(Th_CheckWaveState))
+		{
+			GetWorldTimerManager().SetTimer(Th_CheckWaveState,this,&ASGameMode::CheckWaveState,2.0f,true);
+		}
+	}
 }
 
 bool ASGameMode::IsAnyPlayerAlive() const
 {
 	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator();It;++It)
 	{
-		if(const APlayerController* PC = It->Get(); PC && PC->GetPawn())
+		if(const APlayerController* PC = It->Get(); PC)
 		{
-			const APawn* PlayerPawn = PC->GetPawn();
-			//TODO hacer un null system asi no se corta el juego.
-			if(const IIHealthyActor* I = Cast<IIHealthyActor>(PlayerPawn);
-				I->I_GetHealthComp()->GetHealth() > 0.0f )
+			if(PC->GetPawn())
 			{
 				return true;
 			}
@@ -220,7 +243,8 @@ bool ASGameMode::IsAnyEnemyAlive() const
 		{
 			continue;
 		}
-		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);I->I_GetHealthComp()->GetHealth() > 0.0f)
+		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);
+			IsValid(I->I_GetHealthComp()) && I->I_GetHealthComp()->GetHealth() > 0.0f)
 		{
 			return true;
 		}

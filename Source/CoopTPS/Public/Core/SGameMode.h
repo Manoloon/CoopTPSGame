@@ -19,7 +19,7 @@ public:
 	ASGameMode();
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//virtual void StartPlay() override;
+	void RespawnPlayer(const APlayerController* PlayerController);
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
@@ -32,6 +32,7 @@ public:
 private:
 	FTimerHandle Th_SpawnBots;
 	FTimerHandle Th_NextWaveStart;
+	FTimerHandle Th_CheckWaveState;
 	int32 NumBotsToSpawn;
 	int32 WaveCount;
 	// Helper function
@@ -52,8 +53,11 @@ protected:
 	UFUNCTION()
 	void ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const AController* VictimController,
 																AController* KillerController);
-	void CheckAnyPlayerAlive();
+	UFUNCTION()
+	void RestartPlayerDeferred(AController* NewPlayer);
 	void GameOver();
 	void SetWaveState(EWaveState NewWaveState) const;
-	void RestoreDeadPlayer();
+
+
+	
 };

@@ -600,6 +600,6 @@ void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		DetachFromControllerPendingDestroy();
-		SetLifeSpan(10);
+		SetLifeSpan(4);
 	}
 }

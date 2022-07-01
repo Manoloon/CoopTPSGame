@@ -118,7 +118,8 @@ FVector ASTrackerBall::GetNextPathPoint()
 		{
 			continue;
 		}
-		if(const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);I->I_GetHealthComp()->GetHealth() > 0.0f)
+		const IIHealthyActor* I = Cast<IIHealthyActor>(TestPawn);
+		if(IsValid(I->I_GetHealthComp()) &&  I->I_GetHealthComp()->GetHealth() > 0.0f)
 		{
 			if(const float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
 				Distance < NearestTargetDistance)

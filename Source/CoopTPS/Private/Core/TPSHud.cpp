@@ -77,8 +77,11 @@ void ATPSHud::AddRoleMessage()
 	if(GetOwningPlayerController() && DebugRoleMessageClass)
 	{
 		RoleMessage = CreateWidget<URoleMessage>(GetWorld(),DebugRoleMessageClass);
+		if(GetOwningPawn())
+		{
+			RoleMessage->ShowPlayerNetRole(GetOwningPawn());	
+		}
 		RoleMessage->AddToViewport(0);
-		RoleMessage->ShowPlayerNetRole(GetOwningPawn());
 	}
 }
 
