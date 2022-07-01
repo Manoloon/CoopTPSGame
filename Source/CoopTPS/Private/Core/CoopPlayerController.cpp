@@ -1,12 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Core/CoopPlayerController.h"
+
+#include "SGameMode.h"
 #include "TextBlock.h"
 #include "TPSHud.h"
 #include "UI/UPlayerUI.h"
 #include "UserWidget.h"
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/IInputComm.h"
+#include "Kismet/GameplayStatics.h"
 
 ACoopPlayerController::ACoopPlayerController()
 {
@@ -90,7 +93,11 @@ void ACoopPlayerController::OnUnPossess()
 	if(HealthWidget)
 	{
 		HealthWidget->RemoveFromParent();	
-	}	
+	}
+	if(const auto GameMode = Cast<ASGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
+	{
+		GameMode->RespawnPlayer(this);
+	}
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
