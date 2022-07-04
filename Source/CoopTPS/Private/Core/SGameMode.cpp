@@ -133,6 +133,11 @@ void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const 
 		KillerPlayerState && KillerPlayerState != VictimPlayerState)
 	{
 		KillerPlayerState->AddToScore(100);
+		NumBotsToSpawn--;
+		if(NumBotsToSpawn<=0)
+		{
+			PrepareNextWave();
+		}
 	}
 	if(VictimActor->Implements<UIHealthyActor>())
 	{

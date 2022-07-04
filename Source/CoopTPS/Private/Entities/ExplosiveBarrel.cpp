@@ -70,7 +70,6 @@ void AExplosiveBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AExplosiveBarrel::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
                                      const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
-	UE_LOG(LogTemp,Warning,TEXT("TAKING DAMAGE"));
 	if(MatInst == nullptr)
 	{
 		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0,

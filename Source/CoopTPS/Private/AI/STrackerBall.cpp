@@ -165,13 +165,15 @@ void ASTrackerBall::HealthChanged(USHealthComponent* OwningHealthComp, float Hea
  	}
  	if(MeshMaterialInstance)
  	{
- 	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->TimeSeconds);
+ 	MeshMaterialInstance->SetScalarParameterValue("DamageTaken",GetWorld()->GetTimeSeconds());
+ 	MeshMaterialInstance->SetScalarParameterValue("ShakeFrequency",GetWorld()->GetTimeSeconds());
  	}
+	/**
 	if(!GetWorldTimerManager().IsTimerActive(TH_HitShake))
 	{
 		GetWorldTimerManager().SetTimer(TH_HitShake,this, &ASTrackerBall::StartHitShake, 0.0f, false);
 	}
-
+	*/
 	if(Health <=0.0f)
 	{
 		SelfDestruct();
@@ -222,7 +224,7 @@ void ASTrackerBall::StartHitShake()
 	}
 	if (MeshMaterialInstance)
 	{
-		const float DamageHit = FMath::FInterpTo(1.0f, 0.0, GetWorld()->TimeSeconds, 1.0f);
+		const float DamageHit = FMath::FInterpTo(0.5f, 0.0, GetWorld()->TimeSeconds, 1.0f);
 		MeshMaterialInstance->SetScalarParameterValue("DamageTaken", DamageHit);
 		if(DamageHit == 0.0f)
 		{
