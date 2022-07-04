@@ -16,13 +16,9 @@ class COOPTPS_API ATPSHud final : public AHUD
 	UPROPERTY(EditAnywhere,Category = "Settings")
 	TSubclassOf<UUserWidget> AnnouncementClass;
 	UPROPERTY(EditAnywhere,Category = "Settings")
-	TSubclassOf<UUserWidget> HealthIndicatorClass;
-	UPROPERTY(EditAnywhere,Category = "Settings")
 	TSubclassOf<UUserWidget> DebugRoleMessageClass;
 	UPROPERTY()
 	class UUPlayerUI* PlayerUI;
-	UPROPERTY()
-	UUserWidget* HealthIndicator;
 	UPROPERTY()
 	class URoleMessage* RoleMessage;
 	UPROPERTY()
@@ -39,11 +35,9 @@ public:
 	virtual void DrawHUD() override;
 	FORCEINLINE void SetHUDData(const FHUDData& Data){HUDData = Data;}
 	UUPlayerUI* GetPlayerUI() const;
-	UUserWidget* GetHealthIndicator()const;
 	URoleMessage* GetRoleMessage() const;
 	void AddRoleMessage();
 	void AddPlayerUI();
-	void AddHealthIndicator();
 	void AddAnnouncement();
 	//void HideAllWidgets();
 };

@@ -11,15 +11,6 @@
 #include "Interfaces/IInputComm.h"
 #include "Kismet/GameplayStatics.h"
 
-ACoopPlayerController::ACoopPlayerController()
-{
-	static ConstructorHelpers::FClassFinder<UUserWidget>HealthIndicatorClass(TEXT("/Game/UI/WB_HealthIndicator"));
-	if(HealthIndicatorClass.Class)
-	{
-		HealthIndicator = HealthIndicatorClass.Class;
-	}
-}
-
 void ACoopPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -48,7 +39,7 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ChangeWeapon);
 }
 
-void ACoopPlayerController::SetHUDScore(int Score)
+void ACoopPlayerController::SetHUDScore(const int Score)
 {
 	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetPlayerUI() && PlayerHUD->GetPlayerUI()->ScoreVal)
@@ -58,18 +49,9 @@ void ACoopPlayerController::SetHUDScore(int Score)
 	}
 }
 
-void ACoopPlayerController::SetHUDHealth(float Health)
-{
-	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
-	if(PlayerHUD && PlayerHUD->GetHealthIndicator())
-	{
-		// TODO : Falta setear la salud en el hud
-	}
-}
-
 void ACoopPlayerController::BeginPlay()
 {
-	Super::BeginPlay();
+	Super::BeginPlay();	
 }
 
 void ACoopPlayerController::OnPossess(APawn* APawn)
@@ -82,7 +64,6 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 	PlayerHUD = (PlayerHUD==nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetPlayerUI())
 	{
-		//set the score when respawn player.
 		SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
 	}
 }
@@ -90,16 +71,11 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 void ACoopPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	if(HealthWidget)
-	{
-		HealthWidget->RemoveFromParent();	
-	}
 	if(const auto GameMode = Cast<ASGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
 		GameMode->RespawnPlayer(this);
 	}
 }
-
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartRun()
 {

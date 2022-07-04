@@ -17,17 +17,14 @@ class COOPTPS_API ACoopPlayerController : public APlayerController
 	class ATPSHud* PlayerHUD;
 	
 public:
-	ACoopPlayerController();
+	ACoopPlayerController()=default;
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)
 	ASCharacter* MyPawn = nullptr;
-	UPROPERTY()
-	TSubclassOf<UUserWidget> HealthIndicator;
-	UPROPERTY()
-	UUserWidget* HealthWidget;
-	void SetHUDScore(int Score);
-	void SetHUDHealth(float Health);
+
+	void SetHUDScore(const int Score);
+	//void SetHUDHealth(const float Health);
 	
 protected:
 	virtual void SetupInputComponent() override;

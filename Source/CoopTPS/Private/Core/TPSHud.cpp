@@ -9,6 +9,17 @@
 static bool DebugRole = true;
 FAutoConsoleVariableRef CVarDebugRole(TEXT("Coop.ShowPawnRole"), DebugRole,
 											TEXT("Show Pawn Role"), ECVF_Cheat);
+
+void ATPSHud::BeginPlay()
+{
+	Super::BeginPlay();
+	AddPlayerUI();
+	if(DebugRole)
+	{
+		AddRoleMessage();
+	}
+}
+
 void ATPSHud::DrawHUD()
 {
 	Super::DrawHUD();
@@ -46,25 +57,9 @@ void ATPSHud::DrawHUD()
 	}
 }
 
-void ATPSHud::BeginPlay()
-{
-	Super::BeginPlay();
-	AddPlayerUI();
-	AddHealthIndicator();
-	if(DebugRole)
-	{
-		AddRoleMessage();
-	}
-}
-
 UUPlayerUI* ATPSHud::GetPlayerUI() const
 {
 	return PlayerUI;
-}
-
-UUserWidget* ATPSHud::GetHealthIndicator() const
-{
-	return HealthIndicator;
 }
 
 URoleMessage* ATPSHud::GetRoleMessage() const
@@ -81,26 +76,20 @@ void ATPSHud::AddRoleMessage()
 		{
 			RoleMessage->ShowPlayerNetRole(GetOwningPawn());	
 		}
-		RoleMessage->AddToViewport(0);
+		RoleMessage->AddToViewport();;
 	}
 }
 
 void ATPSHud::AddPlayerUI()
 {
 	APlayerController* PlayerController = GetOwningPlayerController();
-	if(GetOwningPlayerController() &&PlayerUIClass)
+	if(GetOwningPlayerController() && PlayerUIClass)
 	{
 		PlayerUI = CreateWidget<UUPlayerUI>(PlayerController,PlayerUIClass);
-		PlayerUI->AddToViewport();
-	}
-}
-
-void ATPSHud::AddHealthIndicator()
-{
-	if(GetOwningPlayerController() && HealthIndicatorClass)
-	{
-		HealthIndicator = CreateWidget<UUserWidget>(GetWorld(),HealthIndicatorClass);
-		HealthIndicator->AddToViewport();
+		if(PlayerUI)
+		{
+			PlayerUI->AddToViewport();
+		}
 	}
 }
 

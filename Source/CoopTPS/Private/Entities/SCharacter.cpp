@@ -589,7 +589,7 @@ void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float
 					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
 	Multicast_PlayMontage(HitReactMontage);
-	
+
 	if (Health<=0.0f && !bDied)
 	{
 		bDied = true;
