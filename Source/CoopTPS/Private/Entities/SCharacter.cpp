@@ -2,7 +2,7 @@
 
 #include "Entities/SCharacter.h"
 
-#include "CoopPlayerController.h"
+#include "Core/CoopPlayerController.h"
 #include "Engine.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"

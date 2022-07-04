@@ -4,7 +4,7 @@
 #include "Core/CoopGameInstance.h"
 #include "Uobject/ConstructorHelpers.h"
 #include "UI/UW_MainMenu.h"
-#include "UI/W_PauseMenu.h"
+//#include "UI/W_PauseMenu.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/BaseMenuWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -153,6 +153,7 @@ void UCoopGameInstance::LoadPauseMenu()
 }
 
 // ONLINE SUBSYSTEM CALLBACKS!
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UCoopGameInstance::OnFindSessionsComplete(const bool Success)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Finish Session Found"));
@@ -183,6 +184,7 @@ void UCoopGameInstance::OnFindSessionsComplete(const bool Success)
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoinSessionCompleteResult::Type NewResult)
 {
 	if (!OnlineSessionInterface.IsValid()) { return; }
@@ -201,7 +203,7 @@ void UCoopGameInstance::OnJoinSessionComplete(const FName NewSessionName, EOnJoi
 		}
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UCoopGameInstance::OnCreateSessionComplete(FName NewSessionName, const bool Success)
 {
 	if(!Success)
@@ -217,7 +219,7 @@ void UCoopGameInstance::OnCreateSessionComplete(FName NewSessionName, const bool
 	UE_LOG(LogTemp, Error, TEXT("OnCreateSesionComplete"));
 	GetWorld()->ServerTravel(FString("/Game/Map/M_Lobby?listen"));
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UCoopGameInstance::OnDestroySessionComplete(FName NewSessionName, const bool Success)
 {
 	if(Success)

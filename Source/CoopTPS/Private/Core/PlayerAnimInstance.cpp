@@ -2,7 +2,7 @@
 
 
 #include "Core/PlayerAnimInstance.h"
-#include "SCharacter.h"
+#include "Entities/SCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Kismet/KismetMathLibrary.h"

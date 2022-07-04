@@ -3,13 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MainMenuInterface.h"
+#include "Interfaces/MainMenuInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "BaseMenuWidget.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COOPTPS_API UBaseMenuWidget : public UUserWidget
 {

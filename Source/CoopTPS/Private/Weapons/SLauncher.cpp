@@ -2,7 +2,7 @@
 
 #include "Weapons/SLauncher.h"
 
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapons/SProjectile.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"

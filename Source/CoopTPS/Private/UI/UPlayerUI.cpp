@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "UI/UPlayerUI.h"
-#include "IHealthyActor.h"
-#include "SHealthComponent.h"
+#include "Interfaces/IHealthyActor.h"
+#include "Components/SHealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UUPlayerUI::PostInitProperties()

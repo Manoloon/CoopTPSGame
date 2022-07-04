@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Core/SPlayerState.h"
-
-#include "CoopPlayerController.h"
-#include "SCharacter.h"
+#include "Core/CoopPlayerController.h"
+#include "Entities/SCharacter.h"
 
 void ASPlayerState::OnRep_Score()
 {

@@ -4,7 +4,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Components/SHealthComponent.h"
 #include "DrawDebugHelpers.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"

@@ -7,10 +7,7 @@ void UBaseMenuWidget::Setup()
 {
 	this->AddToViewport();
 	this->bIsFocusable = true;
-	UWorld* World = GetWorld();
-	if (World == nullptr) { return; }
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (PlayerController)
+	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		FInputModeUIOnly InputModeData;
 		InputModeData.SetWidgetToFocus(this->TakeWidget());
@@ -22,10 +19,7 @@ void UBaseMenuWidget::Setup()
 
 void UBaseMenuWidget::Teardown()
 {
-	UWorld* World = GetWorld();
-	if (World == nullptr) { return; }
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (PlayerController)
+	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		FInputModeGameOnly InputModeData;
 		InputModeData.SetConsumeCaptureMouseDown(true);

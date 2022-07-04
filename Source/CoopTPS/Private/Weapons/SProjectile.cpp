@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 static bool DebugProjectile = false;

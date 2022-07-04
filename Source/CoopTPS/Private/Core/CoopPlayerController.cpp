@@ -2,11 +2,11 @@
 
 #include "Core/CoopPlayerController.h"
 
-#include "SGameMode.h"
-#include "TextBlock.h"
-#include "TPSHud.h"
+#include "Core/SGameMode.h"
+#include "Components/TextBlock.h"
+#include "Core/TPSHud.h"
 #include "UI/UPlayerUI.h"
-#include "UserWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/IInputComm.h"
 #include "Kismet/GameplayStatics.h"

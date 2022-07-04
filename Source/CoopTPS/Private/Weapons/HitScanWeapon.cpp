@@ -3,8 +3,8 @@
 
 #include "Weapons/HitScanWeapon.h"
 #include "CoopTPS.h"
-#include "PhysicalMaterial.h"
-#include "UnrealNetwork.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
 static int32 DebugWeaponDrawing = 0;

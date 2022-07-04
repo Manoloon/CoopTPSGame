@@ -2,6 +2,7 @@
 
 
 #include "UI/RoleMessage.h"
+#include "Components/TextBlock.h"
 
 void URoleMessage::SetDisplayText(const FString TextToDisplay) const
 {

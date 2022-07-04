@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "TextBlock.h"
 #include "RoleMessage.generated.h"
 
+class UTextBlock;
 UCLASS(Abstract)
 class URoleMessage final : public UUserWidget
 {
