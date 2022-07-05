@@ -23,13 +23,17 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	ASCharacter* MyPawn = nullptr;
 
-	void SetHUDScore(const int Score);
+	void SetHudScore(const int Score);
+	void SetHudGameTime();
 	//void SetHUDHealth(const float Health);
-	
+
+	virtual float GetServerTime();
+	virtual void ReceivedPlayer() override;
 protected:
 	virtual void SetupInputComponent() override;
 	IIInputComm* PawnInterface;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnPossess(APawn* APawn) override;
 	virtual void OnUnPossess() override;
 	void StartRun();
@@ -49,4 +53,18 @@ protected:
 	void StartThrow();
 	void StopThrow();
 	void Jump();
+
+	/* Sync time between client and server*/
+	float MatchTime =120.f;
+	uint32 Countdown=0;
+ 	float ClientServerDelta = 0.f; //Diff between client and server time
+	UPROPERTY(EditAnywhere,Category = Settings)
+	float TimeSyncFrequency = 5.f;
+	UFUNCTION(Server,Reliable)
+	void Server_RequestServerTime(float TimeClientRequest);
+	UFUNCTION(Client,Reliable)
+	void Client_ReportServerTime(float TimeClientRequest,float TimeServerReceiveClientRequest);
+	UFUNCTION()
+	void SyncTime();
+	
 };

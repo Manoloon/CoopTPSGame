@@ -14,7 +14,7 @@ void ASPlayerState::OnRep_Score()
 														: PlayerController;
 		if(PlayerController)
 		{
-			PlayerController->SetHUDScore(GetScore());
+			PlayerController->SetHudScore(GetScore());
 		}
 	}
 }
@@ -29,7 +29,7 @@ void ASPlayerState::AddToScore(const float ScoreDelta)
 														: PlayerController;
 		if(PlayerController)
 		{
-			PlayerController->SetHUDScore(GetScore());
+			PlayerController->SetHudScore(GetScore());
 		}
 	}
 }

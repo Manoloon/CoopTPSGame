@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "UI/UPlayerUI.h"
+
+#include "TextBlock.h"
 #include "Interfaces/IHealthyActor.h"
 #include "Components/SHealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -32,7 +34,6 @@ void UUPlayerUI::BeginDestroy()
 		if(PlayerPawn->Implements<UIHealthyActor>())
 		{
 			const auto I = Cast<IIHealthyActor>(PlayerPawn);
-			UE_LOG(LogTemp,Error,TEXT("Removing Dynamic"));
 			I->I_GetHealthComp()->OnHealthChanged.RemoveDynamic(this,&UUPlayerUI::HealthChanged);
 		}
 	}
@@ -48,11 +49,15 @@ void UUPlayerUI::SetHealthIndicator(const float NewHealth) const
 	}
 }
 
+void UUPlayerUI::SetMatchTime(const FString NewTime) const
+{
+	GameTimeText->SetText(FText::FromString(NewTime));
+}
+
 // ReSharper disable once CppMemberFunctionMayBeConst
 void UUPlayerUI::HealthChanged(USHealthComponent* OwningHealthComp, const float Health, float HealthDelta,
                                const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	
 	if(PlayerPawn)
 	{
 		if(PlayerPawn->Implements<UIHealthyActor>())

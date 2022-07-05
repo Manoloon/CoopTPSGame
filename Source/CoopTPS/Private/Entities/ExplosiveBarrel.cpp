@@ -33,6 +33,13 @@ AExplosiveBarrel::AExplosiveBarrel()
 	RadialForceComp->ImpulseStrength = ExplosionImpulse;
 }
 
+void AExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AExplosiveBarrel,bExploded);
+	DOREPLIFETIME(AExplosiveBarrel, ExplosionFX);
+}
+
 USHealthComponent* AExplosiveBarrel::I_GetHealthComp() const
 {
 	if(HealthComp)
@@ -129,8 +136,3 @@ void AExplosiveBarrel::OnRep_Exploded() const
 	}
 }
 
-void AExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AExplosiveBarrel,bExploded);
-}

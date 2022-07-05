@@ -58,6 +58,6 @@ protected:
 	void GameOver();
 	void SetWaveState(EWaveState NewWaveState) const;
 
-
-	
+//	void CalculateMatchCountdown();
+//	void CalculateGameTime();	
 };

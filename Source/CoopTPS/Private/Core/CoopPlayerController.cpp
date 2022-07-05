@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Core/CoopPlayerController.h"
-
 #include "Core/SGameMode.h"
 #include "Components/TextBlock.h"
 #include "Core/TPSHud.h"
@@ -39,19 +38,50 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ChangeWeapon);
 }
 
-void ACoopPlayerController::SetHUDScore(const int Score)
+void ACoopPlayerController::SetHudScore(const int Score)
 {
 	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetPlayerUI() && PlayerHUD->GetPlayerUI()->ScoreVal)
 	{
-		const FString ScoreText = FString::Printf(TEXT("%d"),Score);
+		const FString ScoreText = FString::Printf(TEXT("%02d"),Score);
 		PlayerHUD->GetPlayerUI()->ScoreVal->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ACoopPlayerController::SetHudGameTime()
+{
+	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetPlayerUI())
+	{
+		const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+		if(Countdown != SecondsLeft)
+		{
+			// Set hud time
+			const float CountDownTime = MatchTime - GetServerTime();
+			const int32 Minutes = FMath::FloorToInt(CountDownTime /60);
+			const int32 Seconds = CountDownTime - Minutes * 60;
+
+			const FString CountdownText = FString::Printf(TEXT("%02d:%02d"),Minutes,Seconds);
+			PlayerHUD->GetPlayerUI()->SetMatchTime(CountdownText);
+		}
+		Countdown = SecondsLeft;
 	}
 }
 
 void ACoopPlayerController::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+	FTimerHandle Th_MatchTime;
+	if(!GetWorldTimerManager().IsTimerActive(Th_MatchTime))
+	{
+		GetWorldTimerManager().SetTimer(Th_MatchTime,this,&ACoopPlayerController::SetHudGameTime,0.5f,true);
+	}
+}
+
+void ACoopPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
 
 void ACoopPlayerController::OnPossess(APawn* APawn)
@@ -64,7 +94,7 @@ void ACoopPlayerController::OnPossess(APawn* APawn)
 	PlayerHUD = (PlayerHUD==nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetPlayerUI())
 	{
-		SetHUDScore(GetPawn()->GetPlayerState()->GetScore());
+		SetHudScore(GetPawn()->GetPlayerState()->GetScore());
 	}
 }
 
@@ -76,6 +106,48 @@ void ACoopPlayerController::OnUnPossess()
 		GameMode->RespawnPlayer(this);
 	}
 }
+
+void ACoopPlayerController::Server_RequestServerTime_Implementation(const float TimeClientRequest)
+{
+	const float ServerTimeReceipt = GetWorld()->GetTimeSeconds();
+	Client_ReportServerTime(TimeClientRequest,ServerTimeReceipt);
+}
+
+void ACoopPlayerController::Client_ReportServerTime_Implementation(const float TimeClientRequest,
+																   const float TimeServerReceiveClientRequest)
+{
+	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeClientRequest;
+	const float CurrentServerTime = TimeServerReceiveClientRequest + (0.5f * RoundTripTime);
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+float ACoopPlayerController::GetServerTime()
+{
+	if(HasAuthority()){return GetWorld()->GetTimeSeconds(); }
+	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ACoopPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+	if(IsLocalController())
+	{
+		Server_RequestServerTime(GetWorld()->GetTimeSeconds());
+		FTimerHandle Th_SyncTime;
+		if(!GetWorldTimerManager().IsTimerActive(Th_SyncTime))
+		{
+			GetWorldTimerManager().SetTimer(Th_SyncTime,this,&ACoopPlayerController::SyncTime,
+														TimeSyncFrequency,true);
+		}	
+	}	
+}
+
+void ACoopPlayerController::SyncTime()
+{
+	Server_RequestServerTime(GetWorld()->GetTimeSeconds());
+}
+
+/*INPUTS */
 // ReSharper disable once CppMemberFunctionMayBeConst
 void ACoopPlayerController::StartRun()
 {

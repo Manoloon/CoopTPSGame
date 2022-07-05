@@ -36,7 +36,8 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	if (Damage <= 0.0f || bOwnerIsDead) {return; }
 	if(DamagedActor != DamageCauser && IsFriendly(DamagedActor,DamageCauser))
 	{
-		UE_LOG(LogTemp,Warning,TEXT("IS FRIENDLY"));
+		UE_LOG(LogTemp,Display,TEXT("%s : IS FRIENDLY"),*this->GetName());
+		//TODO : Hint about friendly if the damageCauser is pawn controlled player.
 		return;
 	}
 

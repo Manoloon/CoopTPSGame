@@ -147,7 +147,7 @@ void ASGameMode::ActorGetKilled(AActor*	VictimActor, AActor* KillerActor, const 
 			if(const auto PController = Cast<ACoopPlayerController>(KillerController);
 				IsValid(PController))
 			{
-				PController->SetHUDScore(KillerPlayerState->GetScore());
+				PController->SetHudScore(KillerPlayerState->GetScore());
 			}			
 		}
 		else

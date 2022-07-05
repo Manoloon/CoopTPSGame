@@ -9,8 +9,8 @@
 #include "CoopTPS.h"
 #include "TimerManager.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Sound/SoundCue.h"
-#include "Net/UnrealNetwork.h"
 
 ASWeapon::ASWeapon()
 {
@@ -43,11 +43,7 @@ void ASWeapon::BeginPlay()
 	}
 	if(WeaponConfig.FireRate >0)
 	{
-		TimeBetweenShots = 60/ WeaponConfig.FireRate; // 10 balas por segundo;
-	}
-	else
-	{
-		UE_LOG(LogTemp,Error,TEXT("FireRate is less or equal To ZERO"));
+		TimeBetweenShots = UKismetMathLibrary::SafeDivide(60, WeaponConfig.FireRate); // 10 balas por segundo;
 	}
 }
 
@@ -64,7 +60,6 @@ void ASWeapon::Reload()
 	if(!HasAuthority())
 	{
 		ServerReload();
-		UE_LOG(LogTemp,Error,TEXT("RELoading server"))
 	}
 	if(WeaponFXConfig.ReloadSFX)
 	{

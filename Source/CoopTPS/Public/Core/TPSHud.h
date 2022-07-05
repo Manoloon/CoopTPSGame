@@ -11,6 +11,7 @@ UCLASS()
 class COOPTPS_API ATPSHud final : public AHUD
 {
 	GENERATED_BODY()
+	
 	UPROPERTY(EditAnywhere,Category = "Settings")
 	TSubclassOf<UUserWidget> PlayerUIClass;
 	UPROPERTY(EditAnywhere,Category = "Settings")
@@ -23,7 +24,7 @@ class COOPTPS_API ATPSHud final : public AHUD
 	class URoleMessage* RoleMessage;
 	UPROPERTY()
 	UUserWidget* Announcements;
-	// announcement pointer.
+	// TODO announcement pointer.
 	virtual void BeginPlay() override;
 	FHUDData HUDData;
 	UPROPERTY(EditAnywhere)

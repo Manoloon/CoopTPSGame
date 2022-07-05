@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/UPlayerUI.h"
 #include "UI/RoleMessage.h"
-static bool DebugRole = true;
+static bool DebugRole = false;
 FAutoConsoleVariableRef CVarDebugRole(TEXT("Coop.ShowPawnRole"), DebugRole,
 											TEXT("Show Pawn Role"), ECVF_Cheat);
 
