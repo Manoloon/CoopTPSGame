@@ -2,7 +2,7 @@
 
 #include "UI/UPlayerUI.h"
 
-#include "TextBlock.h"
+#include "Components/TextBlock.h"
 #include "Interfaces/IHealthyActor.h"
 #include "Components/SHealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -52,6 +52,27 @@ void UUPlayerUI::SetHealthIndicator(const float NewHealth) const
 void UUPlayerUI::SetMatchTime(const FString NewTime) const
 {
 	GameTimeText->SetText(FText::FromString(NewTime));
+}
+
+void UUPlayerUI::SetPingIndicator(const float PingValue) const
+{
+	const FLinearColor CurrentColorPing = PingValue > 50.f ?
+														FLinearColor{255,0,0,255} :
+														FLinearColor{0,255,0,155};
+	PingImg->SetBrushTintColor(CurrentColorPing);
+}
+
+void UUPlayerUI::SetWeaponName(const FName NewWeaponName) const
+{
+	WeaponNameText->SetText(FText::FromName(NewWeaponName));
+}
+
+void UUPlayerUI::SetCurrentAmmo(const int32 NewAmmo, const int32 NewMaxAmmo) const
+{
+	const FString Ammo = FString::Printf(TEXT("%02d:%02d"),NewAmmo,NewMaxAmmo);
+	AmmoText->SetText(FText::FromString(Ammo));
+	const FLinearColor TextColor = NewAmmo == 0 ? FColor::Red : FColor::Green;
+	AmmoText->SetColorAndOpacity(TextColor);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst

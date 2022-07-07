@@ -7,10 +7,19 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+void ASLauncher::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+}
+
 void ASLauncher::StartFire()
 {
-	if(!GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile))
+	if(CurrentAmmo <=0 || bIsReloading){return;}
+	
+	if(!GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile) && CurrentAmmo>0)
 	{
+		CurrentAmmo--;
+		UpdateAmmoInfoUI();
 		GetWorldTimerManager().SetTimer(Th_ChargingProjectile,this,&ASLauncher::ServerUpdateThrow,
 			GetWorld()->GetDeltaSeconds(),true);
 	}
@@ -18,13 +27,11 @@ void ASLauncher::StartFire()
 
 void ASLauncher::StopFire()
 {
-	GetWorldTimerManager().ClearTimer(Th_ChargingProjectile);
-	ServerLaunchProjectile();
-}
-
-void ASLauncher::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
+	if(GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile))
+	{
+		GetWorldTimerManager().ClearTimer(Th_ChargingProjectile);
+		ServerLaunchProjectile();
+	}
 }
 
 bool ASLauncher::ServerLaunchProjectile_Validate()

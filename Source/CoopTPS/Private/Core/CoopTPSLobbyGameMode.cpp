@@ -11,9 +11,8 @@
 
 ACoopTPSLobbyGameMode::ACoopTPSLobbyGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn>
-					BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
-	if (BPPlayerCharacterClass.Class != nullptr)
+	if (static ConstructorHelpers::FClassFinder<APawn> BPPlayerCharacterClass(TEXT("/Game/Blueprints/Player_Pawn"));
+		BPPlayerCharacterClass.Class != nullptr)
 	{
 		DefaultPawnClass = BPPlayerCharacterClass.Class;
 	}
@@ -35,10 +34,10 @@ void ACoopTPSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	++NumOfPlayers;
 	if(NumOfPlayers>=MaxNumPlayers)
 	{
-		FTimerHandle StartTravelTH;
-		if(!GetWorldTimerManager().IsTimerActive(StartTravelTH))
+		if(FTimerHandle Th_StartTravel;
+			!GetWorldTimerManager().IsTimerActive(Th_StartTravel))
 		{
-			GetWorldTimerManager().SetTimer(StartTravelTH, this,
+			GetWorldTimerManager().SetTimer(Th_StartTravel, this,
 				&ACoopTPSLobbyGameMode::TravelToMap, 25.0f, false, 1.0f);
 		}
 	}
@@ -56,12 +55,11 @@ void ACoopTPSLobbyGameMode::TravelToMap()
 	{
 		GameInstance->StartSession();
 	}
-	UWorld* World = GetWorld();
-	if(World!= nullptr)
+	if(GetWorld())
 	{
 		bUseSeamlessTravel = true;
 		UE_LOG(LogTemp, Warning, TEXT("OnTravelToMap"));
-		World->ServerTravel(FString("/Game/Map/M_Level?listen"));
+		GetWorld()->ServerTravel(FString("/Game/Map/M_Level?listen"));
 	}
 }
 
@@ -70,8 +68,8 @@ void ACoopTPSLobbyGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 	Super::SetPlayerDefaults(PlayerPawn);
 	if (ASCharacter* CoopPawn = Cast<ASCharacter>(PlayerPawn))
 	{
-		const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
-		if (PlayerColors.IsValidIndex(PlayerColorIndex))
+		if (const int32 PlayerColorIndex = (LastPlayerColorIndex + 1) % PlayerColors.Num();
+			PlayerColors.IsValidIndex(PlayerColorIndex))
 		{
 			CoopPawn->AuthSetPlayerColor(PlayerColors[PlayerColorIndex]);
 			LastPlayerColorIndex = PlayerColorIndex;

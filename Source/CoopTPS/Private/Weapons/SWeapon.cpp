@@ -53,6 +53,7 @@ void ASWeapon::Fire()
 	{
 		ServerFire();
 	}
+	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::Reload()
@@ -65,8 +66,32 @@ void ASWeapon::Reload()
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
 	}
-	CurrentAmmo = WeaponConfig.MaxAmmo;
-	bIsReloading = false;
+	
+	if(FTimerHandle Th_FinishReload;
+		!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
+	{
+		GetWorldTimerManager().SetTimer(Th_FinishReload,this,&ASWeapon::FinishReloading,WeaponConfig.ReloadTime,false);
+	}
+}
+
+void ASWeapon::UpdateAmmoInfoUI()
+{
+	PlayerController = PlayerController == nullptr?
+			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
+	if(PlayerController)
+	{
+		PlayerController->UpdateCurrentAmmo(CurrentAmmo,WeaponConfig.MaxAmmo);
+	}
+}
+
+void ASWeapon::SetInitialInfoUI()
+{
+	PlayerController = PlayerController == nullptr?
+			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
+	if(PlayerController)
+	{
+		PlayerController->SetWeaponInfo(WeaponConfig.WeaponName,CurrentAmmo,WeaponConfig.MaxAmmo);
+	}
 }
 
 void ASWeapon::StartReloading()
@@ -74,8 +99,16 @@ void ASWeapon::StartReloading()
 	if (CurrentAmmo < WeaponConfig.MaxAmmo && !bIsReloading) 
 	{
 	bIsReloading = true;
-	GetWorldTimerManager().SetTimer(Th_Reloading, this, &ASWeapon::Reload,WeaponConfig.ReloadTime);
+	StopFire();
+	Reload();
 	}
+}
+
+void ASWeapon::FinishReloading()
+{
+	CurrentAmmo = WeaponConfig.MaxAmmo;
+	bIsReloading = false;
+	UpdateAmmoInfoUI();
 }
 
 const FHUDData& ASWeapon::GetCrosshairData() const
@@ -100,6 +133,21 @@ FTransform ASWeapon::GetWeaponHandle() const
 		return MeshComp->GetSocketTransform(FName("HandleSocket"),RTS_World);
 	}
 	return FTransform{};
+}
+
+FName ASWeapon::GetWeaponName() const
+{
+	return WeaponConfig.WeaponName;
+}
+
+int32 ASWeapon::GetWeaponCurrentAmmo() const
+{
+	return CurrentAmmo;
+}
+
+int32 ASWeapon::GetWeaponMaxAmmo() const
+{
+	return WeaponConfig.MaxAmmo;
 }
 
 void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)

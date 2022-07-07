@@ -122,6 +122,10 @@ void ASCharacter::BeginPlay()
 		}
 		OnRep_WeaponEquipped();
 	}
+	if(CurrentWeapon)
+	{
+		CurrentWeapon->SetInitialInfoUI();
+	}
 }
 
 void ASCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -272,6 +276,7 @@ void ASCharacter::I_Reload()
 
 void ASCharacter::I_ChangeWeapon()
 {
+	if(CurrentWeapon->IsReloading()){return;}
 	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
 	{
 		ASWeapon* TempWeapon = SecondaryWeapon;
@@ -281,11 +286,15 @@ void ASCharacter::I_ChangeWeapon()
 		CurrentWeapon = TempWeapon;
 		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
 																								WeaponSocketName);
+		CurrentWeapon->SetInitialInfoUI();
 	}
 	else
 	{
+		SecondaryWeapon->SetInitialInfoUI();
 		ServerChangeWeapon();
 	}
+	
+	
 }
 // TODO : make a Throwing Actor Component
 void ASCharacter::Throw()
@@ -526,6 +535,31 @@ void ASCharacter::ServerChangeWeapon_Implementation()
 																								WeaponSocketName);
 }
 
+void ASCharacter::ServerAiming_Implementation(const bool bAiming)
+{
+	bIsAiming = bAiming;
+	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
+}
+
+void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
+					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
+{
+	Multicast_PlayMontage(HitReactMontage);
+
+	if (Health<=0.0f && !bDied)
+	{
+		bDied = true;
+		if(CurrentWeapon)
+		{
+			CurrentWeapon->StopFire();
+		}
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(4);
+	}
+}
+
 void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 {
 	if(this->Controller == nullptr) return;
@@ -576,30 +610,5 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 			HUDData.CrosshairColor = IterationTrace();
 			HUD->SetHUDData(HUDData);
 		}
-	}
-}
-
-void ASCharacter::ServerAiming_Implementation(const bool bAiming)
-{
-	bIsAiming = bAiming;
-	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
-}
-
-void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
-					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
-{
-	Multicast_PlayMontage(HitReactMontage);
-
-	if (Health<=0.0f && !bDied)
-	{
-		bDied = true;
-		if(CurrentWeapon)
-		{
-			CurrentWeapon->StopFire();
-		}
-		GetMovementComponent()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		DetachFromControllerPendingDestroy();
-		SetLifeSpan(4);
 	}
 }

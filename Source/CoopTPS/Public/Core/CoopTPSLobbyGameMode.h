@@ -12,7 +12,7 @@ class COOPTPS_API ACoopTPSLobbyGameMode final : public AGameMode
 {
 	GENERATED_BODY()
 
-		ACoopTPSLobbyGameMode();
+	ACoopTPSLobbyGameMode();
 
 public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;

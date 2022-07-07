@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CoopPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "ST_WeaponData.h"
@@ -31,10 +32,17 @@ public:
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
+	void FinishReloading();
+	void SetInitialInfoUI();
 	const FHUDData& GetCrosshairData() const;
 	UAnimMontage* GetFireMontage() const;
 	UAnimMontage* GetReloadMontage() const;
 	FTransform GetWeaponHandle()const;
+	FName GetWeaponName() const;
+
+	int32 GetWeaponCurrentAmmo() const;
+	int32 GetWeaponMaxAmmo()const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FHUDData CrossHairData;
@@ -57,17 +65,17 @@ protected:
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
 		UAudioComponent* WeaponAudioComponent;
-	
 
+	UPROPERTY()
+	ACoopPlayerController* PlayerController;
 	float LastFireTime;
 	float TimeBetweenShots;
 	FTimerHandle Th_TimeBetweenShots;
-	FTimerHandle Th_Reloading;
 
 	void PlayShootVfx(FVector TraceEnd) const;
 	virtual void Fire();
 	void Reload();
-
+	void UpdateAmmoInfoUI();
 	UFUNCTION(Server,Reliable,WithValidation)
 		virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)

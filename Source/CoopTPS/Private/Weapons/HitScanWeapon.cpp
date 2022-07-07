@@ -2,6 +2,7 @@
 
 
 #include "Weapons/HitScanWeapon.h"
+
 #include "CoopTPS.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Net/UnrealNetwork.h"
@@ -47,23 +48,20 @@ void AHitScanWeapon::Fire()
 			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 			{
  				SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
-
-				float ActualDamage = WeaponConfig.BaseDamage;
-				if (SurfaceType == SURFACE_FLESHVULNERABLE)
-				{
-					ActualDamage *= 4.0f;
-				}
-
-				UGameplayStatics::ApplyPointDamage(Hit.GetActor(), ActualDamage, ShotDirection, Hit, 
-				GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
-
+				
 				PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
-
 				TracerEndPoint = Hit.ImpactPoint;
 
 			}
 			if (HasAuthority())
 			{
+				float ActualDamage = WeaponConfig.BaseDamage;
+				if (SurfaceType == SURFACE_FLESHVULNERABLE)
+				{
+					ActualDamage *= 4.0f;
+				}
+				UGameplayStatics::ApplyPointDamage(Hit.GetActor(), ActualDamage, ShotDirection, Hit, 
+				GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
 				HitScanTrace.ImpactPoint = TracerEndPoint;
 				HitScanTrace.ImpactNormal =Hit.ImpactNormal;
 				HitScanTrace.SurfaceType = SurfaceType;

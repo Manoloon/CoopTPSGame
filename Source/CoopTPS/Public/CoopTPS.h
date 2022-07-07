@@ -10,6 +10,12 @@
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_PAWN				ECC_GameTraceChannel2
 
+#if !IS_PROGRAM && !UE_BUILD_SHIPPING && (PLATFORM_WINDOWS || PLATFORM_PS4 || PLATFORM_XBOXONE)
+#define LOGTRACE_ENABLED 1
+#else
+#define LOGTRACE_ENABLED 0
+#endif
+
 // whether the platform will signal a controller pairing change on a controller disconnect.
 // if not, we need to treat the pairing change as a request to switch profiles when
 // the destination profile is not specified

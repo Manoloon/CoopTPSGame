@@ -25,7 +25,8 @@ public:
 
 	void SetHudScore(const int Score);
 	void SetHudGameTime();
-	//void SetHUDHealth(const float Health);
+	void UpdateCurrentAmmo(const int32 NewAmmo,const int32 NewMaxAmmo);
+	void SetWeaponInfo(const FName NewWeaponName,const int32 NewCurrentAmmo,const int32 NewMaxAmmo);
 
 	virtual float GetServerTime();
 	virtual void ReceivedPlayer() override;

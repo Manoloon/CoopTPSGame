@@ -68,6 +68,25 @@ void ACoopPlayerController::SetHudGameTime()
 	}
 }
 
+void ACoopPlayerController::UpdateCurrentAmmo(const int32 NewAmmo,const int32 NewMaxAmmo)
+{
+	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetPlayerUI())
+	{
+		PlayerHUD->GetPlayerUI()->SetCurrentAmmo(NewAmmo,NewMaxAmmo);
+	}
+}
+
+void ACoopPlayerController::SetWeaponInfo(const FName NewWeaponName, const int32 NewCurrentAmmo, const int32 NewMaxAmmo)
+{
+	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
+	if(PlayerHUD && PlayerHUD->GetPlayerUI())
+	{
+		PlayerHUD->GetPlayerUI()->SetWeaponName(NewWeaponName);
+		PlayerHUD->GetPlayerUI()->SetCurrentAmmo(NewCurrentAmmo,NewMaxAmmo);
+	}
+}
+
 void ACoopPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -133,8 +152,8 @@ void ACoopPlayerController::ReceivedPlayer()
 	if(IsLocalController())
 	{
 		Server_RequestServerTime(GetWorld()->GetTimeSeconds());
-		FTimerHandle Th_SyncTime;
-		if(!GetWorldTimerManager().IsTimerActive(Th_SyncTime))
+		if(FTimerHandle Th_SyncTime;
+			!GetWorldTimerManager().IsTimerActive(Th_SyncTime))
 		{
 			GetWorldTimerManager().SetTimer(Th_SyncTime,this,&ACoopPlayerController::SyncTime,
 														TimeSyncFrequency,true);
@@ -144,6 +163,13 @@ void ACoopPlayerController::ReceivedPlayer()
 
 void ACoopPlayerController::SyncTime()
 {
+	// get ping
+	const float CurrentPing = PlayerState->GetPingInMilliseconds();
+	UE_LOG(LogTemp,Warning,TEXT("Ping is %f"),CurrentPing);
+	if(PlayerHUD && CurrentPing)
+	{
+		PlayerHUD->GetPlayerUI()->SetPingIndicator(CurrentPing);
+	}	
 	Server_RequestServerTime(GetWorld()->GetTimeSeconds());
 }
 

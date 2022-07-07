@@ -62,6 +62,8 @@ struct FWeaponData
 	float FireRate;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float ReloadTime;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName WeaponName;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 	FName MuzzleSocketName;
 	UPROPERTY(EditDefaultsOnly,Category ="Weapon")
@@ -74,6 +76,7 @@ struct FWeaponData
 		BaseDamage = 20.0f;
 		FireRate = 600;
 		ReloadTime = 3.0f;
+		WeaponName = "Rifle";
 		MuzzleSocketName = "MuzzleSocket";
 	}
 };
