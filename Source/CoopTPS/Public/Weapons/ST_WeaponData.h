@@ -60,7 +60,6 @@ struct FWeaponData
 	float BaseDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float FireRate;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float ReloadTime;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponName;

@@ -242,6 +242,10 @@ void ASCharacter::I_StartFire()
 {
 	if (CurrentWeapon)
 	{
+		if(CurrentWeapon->IsReloading()) 
+		{
+			return;
+		}
 		CurrentWeapon->StartFire();
 		Multicast_PlayMontage(CurrentWeapon->GetFireMontage());
 	}
@@ -252,7 +256,10 @@ void ASCharacter::I_StopFire()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->StopFire();
-		GetMesh()->GetAnimInstance()->Montage_Stop(0.2);
+		if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(CurrentWeapon->GetFireMontage()))
+		{
+			GetMesh()->GetAnimInstance()->Montage_Stop(0.2);
+		}	
 	}
 }
 
@@ -268,8 +275,11 @@ void ASCharacter::I_Reload()
 {
 	if(CurrentWeapon)
 	{
+		if(CurrentWeapon->IsReloading() || CurrentWeapon->GetWeaponCurrentAmmo()==CurrentWeapon->GetWeaponMaxAmmo())
+		{
+			return;
+		}
 		CurrentWeapon->StartReloading();
-		//Multicast_PlayMontage(CurrentWeapon->GetReloadMontage());
 		ServerReload();
 	}
 }

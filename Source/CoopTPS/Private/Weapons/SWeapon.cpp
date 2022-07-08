@@ -8,7 +8,9 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "GameFramework/Character.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Sound/SoundCue.h"
 
@@ -22,12 +24,7 @@ ASWeapon::ASWeapon()
 	bNetUseOwnerRelevancy = true;
 	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
-	MinNetUpdateFrequency = 33.0f;	
-}
-
-bool ASWeapon::IsReloading() const
-{
-	return bIsReloading;
+	MinNetUpdateFrequency = 33.0f;
 }
 
 void ASWeapon::BeginPlay()
@@ -41,10 +38,19 @@ void ASWeapon::BeginPlay()
 		SphereComp->OnComponentBeginOverlap.AddDynamic(this,&ASWeapon::OnSphereOverlap);
 		SphereComp->OnComponentEndOverlap.AddDynamic(this,&ASWeapon::OnSphereEndOverlap);
 	}
+	if(WeaponFXConfig.ReloadMontage)
+	{
+		WeaponConfig.ReloadTime = WeaponFXConfig.ReloadMontage->GetSectionLength(0);
+	}	
 	if(WeaponConfig.FireRate >0)
 	{
 		TimeBetweenShots = UKismetMathLibrary::SafeDivide(60, WeaponConfig.FireRate); // 10 balas por segundo;
 	}
+}
+
+bool ASWeapon::IsReloading() const
+{
+	return bIsReloading;
 }
 
 void ASWeapon::Fire()
@@ -76,7 +82,7 @@ void ASWeapon::Reload()
 
 void ASWeapon::UpdateAmmoInfoUI()
 {
-	PlayerController = PlayerController == nullptr?
+	PlayerController = PlayerController == nullptr ?
 			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
 	if(PlayerController)
 	{
@@ -90,18 +96,18 @@ void ASWeapon::SetInitialInfoUI()
 			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
 	if(PlayerController)
 	{
+		UE_LOG(LogTemp,Warning,TEXT("Ammo Updating in ui"));
 		PlayerController->SetWeaponInfo(WeaponConfig.WeaponName,CurrentAmmo,WeaponConfig.MaxAmmo);
 	}
 }
 
 void ASWeapon::StartReloading()
 {
-	if (CurrentAmmo < WeaponConfig.MaxAmmo && !bIsReloading) 
-	{
+	if(CurrentAmmo == WeaponConfig.MaxAmmo || bIsReloading){return;}
+
 	bIsReloading = true;
 	StopFire();
 	Reload();
-	}
 }
 
 void ASWeapon::FinishReloading()
@@ -158,15 +164,12 @@ void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASWeapon::StartFire()
 {
-	if (CurrentAmmo>1 && !GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
+	if(CurrentAmmo <=0 || bIsReloading){return;}
+	if (!GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
 	{
 		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
 		GetWorldTimerManager().SetTimer(Th_TimeBetweenShots, this, &ASWeapon::Fire,
 														TimeBetweenShots, true,FireDelay);
-	}
-	else if(!bIsReloading)
-	{
-		StartReloading();
 	}
 }
 

@@ -27,8 +27,6 @@ class COOPTPS_API ASWeapon : public AActor
 public:	
 	ASWeapon();
 	bool IsReloading() const;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		bool bIsReloading;
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
@@ -44,6 +42,8 @@ public:
 	int32 GetWeaponMaxAmmo()const;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+		bool bIsReloading;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FHUDData CrossHairData;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
@@ -59,7 +59,8 @@ protected:
 		USphereComponent* SphereComp;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,ClampMax=30))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,
+	ClampMax=30))
 		int32 CurrentAmmo=30;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
@@ -95,5 +96,5 @@ protected:
 		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);		
+		int32 OtherBodyIndex);
 };
