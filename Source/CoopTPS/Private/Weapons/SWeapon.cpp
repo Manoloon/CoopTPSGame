@@ -2,11 +2,13 @@
 
 #include "Weapons/SWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Core/CoopPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
+#include "SCharacter.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -17,10 +19,16 @@
 ASWeapon::ASWeapon()
 {
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RootComponent = MeshComp;
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetupAttachment(MeshComp);
+	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	bReplicates =true;
+	SetReplicatingMovement(true);
 	bNetUseOwnerRelevancy = true;
 	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
@@ -33,8 +41,7 @@ void ASWeapon::BeginPlay()
 	if(HasAuthority())
 	{
 		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,
-																ECollisionResponse::ECR_Overlap);
+		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,ECollisionResponse::ECR_Overlap);
 		SphereComp->OnComponentBeginOverlap.AddDynamic(this,&ASWeapon::OnSphereOverlap);
 		SphereComp->OnComponentEndOverlap.AddDynamic(this,&ASWeapon::OnSphereEndOverlap);
 	}
@@ -58,8 +65,17 @@ void ASWeapon::Fire()
 	if(!HasAuthority())
 	{
 		ServerFire();
+	}	
+}
+
+void ASWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if(GetOwner() == nullptr)
+	{
+		PlayerController = nullptr;
 	}
-	UpdateAmmoInfoUI();
+	bIsEquipped = GetOwner() != nullptr;
 }
 
 void ASWeapon::Reload()
@@ -86,7 +102,7 @@ void ASWeapon::UpdateAmmoInfoUI()
 			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
 	if(PlayerController)
 	{
-		PlayerController->UpdateCurrentAmmo(CurrentAmmo,WeaponConfig.MaxAmmo);
+		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
 	}
 }
 
@@ -103,16 +119,47 @@ void ASWeapon::SetInitialInfoUI()
 
 void ASWeapon::StartReloading()
 {
-	if(CurrentAmmo == WeaponConfig.MaxAmmo || bIsReloading){return;}
+	if(!HaveAmmoInMag() || bIsReloading)
+	{
+		//TODO: drop a sound or hint that it cant reload
+		return;
+	}
 
 	bIsReloading = true;
 	StopFire();
 	Reload();
 }
 
+void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const
+{
+	MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetEnableGravity(false);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ASWeapon::DropWeapon()
+{
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetEnableGravity(true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
+	MeshComp->DetachFromComponent(DetachRules);
+	SetOwner(nullptr);
+	MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	MeshComp->AddImpulse(GetActorForwardVector() * 150.0f);
+	if(FTimerHandle Th_CanBePicked; !GetWorldTimerManager().IsTimerActive(Th_CanBePicked))
+	{
+		GetWorldTimerManager().SetTimer(Th_CanBePicked,this,&ASWeapon::SetPickable,2.0f,false);
+	}
+}
+
 void ASWeapon::FinishReloading()
 {
-	CurrentAmmo = WeaponConfig.MaxAmmo;
+	CalculateAmmo();	
 	bIsReloading = false;
 	UpdateAmmoInfoUI();
 }
@@ -249,6 +296,11 @@ void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	// show widget to the player who is overlapping,
 	// OtherActor->ShowWidget(this) -> this function will show the proper widget
 	//only for the player who is overlapping.
+	if(OtherActor->Implements<UIInputComm>())
+	{
+		const auto I = Cast<IIInputComm>(OtherActor);
+		I->I_SetOverlappingWeapon(this);
+	}
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
@@ -256,4 +308,24 @@ void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	// OtherActor->ShowWidget(null)
+}
+
+void ASWeapon::CalculateAmmo()
+{
+	const int32 DeltaAmmo = UKismetMathLibrary::Min(CurrentAmmoInBackpack,WeaponConfig.MaxAmmo-CurrentAmmo);
+	CurrentAmmo += DeltaAmmo;
+	CurrentAmmoInBackpack -= DeltaAmmo;
+}
+
+void ASWeapon::SetPickable() const
+{
+	if(HasAuthority())
+	{
+		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+}
+
+bool ASWeapon::HaveAmmoInMag() const
+{
+	return (WeaponConfig.MaxAmmo >0);
 }

@@ -54,7 +54,7 @@ protected:
 	void StartThrow();
 	void StopThrow();
 	void Jump();
-
+	void PickupWeapon();
 	/* Sync time between client and server*/
 	float MatchTime =120.f;
 	uint32 Countdown=0;

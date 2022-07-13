@@ -26,6 +26,8 @@ void AHitScanWeapon::Fire()
 		Super::Fire();
 		if(CurrentAmmo >0)
 		{
+			--CurrentAmmo;
+			UpdateAmmoInfoUI();
 			FVector EyeLocation;
 			FRotator EyeRotation;
 			GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);
@@ -73,7 +75,6 @@ void AHitScanWeapon::Fire()
 																1.f,0,2);
 			}
 			LastFireTime = GetWorld()->TimeSeconds;
-			CurrentAmmo -= 1;
 		}
 	}
 }

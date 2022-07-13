@@ -36,7 +36,7 @@ ASCharacter::ASCharacter()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
+	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
@@ -57,7 +57,6 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
-	DOREPLIFETIME(ASCharacter, PrimaryWeapon);
 	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
@@ -102,23 +101,28 @@ void ASCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::HealthChanged);
+		
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector,
-											FRotator::ZeroRotator, SpawnParams);
-		SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass,
-						FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		if (CurrentWeapon)
+		if(StarterWeaponClass)
 		{
-			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-																									WeaponSocketName);
+			CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector,
+									FRotator::ZeroRotator, SpawnParams);
+			if(CurrentWeapon)
+			{
+				CurrentWeapon->SetOwner(this);
+				CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+			}
 		}
-		if(SecondaryWeapon)
+		if(SecondaryWeaponClass)
 		{
-			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																							SecondaryWeaponSocketName);
+			SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass,
+				FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			if(SecondaryWeapon)
+			{
+				SecondaryWeapon->SetOwner(this);
+				SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+			}
 		}
 		OnRep_WeaponEquipped();
 	}
@@ -214,6 +218,57 @@ void ASCharacter::I_StopAiming()
 	ServerAiming(false);
 }
 
+void ASCharacter::I_PickupWeapon()
+{
+	// if there is a current weapon. . first drop secondary then pass the new one to secondary..
+	if(OverlappingWeapon)
+	{
+		if(HasAuthority())
+		{
+			PickupWeapon();
+			CurrentWeapon->SetInitialInfoUI();
+		}
+		else
+		{
+			ServerPickupWeapon();
+			CurrentWeapon->SetInitialInfoUI();
+		}
+		OnRep_WeaponEquipped();
+	}
+	else
+	{
+		if(HasAuthority())
+		{
+			if (IsValid(CurrentWeapon))
+			{
+				CurrentWeapon->DropWeapon();
+				CurrentWeapon =nullptr;
+			}
+		}
+		OnRep_WeaponEquipped();
+	}
+}
+
+void ASCharacter::I_DropWeapon()
+{
+	if(CurrentWeapon)
+	{
+		CurrentWeapon->DropWeapon();
+	}
+	if(SecondaryWeapon)
+	{
+		CurrentWeapon = std::move(SecondaryWeapon);
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		SecondaryWeapon = nullptr;
+	}
+}
+
+void ASCharacter::I_SetOverlappingWeapon(ASWeapon* NewWeapon)
+{
+	OverlappingWeapon = std::move(NewWeapon);
+}
+
 USHealthComponent* ASCharacter::I_GetHealthComp() const
 {
 	return HealthComp;
@@ -275,8 +330,11 @@ void ASCharacter::I_Reload()
 {
 	if(CurrentWeapon)
 	{
-		if(CurrentWeapon->IsReloading() || CurrentWeapon->GetWeaponCurrentAmmo()==CurrentWeapon->GetWeaponMaxAmmo())
+		if(CurrentWeapon->GetWeaponCurrentAmmo() == CurrentWeapon->GetWeaponMaxAmmo() ||
+			CurrentWeapon->IsReloading() || 
+			!CurrentWeapon->HaveAmmoInMag())
 		{
+			//TODO: drop a sound or hint that it cant reload
 			return;
 		}
 		CurrentWeapon->StartReloading();
@@ -286,16 +344,11 @@ void ASCharacter::I_Reload()
 
 void ASCharacter::I_ChangeWeapon()
 {
+	if(CurrentWeapon == nullptr || SecondaryWeapon == nullptr){return;}
 	if(CurrentWeapon->IsReloading()){return;}
-	if (CurrentWeapon != SecondaryWeapon && HasAuthority())
+	if (HasAuthority())
 	{
-		ASWeapon* TempWeapon = SecondaryWeapon;
-		SecondaryWeapon = CurrentWeapon;
-		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																						SecondaryWeaponSocketName);
-		CurrentWeapon = TempWeapon;
-		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																								WeaponSocketName);
+		SwapWeapons();
 		CurrentWeapon->SetInitialInfoUI();
 	}
 	else
@@ -425,6 +478,43 @@ FLinearColor ASCharacter::IterationTrace()
 	return FLinearColor::White;
 }
 
+void ASCharacter::PickupWeapon()
+{
+	if (IsValid(CurrentWeapon))
+	{
+		if(IsValid(SecondaryWeapon))
+		{
+			SecondaryWeapon->SetOwner(this);
+			SecondaryWeapon->DropWeapon();
+		}
+		SecondaryWeapon = std::move(CurrentWeapon);
+		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+		CurrentWeapon = std::move(OverlappingWeapon);
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		OverlappingWeapon =nullptr;
+	}
+	else
+	{
+		CurrentWeapon = std::move(OverlappingWeapon);
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);				
+		OverlappingWeapon =nullptr;
+	}
+}
+
+void ASCharacter::SwapWeapons()
+{
+	if(!SecondaryWeapon || !CurrentWeapon){return;}
+	ASWeapon* TempWeapon = std::move(SecondaryWeapon);
+	SecondaryWeapon = std::move(CurrentWeapon);
+	SecondaryWeapon->SetOwner(this);
+	SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+	
+	CurrentWeapon = std::move(TempWeapon);
+	CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+}
+
 void ASCharacter::TurnInPlace()
 {
 	if(AimOffsetYaw > 90.f)
@@ -449,7 +539,11 @@ void ASCharacter::TurnInPlace()
 
 void ASCharacter::CalculateAimOffset()
 {
-	if(CurrentWeapon == nullptr){return;}
+	if(CurrentWeapon == nullptr)
+	{
+		bUseControllerRotationYaw=true;
+		return;
+	}
 	if(GetVelocity().Size() == 0.f && !GetCharacterMovement()->IsFalling())
 	{
 		const FRotator CurrentAimRotation =  FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
@@ -517,14 +611,12 @@ void ASCharacter::OnRep_WeaponEquipped()
 	{
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-																								WeaponSocketName);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 	}
 	if(SecondaryWeapon)
 	{
 		SecondaryWeapon->SetOwner(this);
-		SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																						SecondaryWeaponSocketName);
+		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
 	}
 }
 
@@ -536,13 +628,7 @@ void ASCharacter::ServerReload_Implementation()
 
 void ASCharacter::ServerChangeWeapon_Implementation()
 {
-	ASWeapon* TempWeapon = SecondaryWeapon;
-	SecondaryWeapon = CurrentWeapon;
-	SecondaryWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																					SecondaryWeaponSocketName);
-	CurrentWeapon = TempWeapon;
-	CurrentWeapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale,
-																								WeaponSocketName);
+	SwapWeapons();
 }
 
 void ASCharacter::ServerAiming_Implementation(const bool bAiming)
@@ -551,8 +637,33 @@ void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
 }
 
+void ASCharacter::ServerPickupWeapon_Implementation()
+{
+	if (IsValid(CurrentWeapon))
+	{
+		if(IsValid(SecondaryWeapon))
+		{
+			SecondaryWeapon->SetOwner(this);
+			SecondaryWeapon->DropWeapon();
+		}
+		SecondaryWeapon = std::move(CurrentWeapon);
+		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+		CurrentWeapon = std::move(OverlappingWeapon);
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		OverlappingWeapon =nullptr;
+	}
+	else
+	{
+		CurrentWeapon = std::move(OverlappingWeapon);
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);				
+		OverlappingWeapon =nullptr;
+	}
+}
+
 void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
-					const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
+                                const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser)
 {
 	Multicast_PlayMontage(HitReactMontage);
 

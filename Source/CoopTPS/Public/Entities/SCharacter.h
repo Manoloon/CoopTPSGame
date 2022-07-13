@@ -64,6 +64,7 @@ protected:
 	FRotator SpawnRotation;
 	FVector Point1;
 	FVector Point2;
+	UPROPERTY()
 	TArray<UParticleSystemComponent*>BeamArray;
 	const float TimeInterval = 0.05;
 	FVector Gravity = FVector(0.0f, 0.0f, -980.0f);
@@ -84,11 +85,11 @@ public:
 	// TODO : ver de quitar el tema de primario y current. Current y secondary deberia quedar.
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponEquipped, Transient)
 		class ASWeapon* CurrentWeapon= nullptr;
-	UPROPERTY(Replicated, Transient)
-		ASWeapon* PrimaryWeapon = nullptr;
+	UPROPERTY()
+		ASWeapon* OverlappingWeapon = nullptr;
 	UPROPERTY(Replicated, Transient)
 		ASWeapon* SecondaryWeapon = nullptr;
-	
+		
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
 	FLinearColor PlayerColor;
 protected:
@@ -102,10 +103,9 @@ protected:
 		TSubclassOf<ASWeapon>StarterWeaponClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Weapon")
 		TSubclassOf<ASWeapon>SecondaryWeaponClass;
-	UPROPERTY(VisibleDefaultsOnly, Category = "Settings|Weapon")
-		FName WeaponSocketName = "WeaponSocket";
-	UPROPERTY(VisibleDefaultsOnly, Category = "Settings|Weapon")
-		FName SecondaryWeaponSocketName = "SecWeaponSocket";
+
+		const FName WeaponSocketName = "WeaponSocket";
+		const FName SecondaryWeaponSocketName = "SecWeaponSocket";
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Camera",
 													meta = (ClampMin = 10.0,ClampMax = 40.0))
@@ -128,6 +128,8 @@ protected:
 	void DrawingTrajectory();
 	FLinearColor IterationTrace();
 private:
+	void PickupWeapon();
+	void SwapWeapons();
 	void TurnInPlace();
 	void CalculateAimOffset();
 	UFUNCTION(NetMulticast,Unreliable)
@@ -150,6 +152,8 @@ private:
 	void ServerReload();
 	UFUNCTION(Server,Reliable)
 	void ServerAiming(bool bAiming);
+	UFUNCTION(Server,Reliable)
+	void ServerPickupWeapon();
 	UFUNCTION()
 	void HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -180,7 +184,9 @@ public:
 	virtual void I_LookUpRate(float Value) override;
 	virtual void I_StartAiming() override;
 	virtual void I_StopAiming() override;
-	
+	virtual void I_PickupWeapon() override;
+	virtual void I_DropWeapon() override;
+	virtual void I_SetOverlappingWeapon(ASWeapon* NewWeapon) override;
 	virtual USHealthComponent* I_GetHealthComp() const override;
 	
 	bool IsWeaponEquipped() const;

@@ -36,6 +36,7 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Throw", IE_Released, this, &ACoopPlayerController::StopThrow);
 
 	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ChangeWeapon);
+	InputComponent->BindAction("PickupWeapon", IE_Released, this, &ACoopPlayerController::PickupWeapon);
 }
 
 void ACoopPlayerController::SetHudScore(const int Score)
@@ -326,5 +327,13 @@ void ACoopPlayerController::Jump()
 	if(GetPawn() && PawnInterface)
 	{
 		PawnInterface->I_Jump();
+	}
+}
+// ReSharper disable once CppMemberFunctionMayBeConst
+void ACoopPlayerController::PickupWeapon()
+{
+	if(GetPawn() && PawnInterface)
+	{
+		PawnInterface->I_PickupWeapon();
 	}
 }

@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CoopPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "ST_WeaponData.h"
 #include "UI/ST_HUDData.h"
 #include "SWeapon.generated.h"
 
+class ACoopPlayerController;
 class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
@@ -30,6 +30,8 @@ public:
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
+	void EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const;
+	void DropWeapon();
 	void FinishReloading();
 	void SetInitialInfoUI();
 	const FHUDData& GetCrosshairData() const;
@@ -37,7 +39,7 @@ public:
 	UAnimMontage* GetReloadMontage() const;
 	FTransform GetWeaponHandle()const;
 	FName GetWeaponName() const;
-
+	bool HaveAmmoInMag()const;
 	int32 GetWeaponCurrentAmmo() const;
 	int32 GetWeaponMaxAmmo()const;
 
@@ -57,11 +59,10 @@ protected:
 		USkeletalMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere,Category = "Component")
 		USphereComponent* SphereComp;
-
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin=0,
-	ClampMax=30))
-		int32 CurrentAmmo=30;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
+	int32 CurrentAmmoInBackpack=CurrentAmmo;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
@@ -69,12 +70,14 @@ protected:
 
 	UPROPERTY()
 	ACoopPlayerController* PlayerController;
+	bool bIsEquipped=false;
 	float LastFireTime;
 	float TimeBetweenShots;
 	FTimerHandle Th_TimeBetweenShots;
 
 	void PlayShootVfx(FVector TraceEnd) const;
 	virtual void Fire();
+	virtual void OnRep_Owner() override;
 	void Reload();
 	void UpdateAmmoInfoUI();
 	UFUNCTION(Server,Reliable,WithValidation)
@@ -97,4 +100,7 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
+
+	void CalculateAmmo();
+	void SetPickable() const;
 };

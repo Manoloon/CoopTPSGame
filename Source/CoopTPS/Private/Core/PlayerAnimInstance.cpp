@@ -31,18 +31,25 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Speed =  Velocity.Size();
 		bIsAccelerating = (PawnCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size()> 0.0f);
 		bWeaponEquipped = PawnCharacter->IsWeaponEquipped();
-		bIsAiming = PawnCharacter->IsAiming();
+		if(bWeaponEquipped)
+		{
+			//AimOffset
+			bIsAiming = PawnCharacter->IsAiming();
+			AimOffsetData = PawnCharacter->GetAimOffsetData();
+			// for the FABRIK -> TODO dont need to be in update
+			LeftHandTransform = PawnCharacter->GetHandlingWeaponTransform();
+			FVector OutPosition;
+			FRotator OutRotation;
+			PawnCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"),
+				LeftHandTransform.GetLocation(),FRotator::ZeroRotator,OutPosition,OutRotation);
+			LeftHandTransform.SetLocation(OutPosition);
+			LeftHandTransform.SetRotation(FQuat(OutRotation));	
+		}
+		
 		Direction = UKismetAnimationLibrary::CalculateDirection(Velocity,PawnCharacter->GetActorRotation());
-		//AimOffset
-		AimOffsetData = PawnCharacter->GetAimOffsetData();
-		// for the FABRIK -> TODO dont need to be in update
-		LeftHandTransform = PawnCharacter->GetHandlingWeaponTransform();
-		FVector OutPosition;
-		FRotator OutRotation;
-		PawnCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"),
-			LeftHandTransform.GetLocation(),FRotator::ZeroRotator,OutPosition,OutRotation);
-		LeftHandTransform.SetLocation(OutPosition);
-		LeftHandTransform.SetRotation(FQuat(OutRotation));	
+		
+		
+
 		//strafing
 		const FRotator AimRotation = PawnCharacter->GetBaseAimRotation();
 		const FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PawnCharacter->GetVelocity());

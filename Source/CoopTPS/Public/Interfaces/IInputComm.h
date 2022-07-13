@@ -29,4 +29,7 @@ public:
 	virtual void I_StartThrow()=0;
 	virtual void I_StopThrow()=0;
 	virtual void I_Jump()=0;
+	virtual void I_PickupWeapon()=0;
+	virtual void I_DropWeapon()=0;
+	virtual void I_SetOverlappingWeapon(class ASWeapon* NewWeapon=nullptr)=0;
 };
