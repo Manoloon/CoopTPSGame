@@ -50,7 +50,7 @@ protected:
 	void StartFiring();
 	void StopFiring();
 	void Reload();
-	void ChangeWeapon();
+	void ContrSwapWeapon();
 	void StartThrow();
 	void StopThrow();
 	void Jump();

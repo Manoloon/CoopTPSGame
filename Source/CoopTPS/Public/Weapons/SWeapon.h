@@ -84,7 +84,8 @@ protected:
 		virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerFire();
-	
+	UFUNCTION(Server, Reliable)
+		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const;
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,

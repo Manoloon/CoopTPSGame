@@ -85,7 +85,7 @@ public:
 	// TODO : ver de quitar el tema de primario y current. Current y secondary deberia quedar.
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponEquipped, Transient)
 		class ASWeapon* CurrentWeapon= nullptr;
-	UPROPERTY()
+	UPROPERTY(Replicated,Transient)
 		ASWeapon* OverlappingWeapon = nullptr;
 	UPROPERTY(Replicated, Transient)
 		ASWeapon* SecondaryWeapon = nullptr;
@@ -147,7 +147,7 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponEquipped();
 	UFUNCTION(Server,Reliable)
-	void ServerChangeWeapon();
+	void ServerSwapWeapon();
 	UFUNCTION(Server,Reliable)
 	void ServerReload();
 	UFUNCTION(Server,Reliable)
@@ -167,7 +167,7 @@ public:
 	// Input interface
 	virtual void I_Jump() override;
 	virtual void I_Reload() override;
-	virtual void I_ChangeWeapon() override;
+	virtual void I_SwapWeapons() override;
 	virtual void I_StartCrouch() override;
 	virtual void I_StopCrouch() override;
 	UFUNCTION(BlueprintCallable,Category = "Player")

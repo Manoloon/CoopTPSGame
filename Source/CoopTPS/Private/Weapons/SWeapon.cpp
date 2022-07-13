@@ -112,7 +112,6 @@ void ASWeapon::SetInitialInfoUI()
 			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
 	if(PlayerController)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("Ammo Updating in ui"));
 		PlayerController->SetWeaponInfo(WeaponConfig.WeaponName,CurrentAmmo,WeaponConfig.MaxAmmo);
 	}
 }
@@ -132,11 +131,19 @@ void ASWeapon::StartReloading()
 
 void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const
 {
-	MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
-	SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	MeshComp->SetSimulatePhysics(false);
-	MeshComp->SetEnableGravity(false);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if(HasAuthority())
+	{
+		SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MeshComp->SetSimulatePhysics(false);
+		MeshComp->SetEnableGravity(false);
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
+	}
+	else
+	{
+		ServerEquipWeapon(MeshComponent,WeaponSocket);
+	}
+
 }
 
 void ASWeapon::DropWeapon()
@@ -287,6 +294,12 @@ void ASWeapon::ServerReload_Implementation()
 bool ASWeapon::ServerReload_Validate()
 {
 	return true;
+}
+
+
+void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket) const
+{
+	EquipWeapon(MeshComponent,WeaponSocket);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic

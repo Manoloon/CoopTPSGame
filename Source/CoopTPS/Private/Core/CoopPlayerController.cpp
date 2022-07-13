@@ -35,7 +35,7 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Throw", IE_Pressed, this, &ACoopPlayerController::StartThrow);
 	InputComponent->BindAction("Throw", IE_Released, this, &ACoopPlayerController::StopThrow);
 
-	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ChangeWeapon);
+	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ContrSwapWeapon);
 	InputComponent->BindAction("PickupWeapon", IE_Released, this, &ACoopPlayerController::PickupWeapon);
 }
 
@@ -298,11 +298,11 @@ void ACoopPlayerController::Reload()
 	}
 }
 // ReSharper disable once CppMemberFunctionMayBeConst
-void ACoopPlayerController::ChangeWeapon()
+void ACoopPlayerController::ContrSwapWeapon()
 {
 	if(GetPawn() && PawnInterface)
 	{
-		PawnInterface->I_ChangeWeapon();
+		PawnInterface->I_SwapWeapons();
 	}
 }
 // ReSharper disable once CppMemberFunctionMayBeConst

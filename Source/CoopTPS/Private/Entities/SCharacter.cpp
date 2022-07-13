@@ -58,6 +58,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 	
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
 	DOREPLIFETIME(ASCharacter, SecondaryWeapon);
+	DOREPLIFETIME(ASCharacter, OverlappingWeapon);
 	DOREPLIFETIME(ASCharacter, PlayerColor);
 	DOREPLIFETIME(ASCharacter, bDied);
 	DOREPLIFETIME(ASCharacter, bIsAiming);
@@ -108,7 +109,7 @@ void ASCharacter::BeginPlay()
 		{
 			CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector,
 									FRotator::ZeroRotator, SpawnParams);
-			if(CurrentWeapon)
+			if(IsValid(CurrentWeapon))
 			{
 				CurrentWeapon->SetOwner(this);
 				CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
@@ -118,7 +119,7 @@ void ASCharacter::BeginPlay()
 		{
 			SecondaryWeapon = GetWorld()->SpawnActor<ASWeapon>(SecondaryWeaponClass,
 				FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-			if(SecondaryWeapon)
+			if(IsValid(SecondaryWeapon))
 			{
 				SecondaryWeapon->SetOwner(this);
 				SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
@@ -126,7 +127,7 @@ void ASCharacter::BeginPlay()
 		}
 		OnRep_WeaponEquipped();
 	}
-	if(CurrentWeapon)
+	if(IsValid(CurrentWeapon))
 	{
 		CurrentWeapon->SetInitialInfoUI();
 	}
@@ -135,8 +136,8 @@ void ASCharacter::BeginPlay()
 void ASCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	if(CurrentWeapon){CurrentWeapon->Destroy();}
-	if(SecondaryWeapon){SecondaryWeapon->Destroy();}
+	if(IsValid(CurrentWeapon)){CurrentWeapon->Destroy();}
+	if(IsValid(SecondaryWeapon)){SecondaryWeapon->Destroy();}
 	HealthComp->OnHealthChanged.RemoveDynamic(this,&ASCharacter::HealthChanged);
 }
 
@@ -189,7 +190,7 @@ void ASCharacter::I_StopCrouch()
 
 FVector ASCharacter::GetPawnViewLocation() const
 {
-	if (CameraComp)
+	if (IsValid(CameraComp))
 	{
 		return CameraComp->GetComponentLocation();
 	}
@@ -221,41 +222,35 @@ void ASCharacter::I_StopAiming()
 void ASCharacter::I_PickupWeapon()
 {
 	// if there is a current weapon. . first drop secondary then pass the new one to secondary..
-	if(OverlappingWeapon)
+	if(IsValid(OverlappingWeapon))
 	{
 		if(HasAuthority())
 		{
 			PickupWeapon();
-			CurrentWeapon->SetInitialInfoUI();
 		}
 		else
 		{
-			ServerPickupWeapon();
-			CurrentWeapon->SetInitialInfoUI();
+			ServerPickupWeapon();			
 		}
-		OnRep_WeaponEquipped();
 	}
 	else
 	{
-		if(HasAuthority())
+		if (IsValid(CurrentWeapon))
 		{
-			if (IsValid(CurrentWeapon))
-			{
-				CurrentWeapon->DropWeapon();
-				CurrentWeapon =nullptr;
-			}
+			CurrentWeapon->DropWeapon();
+			PlayerController->SetWeaponInfo(FName("NONE"),0,0);
+			CurrentWeapon =nullptr;
 		}
-		OnRep_WeaponEquipped();
 	}
 }
 
 void ASCharacter::I_DropWeapon()
 {
-	if(CurrentWeapon)
+	if(IsValid(CurrentWeapon))
 	{
 		CurrentWeapon->DropWeapon();
 	}
-	if(SecondaryWeapon)
+	if(IsValid(SecondaryWeapon))
 	{
 		CurrentWeapon = std::move(SecondaryWeapon);
 		CurrentWeapon->SetOwner(this);
@@ -286,7 +281,7 @@ bool ASCharacter::IsAiming() const
 
 FTransform ASCharacter::GetHandlingWeaponTransform() const
 {
-	if(CurrentWeapon)
+	if(IsValid(CurrentWeapon))
 	{
 		return CurrentWeapon->GetWeaponHandle();
 	}
@@ -295,7 +290,7 @@ FTransform ASCharacter::GetHandlingWeaponTransform() const
 
 void ASCharacter::I_StartFire()
 {
-	if (CurrentWeapon)
+	if (IsValid(CurrentWeapon))
 	{
 		if(CurrentWeapon->IsReloading()) 
 		{
@@ -308,7 +303,7 @@ void ASCharacter::I_StartFire()
 
 void ASCharacter::I_StopFire()
 {
-	if (CurrentWeapon)
+	if (IsValid(CurrentWeapon))
 	{
 		CurrentWeapon->StopFire();
 		if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(CurrentWeapon->GetFireMontage()))
@@ -328,7 +323,7 @@ void ASCharacter::I_StopRun()
 
 void ASCharacter::I_Reload()
 {
-	if(CurrentWeapon)
+	if(IsValid(CurrentWeapon))
 	{
 		if(CurrentWeapon->GetWeaponCurrentAmmo() == CurrentWeapon->GetWeaponMaxAmmo() ||
 			CurrentWeapon->IsReloading() || 
@@ -342,23 +337,20 @@ void ASCharacter::I_Reload()
 	}
 }
 
-void ASCharacter::I_ChangeWeapon()
+void ASCharacter::I_SwapWeapons()
 {
-	if(CurrentWeapon == nullptr || SecondaryWeapon == nullptr){return;}
-	if(CurrentWeapon->IsReloading()){return;}
+	if(!IsValid(SecondaryWeapon)){return;}
+	if(IsValid(CurrentWeapon) && CurrentWeapon->IsReloading()){return;}
 	if (HasAuthority())
 	{
-		SwapWeapons();
-		CurrentWeapon->SetInitialInfoUI();
+		SwapWeapons();		
 	}
 	else
 	{
-		SecondaryWeapon->SetInitialInfoUI();
-		ServerChangeWeapon();
-	}
-	
-	
+		ServerSwapWeapon();
+	}	
 }
+
 // TODO : make a Throwing Actor Component
 void ASCharacter::Throw()
 {
@@ -488,31 +480,39 @@ void ASCharacter::PickupWeapon()
 			SecondaryWeapon->DropWeapon();
 		}
 		SecondaryWeapon = std::move(CurrentWeapon);
+		SecondaryWeapon->SetOwner(this);
 		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
 		CurrentWeapon = std::move(OverlappingWeapon);
+		OverlappingWeapon =nullptr;
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
-		OverlappingWeapon =nullptr;
 	}
 	else
 	{
 		CurrentWeapon = std::move(OverlappingWeapon);
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);				
 		OverlappingWeapon =nullptr;
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 	}
+	CurrentWeapon->SetInitialInfoUI();
 }
 
 void ASCharacter::SwapWeapons()
 {
-	if(!SecondaryWeapon || !CurrentWeapon){return;}
+	if(!SecondaryWeapon){return;}
 	ASWeapon* TempWeapon = std::move(SecondaryWeapon);
-	SecondaryWeapon = std::move(CurrentWeapon);
-	SecondaryWeapon->SetOwner(this);
-	SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
-	
+	if(CurrentWeapon)
+	{
+		SecondaryWeapon = std::move(CurrentWeapon);
+		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+	}
+	else
+	{
+		SecondaryWeapon =nullptr;
+	}
 	CurrentWeapon = std::move(TempWeapon);
 	CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+	CurrentWeapon->SetInitialInfoUI();
 }
 
 void ASCharacter::TurnInPlace()
@@ -626,7 +626,7 @@ void ASCharacter::ServerReload_Implementation()
 	Multicast_PlayMontage(CurrentWeapon->GetReloadMontage());
 }
 
-void ASCharacter::ServerChangeWeapon_Implementation()
+void ASCharacter::ServerSwapWeapon_Implementation()
 {
 	SwapWeapons();
 }
@@ -639,27 +639,7 @@ void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 
 void ASCharacter::ServerPickupWeapon_Implementation()
 {
-	if (IsValid(CurrentWeapon))
-	{
-		if(IsValid(SecondaryWeapon))
-		{
-			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->DropWeapon();
-		}
-		SecondaryWeapon = std::move(CurrentWeapon);
-		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
-		CurrentWeapon = std::move(OverlappingWeapon);
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
-		OverlappingWeapon =nullptr;
-	}
-	else
-	{
-		CurrentWeapon = std::move(OverlappingWeapon);
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);				
-		OverlappingWeapon =nullptr;
-	}
+	PickupWeapon();
 }
 
 void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
