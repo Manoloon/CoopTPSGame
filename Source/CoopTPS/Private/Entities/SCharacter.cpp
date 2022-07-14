@@ -102,7 +102,7 @@ void ASCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::HealthChanged);
-		
+		/*
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		if(StarterWeaponClass)
@@ -125,11 +125,11 @@ void ASCharacter::BeginPlay()
 				SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
 			}
 		}
-		OnRep_WeaponEquipped();
+		//OnRep_WeaponEquipped();
 	}
 	if(IsValid(CurrentWeapon))
 	{
-		CurrentWeapon->SetInitialInfoUI();
+		CurrentWeapon->SetInitialInfoUI();*/
 	}
 }
 
@@ -221,26 +221,15 @@ void ASCharacter::I_StopAiming()
 
 void ASCharacter::I_PickupWeapon()
 {
-	// if there is a current weapon. . first drop secondary then pass the new one to secondary..
-	if(IsValid(OverlappingWeapon))
+	if(IsValid(CurrentWeapon) && CurrentWeapon->IsReloading()){return;}
+	
+	if(HasAuthority())
 	{
-		if(HasAuthority())
-		{
-			PickupWeapon();
-		}
-		else
-		{
-			ServerPickupWeapon();			
-		}
+		PickupWeapon();
 	}
 	else
 	{
-		if (IsValid(CurrentWeapon))
-		{
-			CurrentWeapon->DropWeapon();
-			PlayerController->SetWeaponInfo(FName("NONE"),0,0);
-			CurrentWeapon =nullptr;
-		}
+		ServerPickupWeapon();
 	}
 }
 
@@ -249,6 +238,7 @@ void ASCharacter::I_DropWeapon()
 	if(IsValid(CurrentWeapon))
 	{
 		CurrentWeapon->DropWeapon();
+		CurrentWeapon = nullptr;
 	}
 	if(IsValid(SecondaryWeapon))
 	{
@@ -472,29 +462,44 @@ FLinearColor ASCharacter::IterationTrace()
 
 void ASCharacter::PickupWeapon()
 {
-	if (IsValid(CurrentWeapon))
+	if(IsValid(OverlappingWeapon))
 	{
-		if(IsValid(SecondaryWeapon))
+		if (IsValid(CurrentWeapon))
 		{
+			if(IsValid(SecondaryWeapon))
+			{
+				SecondaryWeapon->DropWeapon();
+			}
+			SecondaryWeapon = std::move(CurrentWeapon);
 			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->DropWeapon();
+			SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+			CurrentWeapon = std::move(OverlappingWeapon);
+			OverlappingWeapon =nullptr;
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 		}
-		SecondaryWeapon = std::move(CurrentWeapon);
-		SecondaryWeapon->SetOwner(this);
-		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
-		CurrentWeapon = std::move(OverlappingWeapon);
-		OverlappingWeapon =nullptr;
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		else
+		{
+			CurrentWeapon = std::move(OverlappingWeapon);
+			OverlappingWeapon =nullptr;
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		}
+		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+		CurrentWeapon->GetAmmoInBackpack());
 	}
 	else
 	{
-		CurrentWeapon = std::move(OverlappingWeapon);
-		OverlappingWeapon =nullptr;
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->DropWeapon();
+			CurrentWeapon =nullptr;
+			if(IsLocallyControlled())
+			{
+				PlayerController->SetWeaponInfoHUD();
+			}
+		}
 	}
-	CurrentWeapon->SetInitialInfoUI();
 }
 
 void ASCharacter::SwapWeapons()
@@ -512,7 +517,11 @@ void ASCharacter::SwapWeapons()
 	}
 	CurrentWeapon = std::move(TempWeapon);
 	CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
-	CurrentWeapon->SetInitialInfoUI();
+	if(IsLocallyControlled())
+	{
+		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+		CurrentWeapon->GetAmmoInBackpack());
+	}	
 }
 
 void ASCharacter::TurnInPlace()
@@ -605,21 +614,31 @@ void ASCharacter::OnRep_PlayerColor() const
 	}
 }
 
-void ASCharacter::OnRep_WeaponEquipped()
+void ASCharacter::OnRep_CurrentWeaponChanged() const
 {
-	if(CurrentWeapon)
+	if(IsLocallyControlled() && !HasAuthority())
 	{
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		if(IsValid(CurrentWeapon))
+		{
+			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+				CurrentWeapon->GetAmmoInBackpack());
+		}
+		else
+		{
+			PlayerController->SetWeaponInfoHUD();
+		}
 	}
+}
+/*
+void ASCharacter::OnRep_SecondaryWeaponChanged()
+{
 	if(SecondaryWeapon)
 	{
 		SecondaryWeapon->SetOwner(this);
 		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
 	}
 }
-
+*/
 void ASCharacter::ServerReload_Implementation()
 {
 	CurrentWeapon->StartReloading();
@@ -634,7 +653,7 @@ void ASCharacter::ServerSwapWeapon_Implementation()
 void ASCharacter::ServerAiming_Implementation(const bool bAiming)
 {
 	bIsAiming = bAiming;
-	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed; 
+	GetCharacterMovement()->MaxWalkSpeed=bIsAiming? AimWalkSpeed:BaseWalkSpeed;
 }
 
 void ASCharacter::ServerPickupWeapon_Implementation()

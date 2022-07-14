@@ -18,11 +18,14 @@
 
 ASWeapon::ASWeapon()
 {
+	PrimaryActorTick.bCanEverTick =false;
+	
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	SetRootComponent(MeshComp);
 	MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	RootComponent = MeshComp;
+	
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SphereComp->SetupAttachment(MeshComp);
 	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -33,6 +36,14 @@ ASWeapon::ASWeapon()
 	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ASWeapon, CurrentAmmo);
+	DOREPLIFETIME(ASWeapon,CurrentAmmoInBackpack);
 }
 
 void ASWeapon::BeginPlay()
@@ -71,19 +82,29 @@ void ASWeapon::Fire()
 void ASWeapon::OnRep_Owner()
 {
 	Super::OnRep_Owner();
-	if(GetOwner() == nullptr)
+	if(Owner == nullptr)
 	{
+		StopFire();
 		PlayerController = nullptr;
+		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
+		MeshComp->DetachFromComponent(DetachRules);
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetEnableGravity(true);
+		MeshComp->AddImpulse(GetActorForwardVector() * -600.0f);
+		
+		MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	}
-	bIsEquipped = GetOwner() != nullptr;
 }
 
 void ASWeapon::Reload()
 {
-	if(!HasAuthority())
-	{
-		ServerReload();
-	}
+//	if(!HasAuthority())
+//	{
+//		ServerReload();
+//	}
 	if(WeaponFXConfig.ReloadSFX)
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
@@ -99,21 +120,16 @@ void ASWeapon::Reload()
 void ASWeapon::UpdateAmmoInfoUI()
 {
 	PlayerController = PlayerController == nullptr ?
-			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
+		Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
 	if(PlayerController)
 	{
 		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
 	}
 }
 
-void ASWeapon::SetInitialInfoUI()
+void ASWeapon::OnRep_CurrentAmmo()
 {
-	PlayerController = PlayerController == nullptr?
-			Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
-	if(PlayerController)
-	{
-		PlayerController->SetWeaponInfo(WeaponConfig.WeaponName,CurrentAmmo,WeaponConfig.MaxAmmo);
-	}
+	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::StartReloading()
@@ -129,7 +145,7 @@ void ASWeapon::StartReloading()
 	Reload();
 }
 
-void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const
+void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
 	if(HasAuthority())
 	{
@@ -143,24 +159,29 @@ void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSo
 	{
 		ServerEquipWeapon(MeshComponent,WeaponSocket);
 	}
-
 }
 
 void ASWeapon::DropWeapon()
 {
-	MeshComp->SetSimulatePhysics(true);
-	MeshComp->SetEnableGravity(true);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
-	MeshComp->DetachFromComponent(DetachRules);
-	SetOwner(nullptr);
-	MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-	MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	MeshComp->AddImpulse(GetActorForwardVector() * 150.0f);
-	if(FTimerHandle Th_CanBePicked; !GetWorldTimerManager().IsTimerActive(Th_CanBePicked))
+	if(HasAuthority())
 	{
-		GetWorldTimerManager().SetTimer(Th_CanBePicked,this,&ASWeapon::SetPickable,2.0f,false);
+		StopFire();
+		SetOwner(nullptr);
+		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
+		MeshComp->DetachFromComponent(DetachRules);
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetEnableGravity(true);
+		MeshComp->AddImpulse(GetActorForwardVector() * -600.0f);
+		
+		MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		
+		if(FTimerHandle Th_CanBePicked; !GetWorldTimerManager().IsTimerActive(Th_CanBePicked))
+		{
+			GetWorldTimerManager().SetTimer(Th_CanBePicked,this,&ASWeapon::SetPickable,2.0f,false);
+		}
 	}
 }
 
@@ -203,6 +224,16 @@ FName ASWeapon::GetWeaponName() const
 int32 ASWeapon::GetWeaponCurrentAmmo() const
 {
 	return CurrentAmmo;
+}
+
+FName ASWeapon::GetWeaponsName() const
+{
+	return WeaponConfig.WeaponName;
+}
+
+int32 ASWeapon::GetAmmoInBackpack() const
+{
+	return CurrentAmmoInBackpack;
 }
 
 int32 ASWeapon::GetWeaponMaxAmmo() const
@@ -285,7 +316,7 @@ bool ASWeapon::ServerFire_Validate()
 {
 	return true;
 }
-
+/*
 void ASWeapon::ServerReload_Implementation()
 {
 	Reload();
@@ -295,11 +326,15 @@ bool ASWeapon::ServerReload_Validate()
 {
 	return true;
 }
-
-
-void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket) const
+*/
+void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
 	EquipWeapon(MeshComponent,WeaponSocket);
+}
+
+void ASWeapon::ServerDropWeapon_Implementation()
+{
+	DropWeapon();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
@@ -332,6 +367,8 @@ void ASWeapon::CalculateAmmo()
 
 void ASWeapon::SetPickable() const
 {
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetEnableGravity(false);
 	if(HasAuthority())
 	{
 		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);

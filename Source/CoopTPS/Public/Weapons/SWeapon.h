@@ -30,10 +30,9 @@ public:
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReloading();
-	void EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const;
+	void EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
 	void DropWeapon();
 	void FinishReloading();
-	void SetInitialInfoUI();
 	const FHUDData& GetCrosshairData() const;
 	UAnimMontage* GetFireMontage() const;
 	UAnimMontage* GetReloadMontage() const;
@@ -41,6 +40,8 @@ public:
 	FName GetWeaponName() const;
 	bool HaveAmmoInMag()const;
 	int32 GetWeaponCurrentAmmo() const;
+	FName GetWeaponsName() const;
+	int32 GetAmmoInBackpack() const;
 	int32 GetWeaponMaxAmmo()const;
 
 protected:
@@ -60,8 +61,9 @@ protected:
 	UPROPERTY(VisibleAnywhere,Category = "Component")
 		USphereComponent* SphereComp;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(ReplicatedUsing =OnRep_CurrentAmmo, EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
+	UPROPERTY(Replicated)
 	int32 CurrentAmmoInBackpack=CurrentAmmo;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
@@ -80,12 +82,16 @@ protected:
 	virtual void OnRep_Owner() override;
 	void Reload();
 	void UpdateAmmoInfoUI();
-	UFUNCTION(Server,Reliable,WithValidation)
-		virtual void ServerReload();
+	UFUNCTION()
+	void OnRep_CurrentAmmo();
+	//UFUNCTION(Server,Reliable,WithValidation)
+	//	virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerFire();
 	UFUNCTION(Server, Reliable)
-		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket) const;
+		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
+	UFUNCTION(Server,Reliable)
+		void ServerDropWeapon();
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,

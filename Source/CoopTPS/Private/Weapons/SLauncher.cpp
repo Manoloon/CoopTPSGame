@@ -19,7 +19,7 @@ void ASLauncher::StartFire()
 	if(!GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile) && CurrentAmmo>0)
 	{
 		CurrentAmmo--;
-		UpdateAmmoInfoUI();
+		//UpdateAmmoInfoUI();
 		GetWorldTimerManager().SetTimer(Th_ChargingProjectile,this,&ASLauncher::ServerUpdateThrow,
 			GetWorld()->GetDeltaSeconds(),true);
 	}

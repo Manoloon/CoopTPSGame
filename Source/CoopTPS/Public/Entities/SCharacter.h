@@ -80,14 +80,12 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Grenades")
 	FName GrenadeSocketName = "GrenadeSocket";
 
-	// current weapon
 public:
-	// TODO : ver de quitar el tema de primario y current. Current y secondary deberia quedar.
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponEquipped, Transient)
-		class ASWeapon* CurrentWeapon= nullptr;
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeaponChanged, Transient)
+		ASWeapon* CurrentWeapon= nullptr;
 	UPROPERTY(Replicated,Transient)
 		ASWeapon* OverlappingWeapon = nullptr;
-	UPROPERTY(Replicated, Transient)
+	UPROPERTY(Replicated, Transient) //replicated ReplicatedUsing = OnRep_SecondaryWeaponChanged
 		ASWeapon* SecondaryWeapon = nullptr;
 		
 	UPROPERTY(ReplicatedUsing=OnRep_PlayerColor,EditAnywhere,BlueprintReadOnly,Transient)
@@ -145,7 +143,9 @@ private:
 	UFUNCTION()
 	void OnRep_PlayerColor() const;
 	UFUNCTION()
-	void OnRep_WeaponEquipped();
+	void OnRep_CurrentWeaponChanged() const;
+	//UFUNCTION()
+	//void OnRep_SecondaryWeaponChanged();
 	UFUNCTION(Server,Reliable)
 	void ServerSwapWeapon();
 	UFUNCTION(Server,Reliable)

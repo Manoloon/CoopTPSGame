@@ -78,7 +78,7 @@ void ACoopPlayerController::UpdateCurrentAmmo(const int32 NewAmmo,const int32 Ne
 	}
 }
 
-void ACoopPlayerController::SetWeaponInfo(const FName NewWeaponName, const int32 NewCurrentAmmo, const int32 NewMaxAmmo)
+void ACoopPlayerController::SetWeaponInfoHUD(const FName NewWeaponName, const int32 NewCurrentAmmo, const int32 NewMaxAmmo)
 {
 	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;
 	if(PlayerHUD && PlayerHUD->GetPlayerUI())
@@ -91,8 +91,8 @@ void ACoopPlayerController::SetWeaponInfo(const FName NewWeaponName, const int32
 void ACoopPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	FTimerHandle Th_MatchTime;
-	if(!GetWorldTimerManager().IsTimerActive(Th_MatchTime))
+	if(FTimerHandle Th_MatchTime;
+		!GetWorldTimerManager().IsTimerActive(Th_MatchTime))
 	{
 		GetWorldTimerManager().SetTimer(Th_MatchTime,this,&ACoopPlayerController::SetHudGameTime,0.5f,true);
 	}
