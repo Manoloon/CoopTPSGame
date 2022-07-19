@@ -26,8 +26,7 @@ void AHitScanWeapon::Fire()
 		Super::Fire();
 		if(CurrentAmmo >0)
 		{
-			--CurrentAmmo;
-			UpdateAmmoInfoUI();
+			SpendAmmo();
 			FVector EyeLocation;
 			FRotator EyeRotation;
 			GetOwner()->GetActorEyesViewPoint(EyeLocation, EyeRotation);

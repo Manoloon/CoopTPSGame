@@ -61,7 +61,7 @@ protected:
 	UPROPERTY(VisibleAnywhere,Category = "Component")
 		USphereComponent* SphereComp;
 	
-	UPROPERTY(ReplicatedUsing =OnRep_CurrentAmmo, EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
 	UPROPERTY(Replicated)
 	int32 CurrentAmmoInBackpack=CurrentAmmo;
@@ -76,7 +76,9 @@ protected:
 	float LastFireTime;
 	float TimeBetweenShots;
 	FTimerHandle Th_TimeBetweenShots;
-
+	// its use for Ammo data reconciliation
+	int32 AmmoSequence=0;
+	void SpendAmmo();
 	void PlayShootVfx(FVector TraceEnd) const;
 	virtual void Fire();
 	virtual void OnRep_Owner() override;
@@ -92,6 +94,8 @@ protected:
 		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
 	UFUNCTION(Server,Reliable)
 		void ServerDropWeapon();
+	UFUNCTION(Client,Reliable)
+		void ClientAmmoUpdate(int32 ServerAmo);
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,

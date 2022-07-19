@@ -42,8 +42,7 @@ void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
-	DOREPLIFETIME(ASWeapon, CurrentAmmo);
-	DOREPLIFETIME(ASWeapon,CurrentAmmoInBackpack);
+	DOREPLIFETIME_CONDITION(ASWeapon,CurrentAmmoInBackpack,COND_OwnerOnly);
 }
 
 void ASWeapon::BeginPlay()
@@ -115,6 +114,29 @@ void ASWeapon::Reload()
 	{
 		GetWorldTimerManager().SetTimer(Th_FinishReload,this,&ASWeapon::FinishReloading,WeaponConfig.ReloadTime,false);
 	}
+}
+
+void ASWeapon::SpendAmmo()
+{
+	CurrentAmmo = FMath::Clamp(CurrentAmmo -1,0,CurrentAmmoInBackpack);
+	UpdateAmmoInfoUI();
+	if(HasAuthority())
+	{
+		ClientAmmoUpdate(CurrentAmmo);
+	}
+	else
+	{
+		++AmmoSequence;
+	}
+}
+
+void ASWeapon::ClientAmmoUpdate_Implementation(const int32 ServerAmo)
+{
+	if(HasAuthority()){return;}
+	CurrentAmmo = ServerAmo;
+	--AmmoSequence;
+	CurrentAmmo -= AmmoSequence;
+	UpdateAmmoInfoUI();	
 }
 
 void ASWeapon::UpdateAmmoInfoUI()

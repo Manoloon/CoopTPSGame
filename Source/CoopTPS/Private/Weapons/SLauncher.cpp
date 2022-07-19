@@ -7,6 +7,13 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+void ASLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASLauncher,LauncherPacket,COND_OwnerOnly);
+}
+
 void ASLauncher::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -18,8 +25,7 @@ void ASLauncher::StartFire()
 	
 	if(!GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile) && CurrentAmmo>0)
 	{
-		CurrentAmmo--;
-		//UpdateAmmoInfoUI();
+		SpendAmmo();
 		GetWorldTimerManager().SetTimer(Th_ChargingProjectile,this,&ASLauncher::ServerUpdateThrow,
 			GetWorld()->GetDeltaSeconds(),true);
 	}
@@ -80,10 +86,4 @@ void ASLauncher::OnRep_LauncherPacket() const
 {
 	const FVector_NetQuantize MuzzleLocation = MeshComp->GetSocketLocation(WeaponConfig.MuzzleSocketName);
 	PlayShootVfx(MuzzleLocation);	
-}
-void ASLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ASLauncher,LauncherPacket,COND_OwnerOnly);
 }

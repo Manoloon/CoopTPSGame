@@ -5,16 +5,10 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Interfaces/MainMenuInterface.h"
-
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
-#include "OnlineSubsystem.h"
-
 #include "CoopGameInstance.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COOPTPS_API UCoopGameInstance : public UGameInstance, public IMainMenuInterface
 {
@@ -38,7 +32,6 @@ public:
 		void LoadMenu();
 	UFUNCTION(BlueprintCallable)
 		void LoadPauseMenu();
-
 	void StartSession() const;
 
 private:
