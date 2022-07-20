@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/BoxComponent.h"
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/IInputComm.h"
@@ -35,15 +36,22 @@ protected:
 		UParticleSystemComponent* BeamComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
 		UDecalComponent* BeamEndPointDecal;
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Settings|HealthComp")
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 		class USHealthComponent* HealthComp;
+	UPROPERTY(VisibleAnywhere)
+		class URagDollStateComp* RagDollComp;
+	UPROPERTY(VisibleAnywhere)
+		class ULagCompensationComp* LagCompensationComp;
+	
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;
-	UPROPERTY(Replicated)
-		bool bIsAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+		bool bIsAiming=false;
+	UFUNCTION()
+		void OnRep_Aiming();
+	bool BAimButtonPressed=false;
 	UPROPERTY(EditAnywhere, Category = "Settings")
-		USkeletalMesh* PawnMesh = nullptr;
-
+		USkeletalMesh* PawnMesh = nullptr;	
 	// aiming variables
 	bool bTurnInPlace=false;
 	float InterpAimYaw=0.f;
@@ -53,11 +61,8 @@ protected:
 	float DefaultFOV;
 
 	// grenade mode
-	//UPROPERTY()
-	//class ASProjectile* Grenade = nullptr;
 	bool bIsGranadaMode = false;
 	float LaunchDistance = 100.0f;
-	//FVector InitialVelocity;
 	FVector InitialLocalVelocity;
 	FVector StartLocation;
 	FVector SpawnScale = FVector(1.0f);
@@ -132,7 +137,6 @@ private:
 	void CalculateAimOffset();
 	UFUNCTION(NetMulticast,Unreliable)
 	void Multicast_PlayMontage(UAnimMontage* MontageToPlay) const;
-	//void PlayMontage(UAnimMontage* MontageToPlay) const;
 	FHitResult TraceResult;
 	float CrosshairSpreadFactor;
 	float CrossInAirFactor;
@@ -157,8 +161,45 @@ private:
 	UFUNCTION()
 	void HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+protected:
+	//Lag comp
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_Head;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_Pelvis;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_Spine_02;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_Spine_03;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_UpperArm_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_UpperArm_r;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_lowerarm_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_lowerarm_r;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_hand_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_hand_r;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_thigh_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_thigh_r;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_calf_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_calf_r;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_foot_l;
+	UPROPERTY(EditAnywhere,Category="RewindSystem")
+	UBoxComponent* HitBox_foot_r;
 
-public:	
+	UPROPERTY()
+	TMap<FName,UBoxComponent*> ServerRewindHitBoxes;
+	void CreateRewindHitBox();
+public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
 	virtual FVector GetPawnViewLocation() const override;
@@ -190,6 +231,7 @@ public:
 	virtual USHealthComponent* I_GetHealthComp() const override;
 	
 	bool IsWeaponEquipped() const;
+	const TMap<FName,UBoxComponent*>& GetRewindHitBoxes() const;
 	UFUNCTION(BlueprintCallable)
 	bool IsAiming()const;
 	UFUNCTION()
@@ -197,4 +239,5 @@ public:
 	UFUNCTION()
 	FVector2D GetAimOffsetData()const{return FVector2D(AimOffsetYaw,AimOffSetPitch);}
 	FORCEINLINE bool PlayerIsDead()const{return bDied;}
+	FORCEINLINE ULagCompensationComp* GetLagCompensationComp() const{return LagCompensationComp;}
 };

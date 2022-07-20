@@ -45,14 +45,17 @@ public:
 	int32 GetWeaponMaxAmmo()const;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY() //ReplicatedUsing=OnRep_Reloading
 		bool bIsReloading;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FHUDData CrossHairData;
-	UPROPERTY(EditDefaultsOnly,Category = "Settings")
+	UPROPERTY(EditAnywhere,Category = "Settings")
 		FWeaponData WeaponConfig;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponFXData WeaponFXConfig;
+
+	UPROPERTY(EditAnywhere,Category = "Settings|Network")
+	bool bUseServerSideRewind = false;
 	
 	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector& ImpactPoint, const FVector& ImpactNormal) const;
 
@@ -61,10 +64,10 @@ protected:
 	UPROPERTY(VisibleAnywhere,Category = "Component")
 		USphereComponent* SphereComp;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
 	UPROPERTY(Replicated)
-	int32 CurrentAmmoInBackpack=CurrentAmmo;
+		int32 CurrentAmmoInBackpack=CurrentAmmo;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
@@ -72,6 +75,8 @@ protected:
 
 	UPROPERTY()
 	ACoopPlayerController* PlayerController;
+	UPROPERTY()
+	APawn* PlayerPawn;
 	bool bIsEquipped=false;
 	float LastFireTime;
 	float TimeBetweenShots;
@@ -81,13 +86,15 @@ protected:
 	void SpendAmmo();
 	void PlayShootVfx(FVector TraceEnd) const;
 	virtual void Fire();
-	virtual void OnRep_Owner() override;
 	void Reload();
 	void UpdateAmmoInfoUI();
+	virtual void OnRep_Owner() override;
+	//UFUNCTION()
+	//void OnRep_Reloading();
 	UFUNCTION()
 	void OnRep_CurrentAmmo();
-	//UFUNCTION(Server,Reliable,WithValidation)
-	//	virtual void ServerReload();
+	UFUNCTION(Server,Reliable,WithValidation)
+		virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerFire();
 	UFUNCTION(Server, Reliable)

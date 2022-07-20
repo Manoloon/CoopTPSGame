@@ -3,7 +3,10 @@
 
 #include "Weapons/HitScanWeapon.h"
 
+#include "CoopPlayerController.h"
 #include "CoopTPS.h"
+#include "LagCompensationComp.h"
+#include "SCharacter.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -52,11 +55,10 @@ void AHitScanWeapon::Fire()
 				
 				PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
 				TracerEndPoint = Hit.ImpactPoint;
-
 			}
+			float ActualDamage = WeaponConfig.BaseDamage;
 			if (HasAuthority())
 			{
-				float ActualDamage = WeaponConfig.BaseDamage;
 				if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
 					ActualDamage *= 4.0f;
@@ -66,6 +68,17 @@ void AHitScanWeapon::Fire()
 				HitScanTrace.ImpactPoint = TracerEndPoint;
 				HitScanTrace.ImpactNormal =Hit.ImpactNormal;
 				HitScanTrace.SurfaceType = SurfaceType;
+			}
+			if(!HasAuthority() && bUseServerSideRewind && PlayerController)
+			{
+				const ASCharacter* PlayerPawn = Cast<ASCharacter>(GetOwner());
+				if(PlayerPawn && PlayerPawn->GetLagCompensationComp())
+				{
+					PlayerPawn->GetLagCompensationComp()->
+					ServerScoreRequest(Hit.GetActor(),EyeLocation,Hit.Location,
+					                   PlayerController->GetServerTime() - PlayerController->HalfRoundtripTime,
+					                   this,ActualDamage,WeaponConfig.DamageType);
+				}
 			}
 			if(DebugWeaponDrawing>0)
 			{

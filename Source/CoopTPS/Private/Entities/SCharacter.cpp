@@ -13,7 +13,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SHealthComponent.h"
+#include "Components/LagCompensationComp.h"
 #include "CoopTPS.h"
+#include "RagDollStateComp.h"
 #include "Core/TPSHud.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/RoleMessage.h"
@@ -47,9 +49,14 @@ ASCharacter::ASCharacter()
 
 	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
 	BeamEndPointDecal->SetVisibility(false);
-	
+
+	CreateRewindHitBox();
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 	HealthComp->TeamNum = 0;
+	
+	RagDollComp = CreateDefaultSubobject<URagDollStateComp>(TEXT("RagDollComp"));
+	
+	LagCompensationComp = CreateDefaultSubobject<ULagCompensationComp>(TEXT("LagCompensationComp"));
 }
 // networking --> 
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -66,7 +73,7 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
+	
 	USkeletalMeshComponent* MeshComponent = GetMesh();
 	if (PawnMesh)
 	{
@@ -141,6 +148,58 @@ void ASCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	HealthComp->OnHealthChanged.RemoveDynamic(this,&ASCharacter::HealthChanged);
 }
 
+void ASCharacter::CreateRewindHitBox()
+{
+	HitBox_Head = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_Head"));
+	HitBox_Head->SetupAttachment(GetMesh(),FName("head"));
+	ServerRewindHitBoxes.Add(FName("head"),HitBox_Head);
+	HitBox_Pelvis = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_Pelvis"));
+	HitBox_Pelvis->SetupAttachment(GetMesh(),FName("pelvis"));
+	ServerRewindHitBoxes.Add(FName("pelvis"),HitBox_Pelvis);
+	HitBox_Spine_02 = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_Spine_02"));
+	HitBox_Spine_02->SetupAttachment(GetMesh(),FName("spine_02"));
+	ServerRewindHitBoxes.Add(FName("spine_02"),HitBox_Spine_02);
+	HitBox_Spine_03 = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_Spine_03"));
+	HitBox_Spine_03->SetupAttachment(GetMesh(),FName("spine_03"));
+	ServerRewindHitBoxes.Add(FName("spine_03"),HitBox_Spine_03);
+	HitBox_UpperArm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_UpperArm_l"));
+	HitBox_UpperArm_l->SetupAttachment(GetMesh(),FName("upperarm_l"));
+	ServerRewindHitBoxes.Add(FName("upperarm_l"),HitBox_UpperArm_l);
+	HitBox_UpperArm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_UpperArm_r"));
+	HitBox_UpperArm_r->SetupAttachment(GetMesh(),FName("upperarm_r"));
+	ServerRewindHitBoxes.Add(FName("upperarm_r"),HitBox_UpperArm_r);
+	HitBox_lowerarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_lowerarm_l"));
+	HitBox_lowerarm_l->SetupAttachment(GetMesh(),FName("lowerarm_l"));
+	ServerRewindHitBoxes.Add(FName("lowerarm_l"),HitBox_lowerarm_l);
+	HitBox_lowerarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_lowerarm_r"));
+	HitBox_lowerarm_r->SetupAttachment(GetMesh(),FName("lowerarm_r"));
+	ServerRewindHitBoxes.Add(FName("lowerarm_r"),HitBox_lowerarm_r);
+	HitBox_hand_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_hand_l"));
+	HitBox_hand_l->SetupAttachment(GetMesh(),FName("hand_l"));
+	ServerRewindHitBoxes.Add(FName("hand_l"),HitBox_hand_l);
+	HitBox_hand_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_hand_r"));
+	HitBox_hand_r->SetupAttachment(GetMesh(),FName("hand_r"));
+	ServerRewindHitBoxes.Add(FName("hand_r"),HitBox_hand_r);
+	HitBox_thigh_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_thigh_l"));
+	HitBox_thigh_l->SetupAttachment(GetMesh(),FName("thigh_l"));
+	ServerRewindHitBoxes.Add(FName("thigh_l"),HitBox_thigh_l);
+	HitBox_thigh_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_thigh_r"));
+	HitBox_thigh_r->SetupAttachment(GetMesh(),FName("thigh_r"));
+	ServerRewindHitBoxes.Add(FName("thigh_r"),HitBox_thigh_r);
+	HitBox_calf_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_calf_l"));
+	HitBox_calf_l->SetupAttachment(GetMesh(),FName("calf_l"));
+	ServerRewindHitBoxes.Add(FName("calf_l"),HitBox_calf_l);
+	HitBox_calf_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_calf_r"));
+	HitBox_calf_r->SetupAttachment(GetMesh(),FName("calf_r"));
+	ServerRewindHitBoxes.Add(FName("calf_r"),HitBox_calf_r);
+	HitBox_foot_l = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_foot_l"));
+	HitBox_foot_l->SetupAttachment(GetMesh(),FName("foot_l"));
+	ServerRewindHitBoxes.Add(FName("foot_l"),HitBox_foot_l);
+	HitBox_foot_r = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox_foot_r"));
+	HitBox_foot_r->SetupAttachment(GetMesh(),FName("foot_r"));
+	ServerRewindHitBoxes.Add(FName("foot_r"),HitBox_foot_r);
+}
+
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -205,11 +264,23 @@ void ASCharacter::I_Jump()
 	}
 }
 
+void ASCharacter::OnRep_Aiming()
+{
+	if(IsLocallyControlled())
+	{
+		bIsAiming = BAimButtonPressed;
+	}
+}
+
 void ASCharacter::I_StartAiming()
 {
 	bIsAiming = true;
 	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
 	ServerAiming(true);
+	if(IsLocallyControlled())
+	{
+		BAimButtonPressed = bIsAiming;
+	}
 }
 
 void ASCharacter::I_StopAiming()
@@ -217,6 +288,10 @@ void ASCharacter::I_StopAiming()
 	bIsAiming = false;
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	ServerAiming(false);
+	if(IsLocallyControlled())
+	{
+		BAimButtonPressed = bIsAiming;
+	}
 }
 
 void ASCharacter::I_PickupWeapon()
@@ -262,6 +337,11 @@ USHealthComponent* ASCharacter::I_GetHealthComp() const
 bool ASCharacter::IsWeaponEquipped() const
 {
 	return CurrentWeapon != nullptr;
+}
+
+const TMap<FName, UBoxComponent*>& ASCharacter::GetRewindHitBoxes() const
+{
+	return ServerRewindHitBoxes;
 }
 
 bool ASCharacter::IsAiming() const
@@ -593,18 +673,7 @@ void ASCharacter::Multicast_PlayMontage_Implementation(UAnimMontage* MontageToPl
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
-/*
-void ASCharacter::PlayMontage(UAnimMontage* MontageToPlay) const
-{
-	if(UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		IsValid(AnimInstance) )
-	{
-		AnimInstance->Montage_Play(MontageToPlay);
-		const FName SectionName = bIsAiming? FName("Aiming") : FName("Hip");
-		AnimInstance->Montage_JumpToSection(SectionName);
-	}
-}
-*/
+
 // Cambio del color del pawn segun el playercontroller que lo controle.
 void ASCharacter::OnRep_PlayerColor() const
 {
@@ -629,6 +698,7 @@ void ASCharacter::OnRep_CurrentWeaponChanged() const
 		}
 	}
 }
+
 /*
 void ASCharacter::OnRep_SecondaryWeaponChanged()
 {
@@ -669,6 +739,7 @@ void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float
 	if (Health<=0.0f && !bDied)
 	{
 		bDied = true;
+		//RagDollComp->ToggleRagDoll(true);
 		if(CurrentWeapon)
 		{
 			CurrentWeapon->StopFire();
@@ -677,6 +748,8 @@ void ASCharacter::HealthChanged(USHealthComponent* OwningHealthComp, const float
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		DetachFromControllerPendingDestroy();
 		SetLifeSpan(4);
+		//Backfromdead
+		//RagDollComp->ToggleRagDoll(false);
 	}
 }
 

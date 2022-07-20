@@ -8,7 +8,6 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopTPS.h"
-#include "SCharacter.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -65,11 +64,6 @@ void ASWeapon::BeginPlay()
 	}
 }
 
-bool ASWeapon::IsReloading() const
-{
-	return bIsReloading;
-}
-
 void ASWeapon::Fire()
 {
 	if(!HasAuthority())
@@ -97,32 +91,66 @@ void ASWeapon::OnRep_Owner()
 		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	}
 }
+void ASWeapon::StartReloading()
+{
+	if(!HaveAmmoInMag() || bIsReloading){return;}
+	bIsReloading = true;
+	StopFire();
+	Reload();
+}
 
+bool ASWeapon::IsReloading() const
+{
+	return bIsReloading;
+}
+/*
+void ASWeapon::OnRep_Reloading()
+{
+	if(!bIsReloading)
+	{
+		CalculateAmmo();	
+		UpdateAmmoInfoUI();
+	}
+}
+*/
 void ASWeapon::Reload()
 {
-//	if(!HasAuthority())
-//	{
-//		ServerReload();
-//	}
+	if(!HasAuthority())
+	{
+		ServerReload();
+	}
 	if(WeaponFXConfig.ReloadSFX)
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
 	}
-	
 	if(FTimerHandle Th_FinishReload;
-		!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
+	!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
 	{
 		GetWorldTimerManager().SetTimer(Th_FinishReload,this,&ASWeapon::FinishReloading,WeaponConfig.ReloadTime,false);
-	}
+	}	
+}
+
+void ASWeapon::FinishReloading()
+{
+	CalculateAmmo();
+	bIsReloading = false;
+}
+
+void ASWeapon::CalculateAmmo()
+{
+	const int32 DeltaAmmo = UKismetMathLibrary::Min(CurrentAmmoInBackpack,WeaponConfig.MaxAmmo-CurrentAmmo);
+	CurrentAmmo += DeltaAmmo;
+	CurrentAmmoInBackpack -= DeltaAmmo;
+	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::SpendAmmo()
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo -1,0,CurrentAmmoInBackpack);
-	UpdateAmmoInfoUI();
 	if(HasAuthority())
 	{
 		ClientAmmoUpdate(CurrentAmmo);
+		UpdateAmmoInfoUI();	
 	}
 	else
 	{
@@ -136,14 +164,15 @@ void ASWeapon::ClientAmmoUpdate_Implementation(const int32 ServerAmo)
 	CurrentAmmo = ServerAmo;
 	--AmmoSequence;
 	CurrentAmmo -= AmmoSequence;
-	UpdateAmmoInfoUI();	
+	UpdateAmmoInfoUI();		
 }
 
 void ASWeapon::UpdateAmmoInfoUI()
 {
 	PlayerController = PlayerController == nullptr ?
 		Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
-	if(PlayerController)
+	PlayerPawn = PlayerPawn == nullptr? PlayerController->GetPawn() : PlayerPawn;
+	if(PlayerController && PlayerPawn && PlayerPawn->IsLocallyControlled())
 	{
 		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
 	}
@@ -152,19 +181,6 @@ void ASWeapon::UpdateAmmoInfoUI()
 void ASWeapon::OnRep_CurrentAmmo()
 {
 	UpdateAmmoInfoUI();
-}
-
-void ASWeapon::StartReloading()
-{
-	if(!HaveAmmoInMag() || bIsReloading)
-	{
-		//TODO: drop a sound or hint that it cant reload
-		return;
-	}
-
-	bIsReloading = true;
-	StopFire();
-	Reload();
 }
 
 void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket)
@@ -205,13 +221,6 @@ void ASWeapon::DropWeapon()
 			GetWorldTimerManager().SetTimer(Th_CanBePicked,this,&ASWeapon::SetPickable,2.0f,false);
 		}
 	}
-}
-
-void ASWeapon::FinishReloading()
-{
-	CalculateAmmo();	
-	bIsReloading = false;
-	UpdateAmmoInfoUI();
 }
 
 const FHUDData& ASWeapon::GetCrosshairData() const
@@ -338,7 +347,7 @@ bool ASWeapon::ServerFire_Validate()
 {
 	return true;
 }
-/*
+
 void ASWeapon::ServerReload_Implementation()
 {
 	Reload();
@@ -348,7 +357,7 @@ bool ASWeapon::ServerReload_Validate()
 {
 	return true;
 }
-*/
+
 void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
 	EquipWeapon(MeshComponent,WeaponSocket);
@@ -378,13 +387,6 @@ void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	// OtherActor->ShowWidget(null)
-}
-
-void ASWeapon::CalculateAmmo()
-{
-	const int32 DeltaAmmo = UKismetMathLibrary::Min(CurrentAmmoInBackpack,WeaponConfig.MaxAmmo-CurrentAmmo);
-	CurrentAmmo += DeltaAmmo;
-	CurrentAmmoInBackpack -= DeltaAmmo;
 }
 
 void ASWeapon::SetPickable() const

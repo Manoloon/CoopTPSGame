@@ -52,20 +52,20 @@ USTRUCT(BlueprintType)
 struct FWeaponData
 {
 	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 1, ClampMax = 30))
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 1, ClampMax = 30))
 	int32 MaxAmmo;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
 	float BulletSpread;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float BaseDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float FireRate;
 	float ReloadTime;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponName;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 	FName MuzzleSocketName;
-	UPROPERTY(EditDefaultsOnly,Category ="Weapon")
+	UPROPERTY(EditAnywhere,Category ="Weapon")
 	TSubclassOf<UDamageType> DamageType;
 
 	FWeaponData()

@@ -22,9 +22,11 @@ public:
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)
 	ASCharacter* MyPawn = nullptr;
-
+	//this is the real time on server.
+	float HalfRoundtripTime;
 	void SetHudScore(const int Score);
 	void SetHudGameTime();
+	
 	void UpdateCurrentAmmo(const int32 NewAmmo,const int32 NewMaxAmmo);
 	void SetWeaponInfoHUD(const FName NewWeaponName="NONE",const int32 NewCurrentAmmo=0,const int32 NewMaxAmmo=0);
 

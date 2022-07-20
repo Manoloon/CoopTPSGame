@@ -137,7 +137,8 @@ void ACoopPlayerController::Client_ReportServerTime_Implementation(const float T
 																   const float TimeServerReceiveClientRequest)
 {
 	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeClientRequest;
-	const float CurrentServerTime = TimeServerReceiveClientRequest + (0.5f * RoundTripTime);
+	HalfRoundtripTime = (0.5f * RoundTripTime);
+	const float CurrentServerTime = TimeServerReceiveClientRequest + HalfRoundtripTime;
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
