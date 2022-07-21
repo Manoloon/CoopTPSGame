@@ -49,8 +49,11 @@ ASCharacter::ASCharacter()
 
 	BeamEndPointDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("BeamEndPointDecal"));
 	BeamEndPointDecal->SetVisibility(false);
-
-	CreateRewindHitBox();
+	if(GetMesh())
+	{
+		CreateRewindHitBox();
+	}
+	
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 	HealthComp->TeamNum = 0;
 	
