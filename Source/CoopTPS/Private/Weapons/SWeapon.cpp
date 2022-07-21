@@ -85,10 +85,23 @@ void ASWeapon::OnRep_Owner()
 		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetEnableGravity(true);
 		MeshComp->AddImpulse(GetActorForwardVector() * -600.0f);
-		
+		UE_LOG(LogTemp,Warning,TEXT("NULL OWNER"));
 		MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	}
+	else
+	{
+		PlayerController = Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController());
+		if(PlayerController)
+		{
+			UE_LOG(LogTemp,Warning,TEXT("OWNER %s"),*PlayerController->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp,Error,TEXT("OWNER FAILED"));
+		}
+		
 	}
 }
 void ASWeapon::StartReloading()
@@ -170,9 +183,9 @@ void ASWeapon::ClientAmmoUpdate_Implementation(const int32 ServerAmo)
 void ASWeapon::UpdateAmmoInfoUI()
 {
 	PlayerController = PlayerController == nullptr ?
-		Cast<ACoopPlayerController>(GetOwner()->GetInstigatorController()) : PlayerController;
-	PlayerPawn = PlayerPawn == nullptr? PlayerController->GetPawn() : PlayerPawn;
-	if(PlayerController && PlayerPawn && PlayerPawn->IsLocallyControlled())
+		Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController()) : PlayerController;
+	//PlayerController = Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController());
+	if(PlayerController)
 	{
 		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
 	}
@@ -197,6 +210,7 @@ void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSo
 	{
 		ServerEquipWeapon(MeshComponent,WeaponSocket);
 	}
+	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::DropWeapon()
@@ -205,6 +219,7 @@ void ASWeapon::DropWeapon()
 	{
 		StopFire();
 		SetOwner(nullptr);
+		PlayerController =nullptr;
 		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
 		MeshComp->DetachFromComponent(DetachRules);
 		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -304,7 +319,6 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	case SURFACE_FLESHVULNERABLE: // flesh headshot
 		SelectedFX = WeaponFXConfig.FleshImpactFX;
 		break;
-
 	default:
 		SelectedFX = WeaponFXConfig.DefaultImpactFX;
 		break;
@@ -362,11 +376,11 @@ void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, 
 {
 	EquipWeapon(MeshComponent,WeaponSocket);
 }
-
+/*
 void ASWeapon::ServerDropWeapon_Implementation()
 {
 	DropWeapon();
-}
+}*/
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

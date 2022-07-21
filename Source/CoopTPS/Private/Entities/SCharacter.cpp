@@ -565,8 +565,11 @@ void ASCharacter::PickupWeapon()
 			CurrentWeapon->SetOwner(this);
 			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 		}
-		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
-		CurrentWeapon->GetAmmoInBackpack());
+		if(IsLocallyControlled())
+		{
+			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+CurrentWeapon->GetAmmoInBackpack());
+		}
 	}
 	else
 	{

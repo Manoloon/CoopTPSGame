@@ -64,10 +64,10 @@ protected:
 	UPROPERTY(VisibleAnywhere,Category = "Component")
 		USphereComponent* SphereComp;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
 	UPROPERTY(Replicated)
-		int32 CurrentAmmoInBackpack=CurrentAmmo;
+		int32 CurrentAmmoInBackpack=WeaponConfig.MaxAmmo;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY(VisibleAnywhere)
@@ -75,8 +75,8 @@ protected:
 
 	UPROPERTY()
 	ACoopPlayerController* PlayerController;
-	UPROPERTY()
-	APawn* PlayerPawn;
+	//UPROPERTY()
+	//APawn* PlayerPawn;
 	bool bIsEquipped=false;
 	float LastFireTime;
 	float TimeBetweenShots;
@@ -99,8 +99,8 @@ protected:
 		virtual void ServerFire();
 	UFUNCTION(Server, Reliable)
 		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
-	UFUNCTION(Server,Reliable)
-		void ServerDropWeapon();
+	//UFUNCTION(Server,Reliable)
+	//	void ServerDropWeapon();
 	UFUNCTION(Client,Reliable)
 		void ClientAmmoUpdate(int32 ServerAmo);
 	UFUNCTION()

@@ -71,10 +71,10 @@ void AHitScanWeapon::Fire()
 			}
 			if(!HasAuthority() && bUseServerSideRewind && PlayerController)
 			{
-				const ASCharacter* PlayerPawn = Cast<ASCharacter>(GetOwner());
-				if(PlayerPawn && PlayerPawn->GetLagCompensationComp())
+				if(const ASCharacter* Pawn = Cast<ASCharacter>(GetOwner());
+					Pawn && Pawn->GetLagCompensationComp())
 				{
-					PlayerPawn->GetLagCompensationComp()->
+					Pawn->GetLagCompensationComp()->
 					ServerScoreRequest(Hit.GetActor(),EyeLocation,Hit.Location,
 					                   PlayerController->GetServerTime() - PlayerController->HalfRoundtripTime,
 					                   this,ActualDamage,WeaponConfig.DamageType);
