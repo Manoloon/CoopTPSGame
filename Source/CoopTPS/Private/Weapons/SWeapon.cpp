@@ -162,7 +162,7 @@ void ASWeapon::SpendAmmo()
 	CurrentAmmo = FMath::Clamp(CurrentAmmo -1,0,CurrentAmmoInBackpack);
 	if(HasAuthority())
 	{
-		ClientAmmoUpdate(CurrentAmmo);
+		ClientAmmoUpdate(true,CurrentAmmo);
 		UpdateAmmoInfoUI();	
 	}
 	else
@@ -171,20 +171,22 @@ void ASWeapon::SpendAmmo()
 	}
 }
 
-void ASWeapon::ClientAmmoUpdate_Implementation(const int32 ServerAmo)
+void ASWeapon::ClientAmmoUpdate_Implementation(const bool bCalculateAmmoSeq,const int32 ServerAmo)
 {
 	if(HasAuthority()){return;}
 	CurrentAmmo = ServerAmo;
-	--AmmoSequence;
-	CurrentAmmo -= AmmoSequence;
-	UpdateAmmoInfoUI();		
+	if(bCalculateAmmoSeq)
+	{
+		--AmmoSequence;
+		CurrentAmmo -= AmmoSequence;
+		UpdateAmmoInfoUI();		
+	}
 }
 
 void ASWeapon::UpdateAmmoInfoUI()
 {
 	PlayerController = PlayerController == nullptr ?
 		Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController()) : PlayerController;
-	//PlayerController = Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController());
 	if(PlayerController)
 	{
 		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
@@ -205,12 +207,12 @@ void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSo
 		MeshComp->SetEnableGravity(false);
 		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
+		ClientAmmoUpdate(false,CurrentAmmo);
 	}
 	else
 	{
 		ServerEquipWeapon(MeshComponent,WeaponSocket);
 	}
-	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::DropWeapon()
@@ -325,7 +327,7 @@ void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector
 	}
 	if (SelectedFX)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint,ImpactRotation); //ShotDirection.Rotation()
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedFX, ImpactPoint,ImpactRotation);
 	}
 }
 

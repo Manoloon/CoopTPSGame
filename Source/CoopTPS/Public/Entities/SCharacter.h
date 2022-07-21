@@ -131,6 +131,7 @@ protected:
 	void DrawingTrajectory();
 	FLinearColor IterationTrace();
 private:
+	FString ShowPlayerNetRole() const;
 	void PickupWeapon();
 	void SwapWeapons();
 	void TurnInPlace();

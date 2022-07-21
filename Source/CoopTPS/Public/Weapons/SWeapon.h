@@ -93,6 +93,7 @@ protected:
 	//void OnRep_Reloading();
 	UFUNCTION()
 	void OnRep_CurrentAmmo();
+	
 	UFUNCTION(Server,Reliable,WithValidation)
 		virtual void ServerReload();
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -102,7 +103,7 @@ protected:
 	//UFUNCTION(Server,Reliable)
 	//	void ServerDropWeapon();
 	UFUNCTION(Client,Reliable)
-		void ClientAmmoUpdate(int32 ServerAmo);
+		void ClientAmmoUpdate(const bool bCalculateAmmoSeq,int32 ServerAmo);
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,

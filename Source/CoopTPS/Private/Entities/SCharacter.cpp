@@ -565,11 +565,6 @@ void ASCharacter::PickupWeapon()
 			CurrentWeapon->SetOwner(this);
 			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 		}
-		if(IsLocallyControlled())
-		{
-			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
-CurrentWeapon->GetAmmoInBackpack());
-		}
 	}
 	else
 	{
@@ -577,7 +572,8 @@ CurrentWeapon->GetAmmoInBackpack());
 		{
 			CurrentWeapon->DropWeapon();
 			CurrentWeapon =nullptr;
-			if(IsLocallyControlled())
+	
+			if(IsLocallyControlled() && HasAuthority())
 			{
 				PlayerController->SetWeaponInfoHUD();
 			}
@@ -694,6 +690,7 @@ void ASCharacter::OnRep_CurrentWeaponChanged() const
 		{
 			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
 				CurrentWeapon->GetAmmoInBackpack());
+			UE_LOG(LogTemp,Warning,TEXT("Current ammo on %s : %d"),*ShowPlayerNetRole(),CurrentWeapon->GetWeaponCurrentAmmo());
 		}
 		else
 		{
@@ -806,5 +803,29 @@ void ASCharacter::SetHUDCrosshairs(float DeltaTime)
 			HUDData.CrosshairColor = IterationTrace();
 			HUD->SetHUDData(HUDData);
 		}
+	}
+}
+
+FString ASCharacter::ShowPlayerNetRole() const
+{
+	const ENetRole LocalRole = this->GetLocalRole();
+	FString LocRole;
+	switch (LocalRole)
+	{
+	case ENetRole::ROLE_Authority:
+		LocRole = FString("Authority");
+		return LocRole;
+	case ENetRole::ROLE_AutonomousProxy:
+		LocRole = FString("AutonomousProxy");
+		return LocRole;
+	case ENetRole::ROLE_SimulatedProxy:
+		LocRole = FString("SimulatedProxy");
+		return LocRole;
+	case ENetRole::ROLE_None:
+		LocRole = FString("NONE");
+		return LocRole;
+	default:
+		LocRole = FString("DEFAULT");
+		return LocRole;
 	}
 }

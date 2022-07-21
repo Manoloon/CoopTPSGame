@@ -167,7 +167,7 @@ void ACoopPlayerController::SyncTime()
 {
 	// get ping
 	const float CurrentPing = PlayerState->GetPingInMilliseconds();
-	UE_LOG(LogTemp,Warning,TEXT("Ping is %f"),CurrentPing);
+	//UE_LOG(LogTemp,Warning,TEXT("Ping is %f"),CurrentPing);
 	if(PlayerHUD && CurrentPing)
 	{
 		PlayerHUD->GetPlayerUI()->SetPingIndicator(CurrentPing);
