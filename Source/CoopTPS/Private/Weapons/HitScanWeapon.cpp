@@ -3,10 +3,10 @@
 
 #include "Weapons/HitScanWeapon.h"
 
-#include "CoopPlayerController.h"
+#include "Core/CoopPlayerController.h"
 #include "CoopTPS.h"
-#include "LagCompensationComp.h"
-#include "SCharacter.h"
+#include "Components/LagCompensationComp.h"
+#include "Entities/SCharacter.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"

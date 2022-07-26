@@ -17,7 +17,7 @@
 
 ASWeapon::ASWeapon()
 {
-	PrimaryActorTick.bCanEverTick =true;
+	PrimaryActorTick.bCanEverTick =false;
 	
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(MeshComp);
@@ -145,7 +145,7 @@ void ASWeapon::FinishReloading()
 	if(HasAuthority())
 	{
 		CalculateAmmoReloaded();
-		UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
+		//UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
 	}
 }
 

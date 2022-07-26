@@ -15,7 +15,7 @@
 #include "Components/SHealthComponent.h"
 #include "Components/LagCompensationComp.h"
 #include "CoopTPS.h"
-#include "RagDollStateComp.h"
+#include "Components/RagDollStateComp.h"
 #include "Core/TPSHud.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/RoleMessage.h"
@@ -223,31 +223,49 @@ void ASCharacter::Tick(float DeltaTime)
 
 void ASCharacter::I_MoveForward(float Value)
 {
-	AddMovementInput(GetActorForwardVector() * Value);
+	if(IsLocallyControlled())
+	{
+		AddMovementInput(GetActorForwardVector() * Value);
+	}	
 }
 void ASCharacter::I_MoveRight(float Value)
 {
-	AddMovementInput(GetActorRightVector() * Value);
+	if(IsLocallyControlled())
+	{
+		AddMovementInput(GetActorRightVector() * Value);
+	}
 }
 
 void ASCharacter::I_TurnRate(float Value)
 {
-	AddControllerYawInput(Value);
+	if(IsLocallyControlled())
+	{
+		AddControllerYawInput(Value);
+	}
 }
 
 void ASCharacter::I_LookUpRate(float Value)
 {
-	AddControllerPitchInput(Value);
+	if(IsLocallyControlled())
+	{
+		AddControllerPitchInput(Value);
+	}
 }
 
 void ASCharacter::I_StartCrouch()
 {
-	Crouch();
+	if(IsLocallyControlled())
+	{
+		Crouch();
+	}
 }
 
 void ASCharacter::I_StopCrouch()
 {
-	UnCrouch();
+	if(IsLocallyControlled())
+	{
+		UnCrouch();
+	}
 }
 
 FVector ASCharacter::GetPawnViewLocation() const
@@ -261,9 +279,12 @@ FVector ASCharacter::GetPawnViewLocation() const
 
 void ASCharacter::I_Jump()
 {
-	if(CanJump())
+	if(IsLocallyControlled())
 	{
-		Jump();
+		if(CanJump())
+		{
+			Jump();
+		}
 	}
 }
 

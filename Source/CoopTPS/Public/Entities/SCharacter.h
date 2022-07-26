@@ -119,6 +119,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void SetHUDCrosshairs(float DeltaTime);
 public:
+	//Server-Side
 	UFUNCTION()
 	void AuthSetPlayerColor(const FLinearColor& NewColor);
 	
