@@ -17,7 +17,7 @@
 
 ASWeapon::ASWeapon()
 {
-	PrimaryActorTick.bCanEverTick =false;
+	PrimaryActorTick.bCanEverTick =true;
 	
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(MeshComp);
@@ -40,7 +40,8 @@ ASWeapon::ASWeapon()
 void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
+	DOREPLIFETIME_CONDITION(ASWeapon,CurrentAmmo,COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ASWeapon,CurrentAmmoInBackpack,COND_OwnerOnly);
 }
 
@@ -64,12 +65,23 @@ void ASWeapon::BeginPlay()
 	}
 }
 
-void ASWeapon::Fire()
+void ASWeapon::Tick(float DeltaSeconds)
 {
-	if(!HasAuthority())
+	Super::Tick(DeltaSeconds);
+	if(HasAuthority())
 	{
-		ServerFire();
+		UE_LOG(LogTemp,Warning,TEXT("Current ammo : %d"),CurrentAmmo);
 	}	
+}
+
+void ASWeapon::OnRep_CurrentAmmo()
+{
+	UpdateAmmoInfoUI();
+}
+
+void ASWeapon::OnRep_AmmoInBackpack()
+{
+	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::OnRep_Owner()
@@ -85,81 +97,100 @@ void ASWeapon::OnRep_Owner()
 		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetEnableGravity(true);
 		MeshComp->AddImpulse(GetActorForwardVector() * -600.0f);
-		UE_LOG(LogTemp,Warning,TEXT("NULL OWNER"));
 		MeshComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		MeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	}
-	else
-	{
-		PlayerController = Cast<ACoopPlayerController>(Cast<APawn>(GetOwner())->GetController());
-		if(PlayerController)
-		{
-			UE_LOG(LogTemp,Warning,TEXT("OWNER %s"),*PlayerController->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp,Error,TEXT("OWNER FAILED"));
-		}
-		
-	}
-}
-void ASWeapon::StartReloading()
-{
-	if(!HaveAmmoInMag() || bIsReloading){return;}
-	bIsReloading = true;
-	StopFire();
-	Reload();
 }
 
-bool ASWeapon::IsReloading() const
+void ASWeapon::Server_StartReload_Implementation()
 {
-	return bIsReloading;
+	StartReload();
 }
-/*
-void ASWeapon::OnRep_Reloading()
+
+bool ASWeapon::Server_StartReload_Validate()
 {
-	if(!bIsReloading)
+	return true;
+}
+
+void ASWeapon::StartReload()
+{
+	if(!HaveAmmoInMag() || IsReloading()){return;}
+	if(GetLocalRole() < ROLE_Authority)
 	{
-		CalculateAmmo();	
-		UpdateAmmoInfoUI();
+		Server_StartReload();
 	}
-}
-*/
-void ASWeapon::Reload()
-{
+	StopFire();
 	if(!HasAuthority())
 	{
-		ServerReload();
+		if(WeaponFXConfig.ReloadSFX)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
+		}
 	}
-	if(WeaponFXConfig.ReloadSFX)
-	{
-		UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
-	}
-	if(FTimerHandle Th_FinishReload;
-	!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
+	if(!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
 	{
 		GetWorldTimerManager().SetTimer(Th_FinishReload,this,&ASWeapon::FinishReloading,WeaponConfig.ReloadTime,false);
 	}	
 }
 
-void ASWeapon::FinishReloading()
+bool ASWeapon::IsReloading() const
 {
-	CalculateAmmo();
-	bIsReloading = false;
+	return GetWorldTimerManager().IsTimerActive(Th_FinishReload);
 }
 
-void ASWeapon::CalculateAmmo()
+void ASWeapon::FinishReloading()
 {
-	const int32 DeltaAmmo = UKismetMathLibrary::Min(CurrentAmmoInBackpack,WeaponConfig.MaxAmmo-CurrentAmmo);
-	CurrentAmmo += DeltaAmmo;
-	CurrentAmmoInBackpack -= DeltaAmmo;
-	UpdateAmmoInfoUI();
+	CalculateAmmoReloaded();
+	UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
+}
+
+void ASWeapon:: ClientAmmoReload_Implementation(int32 AmmoToAdd)
+{
+	if(HasAuthority()){return;}
+	CurrentAmmo = FMath::Clamp(CurrentAmmo+AmmoToAdd,0,WeaponConfig.MaxAmmo);
+}
+
+void ASWeapon::CalculateAmmoReloaded()
+{
+	const int32 DeltaAmmo = UKismetMathLibrary::Min(WeaponConfig.MaxAmmo-CurrentAmmo,CurrentAmmoInBackpack);
+	if(HasAuthority())
+	{
+		CurrentAmmo +=DeltaAmmo;
+		CurrentAmmoInBackpack -= DeltaAmmo;
+		ClientAmmoReload(DeltaAmmo);
+		UpdateAmmoInfoUI();	
+	}
+}
+
+void ASWeapon::StartFire()
+{
+	if(!HasAuthority())
+	{
+		Server_StartFire();
+	}
+	
+	if (!GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
+	{
+		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
+		GetWorldTimerManager().SetTimer(Th_TimeBetweenShots, this, &ASWeapon::HandleFiring,
+														TimeBetweenShots, true,FireDelay);
+	}
+}
+
+void ASWeapon::HandleFiring()
+{
+	
+}
+
+void ASWeapon::StopFire()
+{
+	GetWorldTimerManager().ClearTimer(Th_TimeBetweenShots);
 }
 
 void ASWeapon::SpendAmmo()
 {
-	CurrentAmmo = FMath::Clamp(CurrentAmmo -1,0,CurrentAmmoInBackpack);
+	CurrentAmmo = FMath::Clamp(CurrentAmmo-1,0,CurrentAmmoInBackpack);
 	if(HasAuthority())
 	{
 		ClientAmmoUpdate(true,CurrentAmmo);
@@ -171,15 +202,14 @@ void ASWeapon::SpendAmmo()
 	}
 }
 
-void ASWeapon::ClientAmmoUpdate_Implementation(const bool bCalculateAmmoSeq,const int32 ServerAmo)
+void ASWeapon::ClientAmmoUpdate_Implementation(const bool bCalculateAmmoSeq,const int32 ServerAmmo)
 {
 	if(HasAuthority()){return;}
-	CurrentAmmo = ServerAmo;
+	CurrentAmmo = ServerAmmo;
 	if(bCalculateAmmoSeq)
 	{
 		--AmmoSequence;
 		CurrentAmmo -= AmmoSequence;
-		UpdateAmmoInfoUI();		
 	}
 }
 
@@ -191,11 +221,6 @@ void ASWeapon::UpdateAmmoInfoUI()
 	{
 		PlayerController->UpdateCurrentAmmo(CurrentAmmo,CurrentAmmoInBackpack);
 	}
-}
-
-void ASWeapon::OnRep_CurrentAmmo()
-{
-	UpdateAmmoInfoUI();
 }
 
 void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket)
@@ -269,7 +294,7 @@ FName ASWeapon::GetWeaponName() const
 	return WeaponConfig.WeaponName;
 }
 
-int32 ASWeapon::GetWeaponCurrentAmmo() const
+int32 ASWeapon::GetCurrentAmmo() const
 {
 	return CurrentAmmo;
 }
@@ -293,22 +318,6 @@ void ASWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	GetWorldTimerManager().ClearAllTimersForObject(this);
-}
-
-void ASWeapon::StartFire()
-{
-	if(CurrentAmmo <=0 || bIsReloading){return;}
-	if (!GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
-	{
-		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
-		GetWorldTimerManager().SetTimer(Th_TimeBetweenShots, this, &ASWeapon::Fire,
-														TimeBetweenShots, true,FireDelay);
-	}
-}
-
-void ASWeapon::StopFire()
-{
-	GetWorldTimerManager().ClearTimer(Th_TimeBetweenShots);
 }
 
 void ASWeapon::PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector& ImpactPoint, const FVector& ImpactNormal) const
@@ -354,22 +363,12 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 }
 
 //call on client | execute on server
-void ASWeapon::ServerFire_Implementation()
+void ASWeapon::Server_StartFire_Implementation()
 {
-	Fire();
+	HandleFiring();
 }
 
-bool ASWeapon::ServerFire_Validate()
-{
-	return true;
-}
-
-void ASWeapon::ServerReload_Implementation()
-{
-	Reload();
-}
-
-bool ASWeapon::ServerReload_Validate()
+bool ASWeapon::Server_StartFire_Validate()
 {
 	return true;
 }
@@ -378,11 +377,6 @@ void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, 
 {
 	EquipWeapon(MeshComponent,WeaponSocket);
 }
-/*
-void ASWeapon::ServerDropWeapon_Implementation()
-{
-	DropWeapon();
-}*/
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void ASWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

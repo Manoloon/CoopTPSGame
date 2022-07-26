@@ -23,13 +23,15 @@ class COOPTPS_API ASWeapon : public AActor
 	GENERATED_BODY()
 	
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:	
 	ASWeapon();
+	
 	bool IsReloading() const;
 	virtual void StartFire();
 	virtual void StopFire();
-	void StartReloading();
+	void StartReload();
 	void EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
 	void DropWeapon();
 	void FinishReloading();
@@ -39,71 +41,72 @@ public:
 	FTransform GetWeaponHandle()const;
 	FName GetWeaponName() const;
 	bool HaveAmmoInMag()const;
-	int32 GetWeaponCurrentAmmo() const;
+	int32 GetCurrentAmmo() const;
 	FName GetWeaponsName() const;
 	int32 GetAmmoInBackpack() const;
 	int32 GetWeaponMaxAmmo()const;
 
 protected:
-	UPROPERTY() //ReplicatedUsing=OnRep_Reloading
-		bool bIsReloading;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FHUDData CrossHairData;
 	UPROPERTY(EditAnywhere,Category = "Settings")
 		FWeaponData WeaponConfig;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings")
 		FWeaponFXData WeaponFXConfig;
-
 	UPROPERTY(EditAnywhere,Category = "Settings|Network")
-	bool bUseServerSideRewind = false;
-	
-	void PlayImpactFX(const EPhysicalSurface NewSurfaceType, const FVector& ImpactPoint, const FVector& ImpactNormal) const;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-		USkeletalMeshComponent* MeshComp;
-	UPROPERTY(VisibleAnywhere,Category = "Component")
-		USphereComponent* SphereComp;
-	
-	UPROPERTY(EditAnywhere, Category = "Weapon")
+		bool bUseServerSideRewind = false;
+	UPROPERTY(Transient,ReplicatedUsing=OnRep_CurrentAmmo)
 		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
-	UPROPERTY(Replicated)
+	UPROPERTY(Transient,ReplicatedUsing=OnRep_AmmoInBackpack)
 		int32 CurrentAmmoInBackpack=WeaponConfig.MaxAmmo;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
-	UPROPERTY(VisibleAnywhere)
-		UAudioComponent* WeaponAudioComponent;
-
 	UPROPERTY()
 	ACoopPlayerController* PlayerController;
-	//UPROPERTY()
-	//APawn* PlayerPawn;
+	FTimerHandle Th_FinishReload;
 	bool bIsEquipped=false;
 	float LastFireTime;
+	float LastReloadTime;
 	float TimeBetweenShots;
 	FTimerHandle Th_TimeBetweenShots;
 	// its use for Ammo data reconciliation
 	int32 AmmoSequence=0;
-	void SpendAmmo();
-	void PlayShootVfx(FVector TraceEnd) const;
-	virtual void Fire();
-	void Reload();
-	void UpdateAmmoInfoUI();
-	virtual void OnRep_Owner() override;
-	//UFUNCTION()
-	//void OnRep_Reloading();
-	UFUNCTION()
-	void OnRep_CurrentAmmo();
+//Components
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		USkeletalMeshComponent* MeshComp;
+	UPROPERTY(VisibleAnywhere,Category = "Component")
+		USphereComponent* SphereComp;
+	UPROPERTY(VisibleAnywhere)
+		UAudioComponent* WeaponAudioComponent;
 	
-	UFUNCTION(Server,Reliable,WithValidation)
-		virtual void ServerReload();
+//networking
+	UFUNCTION()
+		void OnRep_CurrentAmmo();
+	UFUNCTION()
+		void OnRep_AmmoInBackpack();
+	virtual void OnRep_Owner() override;
+
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void ServerFire();
+		virtual void Server_StartFire();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_StartReload();
 	UFUNCTION(Server, Reliable)
 		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
-	//UFUNCTION(Server,Reliable)
-	//	void ServerDropWeapon();
 	UFUNCTION(Client,Reliable)
-		void ClientAmmoUpdate(const bool bCalculateAmmoSeq,int32 ServerAmo);
+		void ClientAmmoUpdate(const bool bCalculateAmmoSeq,int32 ServerAmmo);
+	UFUNCTION(Client,Reliable)
+		void ClientAmmoReload(int32 AmmoToAdd);
+	
+////////////////////////////////////////////////////////////////////////////////////	
+//functions	
+	void SpendAmmo();
+	virtual void HandleFiring();
+	void UpdateAmmoInfoUI();
+	void PlayShootVfx(FVector TraceEnd) const;
+	void PlayImpactFX(const EPhysicalSurface NewSurfaceType,
+						const FVector& ImpactPoint, const FVector& ImpactNormal) const;
+
+	
 	UFUNCTION()
 	void OnSphereOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -120,6 +123,6 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
-	void CalculateAmmo();
+	void CalculateAmmoReloaded();
 	void SetPickable() const;
 };

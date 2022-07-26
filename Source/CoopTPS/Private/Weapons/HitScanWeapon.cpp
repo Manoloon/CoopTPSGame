@@ -22,11 +22,11 @@ void AHitScanWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(AHitScanWeapon, HitScanTrace,COND_SkipOwner);
 }
 
-void AHitScanWeapon::Fire()
+void AHitScanWeapon::HandleFiring()
 {
 	if(GetOwner())
 	{
-		Super::Fire();
+		Super::HandleFiring();
 		if(CurrentAmmo >0)
 		{
 			SpendAmmo();

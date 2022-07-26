@@ -16,12 +16,12 @@ void ASLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 
 void ASLauncher::Tick(float DeltaSeconds)
 {
-	Super::Tick(DeltaSeconds);
+	//Super::Tick(DeltaSeconds);
 }
 
 void ASLauncher::StartFire()
 {
-	if(CurrentAmmo <=0 || bIsReloading){return;}
+	if(CurrentAmmo <=0 || IsReloading()){return;}
 	
 	if(!GetWorldTimerManager().IsTimerActive(Th_ChargingProjectile) && CurrentAmmo>0)
 	{

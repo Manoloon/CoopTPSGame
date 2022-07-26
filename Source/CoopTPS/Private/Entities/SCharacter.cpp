@@ -398,14 +398,14 @@ void ASCharacter::I_Reload()
 {
 	if(IsValid(CurrentWeapon))
 	{
-		if(CurrentWeapon->GetWeaponCurrentAmmo() == CurrentWeapon->GetWeaponMaxAmmo() ||
+		if(CurrentWeapon->GetCurrentAmmo() == CurrentWeapon->GetWeaponMaxAmmo() ||
 			CurrentWeapon->IsReloading() || 
 			!CurrentWeapon->HaveAmmoInMag())
 		{
 			//TODO: drop a sound or hint that it cant reload
+			UE_LOG(LogTemp,Warning,TEXT("CANT RELOAD!"));
 			return;
 		}
-		CurrentWeapon->StartReloading();
 		ServerReload();
 	}
 }
@@ -568,6 +568,11 @@ void ASCharacter::PickupWeapon()
 			CurrentWeapon->SetOwner(this);
 			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 		}
+		if(IsLocallyControlled() && HasAuthority())
+		{
+			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetCurrentAmmo(),
+			CurrentWeapon->GetAmmoInBackpack());
+		}
 	}
 	else
 	{
@@ -601,7 +606,7 @@ void ASCharacter::SwapWeapons()
 	CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
 	if(IsLocallyControlled())
 	{
-		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetCurrentAmmo(),
 		CurrentWeapon->GetAmmoInBackpack());
 	}	
 }
@@ -691,9 +696,9 @@ void ASCharacter::OnRep_CurrentWeaponChanged() const
 	{
 		if(IsValid(CurrentWeapon))
 		{
-			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetWeaponCurrentAmmo(),
+			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetCurrentAmmo(),
 				CurrentWeapon->GetAmmoInBackpack());
-			UE_LOG(LogTemp,Warning,TEXT("Current ammo on %s : %d"),*ShowPlayerNetRole(),CurrentWeapon->GetWeaponCurrentAmmo());
+			UE_LOG(LogTemp,Warning,TEXT("Current ammo on %s : %d"),*ShowPlayerNetRole(),CurrentWeapon->GetCurrentAmmo());
 		}
 		else
 		{
@@ -714,7 +719,7 @@ void ASCharacter::OnRep_SecondaryWeaponChanged()
 */
 void ASCharacter::ServerReload_Implementation()
 {
-	CurrentWeapon->StartReloading();
+	CurrentWeapon->StartReload();
 	Multicast_PlayMontage(CurrentWeapon->GetReloadMontage());
 }
 
