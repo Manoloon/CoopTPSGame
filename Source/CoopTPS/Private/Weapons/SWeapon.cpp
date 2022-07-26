@@ -68,10 +68,10 @@ void ASWeapon::BeginPlay()
 void ASWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if(HasAuthority())
+	/*if(!HasAuthority())
 	{
 		UE_LOG(LogTemp,Warning,TEXT("Current ammo : %d"),CurrentAmmo);
-	}	
+	}	*/
 }
 
 void ASWeapon::OnRep_CurrentAmmo()
@@ -116,6 +116,7 @@ bool ASWeapon::Server_StartReload_Validate()
 void ASWeapon::StartReload()
 {
 	if(!HaveAmmoInMag() || IsReloading()){return;}
+	
 	if(GetLocalRole() < ROLE_Authority)
 	{
 		Server_StartReload();
@@ -141,8 +142,11 @@ bool ASWeapon::IsReloading() const
 
 void ASWeapon::FinishReloading()
 {
-	CalculateAmmoReloaded();
-	UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
+	if(HasAuthority())
+	{
+		CalculateAmmoReloaded();
+		UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
+	}
 }
 
 void ASWeapon:: ClientAmmoReload_Implementation(int32 AmmoToAdd)
@@ -165,11 +169,6 @@ void ASWeapon::CalculateAmmoReloaded()
 
 void ASWeapon::StartFire()
 {
-	if(!HasAuthority())
-	{
-		Server_StartFire();
-	}
-	
 	if (!GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
 	{
 		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
@@ -180,7 +179,10 @@ void ASWeapon::StartFire()
 
 void ASWeapon::HandleFiring()
 {
-	
+	if(!HasAuthority())
+	{
+		Server_StartFire();
+	}
 }
 
 void ASWeapon::StopFire()
@@ -190,11 +192,11 @@ void ASWeapon::StopFire()
 
 void ASWeapon::SpendAmmo()
 {
-	CurrentAmmo = FMath::Clamp(CurrentAmmo-1,0,CurrentAmmoInBackpack);
 	if(HasAuthority())
 	{
+		--CurrentAmmo;
 		ClientAmmoUpdate(true,CurrentAmmo);
-		UpdateAmmoInfoUI();	
+		UpdateAmmoInfoUI();
 	}
 	else
 	{
@@ -206,11 +208,8 @@ void ASWeapon::ClientAmmoUpdate_Implementation(const bool bCalculateAmmoSeq,cons
 {
 	if(HasAuthority()){return;}
 	CurrentAmmo = ServerAmmo;
-	if(bCalculateAmmoSeq)
-	{
-		--AmmoSequence;
-		CurrentAmmo -= AmmoSequence;
-	}
+	--AmmoSequence;
+	CurrentAmmo -= AmmoSequence;
 }
 
 void ASWeapon::UpdateAmmoInfoUI()
@@ -363,6 +362,7 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 }
 
 //call on client | execute on server
+
 void ASWeapon::Server_StartFire_Implementation()
 {
 	HandleFiring();

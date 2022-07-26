@@ -7,9 +7,7 @@
 #include "SGranade.generated.h"
 
 class ASProjectile;
-/**
- * 
- */
+
 UCLASS()
 class COOPTPS_API ASGranade : public ASWeapon
 {
@@ -30,8 +28,7 @@ protected :
 	UPROPERTY(VisibleDefaultsOnly, Category = "Projectil")
 	FVector Gravity;
 
-
-	virtual void Fire() override;
+	virtual void HandleFiring() override;
 
 	virtual void StartFire() override;
 	virtual void StopFire() override;
