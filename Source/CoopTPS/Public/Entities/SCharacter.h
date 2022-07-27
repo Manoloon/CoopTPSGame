@@ -49,7 +49,7 @@ protected:
 		bool bIsAiming=false;
 	UFUNCTION()
 		void OnRep_Aiming();
-	bool BAimButtonPressed=false;
+	bool bAimButtonPressed=false;
 	UPROPERTY(EditAnywhere, Category = "Settings")
 		USkeletalMesh* PawnMesh = nullptr;	
 	// aiming variables
@@ -136,6 +136,8 @@ private:
 	void PickupWeapon();
 	void SwapWeapons();
 	void TurnInPlace();
+	void StartAiming();
+	void StopAiming();
 	void CalculateAimOffset();
 	UFUNCTION(NetMulticast,Unreliable)
 	void Multicast_PlayMontage(UAnimMontage* MontageToPlay) const;

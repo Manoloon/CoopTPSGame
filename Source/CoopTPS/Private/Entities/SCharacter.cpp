@@ -292,29 +292,25 @@ void ASCharacter::OnRep_Aiming()
 {
 	if(IsLocallyControlled())
 	{
-		bIsAiming = BAimButtonPressed;
+		bIsAiming = bAimButtonPressed;
 	}
 }
 
 void ASCharacter::I_StartAiming()
 {
-	bIsAiming = true;
-	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
-	ServerAiming(true);
 	if(IsLocallyControlled())
 	{
-		BAimButtonPressed = bIsAiming;
+		StartAiming();
+		bAimButtonPressed = bIsAiming;
 	}
 }
 
 void ASCharacter::I_StopAiming()
 {
-	bIsAiming = false;
-	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-	ServerAiming(false);
 	if(IsLocallyControlled())
 	{
-		BAimButtonPressed = bIsAiming;
+		StopAiming();
+		bAimButtonPressed = bIsAiming;
 	}
 }
 
@@ -651,6 +647,26 @@ void ASCharacter::TurnInPlace()
 			bTurnInPlace = false;
 			StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
 		}
+	}
+}
+
+void ASCharacter::StartAiming()
+{
+	bIsAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
+	if(!HasAuthority())
+	{
+		ServerAiming(true);
+	}
+}
+
+void ASCharacter::StopAiming()
+{
+	bIsAiming = false;
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	if(!HasAuthority())
+	{
+		ServerAiming(false);	
 	}
 }
 
