@@ -367,7 +367,7 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 	}
 	// Camera shake
-	if(const APawn* MyOwner = Cast<APawn>(GetOwner()))
+	if(const APawn* MyOwner = Cast<APawn>(GetOwner()); MyOwner->IsLocallyControlled())
 	{
 		if(APlayerController* PC = Cast<APlayerController>(MyOwner->GetController()))
 		{
