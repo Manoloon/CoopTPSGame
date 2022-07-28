@@ -154,6 +154,7 @@ private:
 	void OnRep_CurrentWeaponChanged() const;
 	//UFUNCTION()
 	//void OnRep_SecondaryWeaponChanged();
+	
 	UFUNCTION(Server,Reliable)
 	void ServerSwapWeapon();
 	UFUNCTION(Server,Reliable)

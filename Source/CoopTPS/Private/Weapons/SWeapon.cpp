@@ -70,10 +70,6 @@ void ASWeapon::BeginPlay()
 void ASWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	/*if(!HasAuthority())
-	{
-		UE_LOG(LogTemp,Warning,TEXT("Current ammo : %d"),CurrentAmmo);
-	}	*/
 }
 
 void ASWeapon::OnRep_CurrentAmmo()
@@ -105,6 +101,26 @@ void ASWeapon::OnRep_Owner()
 	}
 }
 
+void ASWeapon::ServerStopFire_Implementation()
+{
+	StopFire();
+}
+
+bool ASWeapon::ServerStopFire_Validate()
+{
+	return true;
+}
+
+void ASWeapon::ServerStartFire_Implementation()
+{
+	StartFire();
+}
+
+bool ASWeapon::ServerStartFire_Validate()
+{
+	return true;
+}
+
 void ASWeapon::Server_StartReload_Implementation()
 {
 	StartReload();
@@ -122,15 +138,12 @@ void ASWeapon::StartReload()
 	if(GetLocalRole() < ROLE_Authority)
 	{
 		Server_StartReload();
-	}
-	StopFire();
-	if(!HasAuthority())
-	{
 		if(WeaponFXConfig.ReloadSFX)
 		{
 			UGameplayStatics::PlaySound2D(GetWorld(), WeaponFXConfig.ReloadSFX);
 		}
 	}
+	StopFire();
 	if(!GetWorldTimerManager().IsTimerActive(Th_FinishReload))
 	{
 		GetWorldTimerManager().SetTimer(Th_FinishReload,this,&ASWeapon::FinishReloading,WeaponConfig.ReloadTime,false);
@@ -147,7 +160,6 @@ void ASWeapon::FinishReloading()
 	if(HasAuthority())
 	{
 		CalculateAmmoReloaded();
-		//UE_LOG(LogTemp,Warning,TEXT("current ammo : %d || Ammo in backpack : %d"),CurrentAmmo,CurrentAmmoInBackpack);
 	}
 }
 
@@ -171,6 +183,10 @@ void ASWeapon::CalculateAmmoReloaded()
 
 void ASWeapon::StartFire()
 {
+	if(!HasAuthority())
+	{
+		ServerStartFire();
+	}
 	if (!GetWorldTimerManager().IsTimerActive(Th_TimeBetweenShots))
 	{
 		const float FireDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->GetTimeSeconds(),0.0f); 
@@ -181,6 +197,10 @@ void ASWeapon::StartFire()
 
 void ASWeapon::StopFire()
 {
+	if(!HasAuthority())
+	{
+		ServerStopFire();
+	}
 	GetWorldTimerManager().ClearTimer(Th_TimeBetweenShots);
 }
 
@@ -357,16 +377,6 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 }
 
 //call on client | execute on server
-
-void ASWeapon::Server_StartFire_Implementation()
-{
-	HandleFiring();
-}
-
-bool ASWeapon::Server_StartFire_Validate()
-{
-	return true;
-}
 
 void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket)
 {

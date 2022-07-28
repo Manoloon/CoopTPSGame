@@ -276,7 +276,6 @@ void ULagCompensationComp::ServerScoreRequest_Implementation(AActor* HitCharacte
 		const FServerSideRewindResults Confirm = ServerSideRewind(HitActor,StartTrace,HitLocation,HitTime);
 		if(HitActor && GetOwner() && Confirm.bHitConfirmed)
 		{
-			//UGameplayStatics::ApplyDamage() or RadialDamage
 			UGameplayStatics::ApplyDamage(HitActor,DamageValue,GetOwner()->GetInstigatorController(),
 			DamageCauser,DamageType);
 		}

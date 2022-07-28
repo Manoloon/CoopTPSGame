@@ -735,7 +735,7 @@ void ASCharacter::OnRep_CurrentWeaponChanged() const
 		{
 			PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetCurrentAmmo(),
 				CurrentWeapon->GetAmmoInBackpack());
-			UE_LOG(LogTemp,Warning,TEXT("Current ammo on %s : %d"),*ShowPlayerNetRole(),CurrentWeapon->GetCurrentAmmo());
+			UE_LOG(LogTemp,Warning,TEXT("Character : Current ammo on %s : %d"),*ShowPlayerNetRole(),CurrentWeapon->GetCurrentAmmo());
 		}
 		else
 		{

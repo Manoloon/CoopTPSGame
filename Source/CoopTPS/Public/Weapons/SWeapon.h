@@ -29,6 +29,7 @@ public:
 	ASWeapon();
 	
 	bool IsReloading() const;
+	// Local + server
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReload();
@@ -56,9 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere,Category = "Settings|Network")
 		bool bUseServerSideRewind = false;
 	UPROPERTY(Transient,ReplicatedUsing=OnRep_CurrentAmmo)
-		int32 CurrentAmmo;//=WeaponConfig.MaxAmmo;
+		int32 CurrentAmmo;
 	UPROPERTY(Transient,ReplicatedUsing=OnRep_AmmoInBackpack)
-		int32 CurrentAmmoInBackpack;//=WeaponConfig.MaxAmmoInBackpack;
+		int32 CurrentAmmoInBackpack;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY()
@@ -85,9 +86,10 @@ protected:
 	UFUNCTION()
 		void OnRep_AmmoInBackpack();
 	virtual void OnRep_Owner() override;
-
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_StartFire();
+	void ServerStartFire();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerStopFire();
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_StartReload();
 	UFUNCTION(Server, Reliable)
