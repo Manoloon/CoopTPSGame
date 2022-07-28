@@ -56,9 +56,9 @@ protected:
 	UPROPERTY(EditAnywhere,Category = "Settings|Network")
 		bool bUseServerSideRewind = false;
 	UPROPERTY(Transient,ReplicatedUsing=OnRep_CurrentAmmo)
-		int32 CurrentAmmo=WeaponConfig.MaxAmmo;
+		int32 CurrentAmmo;//=WeaponConfig.MaxAmmo;
 	UPROPERTY(Transient,ReplicatedUsing=OnRep_AmmoInBackpack)
-		int32 CurrentAmmoInBackpack=WeaponConfig.MaxAmmo;
+		int32 CurrentAmmoInBackpack;//=WeaponConfig.MaxAmmoInBackpack;
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY()
@@ -100,7 +100,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////////	
 //functions	
 	void SpendAmmo();
-	virtual void HandleFiring();
+	virtual void HandleFiring(){};
 	void UpdateAmmoInfoUI();
 	void PlayShootVfx(FVector TraceEnd) const;
 	void PlayImpactFX(const EPhysicalSurface NewSurfaceType,

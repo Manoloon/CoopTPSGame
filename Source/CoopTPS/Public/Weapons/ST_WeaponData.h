@@ -54,12 +54,19 @@ struct FWeaponData
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 1, ClampMax = 30))
 	int32 MaxAmmo;
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmoInBackpack;
 	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 0, ClampMax = 13))
 	float BulletSpread;
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 1, ClampMax = 12))
+	int32 BurstCount;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	int32 MaxBulletTravelDist;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float BaseDamage;
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float FireRate;
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float ReloadTime;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponName;
@@ -71,7 +78,10 @@ struct FWeaponData
 	FWeaponData()
 	{
 		MaxAmmo = 30;
+		MaxAmmoInBackpack=60;
 		BulletSpread = 2.0f;
+		BurstCount=1;
+		MaxBulletTravelDist=8000;
 		BaseDamage = 20.0f;
 		FireRate = 600;
 		ReloadTime = 3.0f;

@@ -24,12 +24,15 @@ struct FHitScanTrace
 };
 
 UCLASS(Abstract)
-class COOPTPS_API AHitScanWeapon : public ASWeapon
+class COOPTPS_API AHitScanWeapon final : public ASWeapon
 {
 	GENERATED_BODY()
+protected:
 	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
 	FHitScanTrace HitScanTrace;
 	UFUNCTION()
 	void OnRep_HitScanTrace() const;
 	virtual void HandleFiring() override;
+public:
+	inline static int32 DebugWeaponDrawing = 0;
 };

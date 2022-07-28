@@ -54,6 +54,8 @@ void ASWeapon::BeginPlay()
 		SphereComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,ECollisionResponse::ECR_Overlap);
 		SphereComp->OnComponentBeginOverlap.AddDynamic(this,&ASWeapon::OnSphereOverlap);
 		SphereComp->OnComponentEndOverlap.AddDynamic(this,&ASWeapon::OnSphereEndOverlap);
+		CurrentAmmo=WeaponConfig.MaxAmmo;
+		CurrentAmmoInBackpack=WeaponConfig.MaxAmmoInBackpack;
 	}
 	if(WeaponFXConfig.ReloadMontage)
 	{
@@ -177,14 +179,6 @@ void ASWeapon::StartFire()
 	}
 }
 
-void ASWeapon::HandleFiring()
-{
-	if(!HasAuthority())
-	{
-		Server_StartFire();
-	}
-}
-
 void ASWeapon::StopFire()
 {
 	GetWorldTimerManager().ClearTimer(Th_TimeBetweenShots);
@@ -241,6 +235,7 @@ void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSo
 
 void ASWeapon::DropWeapon()
 {
+	if(IsReloading()){return;}
 	if(HasAuthority())
 	{
 		StopFire();
