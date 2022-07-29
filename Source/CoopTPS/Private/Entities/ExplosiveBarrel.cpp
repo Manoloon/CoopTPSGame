@@ -71,7 +71,10 @@ void AExplosiveBarrel::BeginPlay()
 void AExplosiveBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	HealthComp->OnHealthChanged.RemoveDynamic(this,&AExplosiveBarrel::HealthChanged);
+	if(HealthComp && HasAuthority())
+	{
+		HealthComp->OnHealthChanged.RemoveDynamic(this,&AExplosiveBarrel::HealthChanged);
+	}
 }
 
 void AExplosiveBarrel::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
@@ -98,19 +101,31 @@ void AExplosiveBarrel::SelfDestruct()
 
 	bExploded = true;
 	OnRep_Exploded();
+	if(HasAuthority())
+	{
+		if(ExplosionFX)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+		}
+		if(ExplosionSFX)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+		}
+	}
+	/*
 	if(ExplosionFX && ExplosionSFX)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
 		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	}
-	
+	*/
 	// push the barrel upward! 
 	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
 	MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 	MeshComp->SetMaterial(0, ExplodedMaterial);
 	RadialForceComp->FireImpulse();
 
-	if (GetLocalRole()== ROLE_Authority)
+	if (HasAuthority())
 	{
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
@@ -128,11 +143,14 @@ void AExplosiveBarrel::SelfDestruct()
 
 void AExplosiveBarrel::OnRep_Exploded() const
 {
-	if(ExplosionFX && ExplosionSFX)
+	if(ExplosionFX)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 		MeshComp->SetMaterial(0, ExplodedMaterial);
+	}
+	if(ExplosionSFX)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	}
 }
 

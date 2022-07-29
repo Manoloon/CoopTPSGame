@@ -104,6 +104,7 @@ protected:
 	void SpendAmmo();
 	virtual void HandleFiring(){};
 	void UpdateAmmoInfoUI();
+	void PlayAudioFX(USoundCue* SfxToPlay) const;
 	void PlayShootVfx(FVector TraceEnd) const;
 	void PlayImpactFX(const EPhysicalSurface NewSurfaceType,
 						const FVector& ImpactPoint, const FVector& ImpactNormal) const;

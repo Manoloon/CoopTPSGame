@@ -8,10 +8,8 @@
 #include "Components/DecalComponent.h"
 #include "TimerManager.h"
 
-// Sets default values
 ASPickup::ASPickup()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -23,11 +21,10 @@ ASPickup::ASPickup()
 	DecalComp->SetRelativeRotation(FRotator(0.0f,90.0f,0.0f));
 	DecalComp->DecalSize = FVector(64.0f, 75.0f, 75.0f);
 
-	CooldDownDuraction = 10.0f;
+	CoolDownDuration = 10.0f;
 
 }
 
-// Called when the game starts or when spawned
 void ASPickup::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,14 +33,14 @@ void ASPickup::BeginPlay()
 
 void ASPickup::RespawnPowerUp()
 {
-	if (PowerupClass == nullptr)
+	if (PowerUpClass == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("NO POWERUP Clas Set"));
 		return;
 	}
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	PowerupInstance = GetWorld()->SpawnActor<ASPowerUp>(PowerupClass, GetTransform(), SpawnParams);
+	PowerUpInstance = GetWorld()->SpawnActor<ASPowerUp>(PowerUpClass, GetTransform(), SpawnParams);
 }
 
 void ASPickup::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -52,12 +49,12 @@ void ASPickup::NotifyActorBeginOverlap(AActor* OtherActor)
 	/*ASCharacter* OtherCharacter = Cast<ASCharacter>(OtherActor);*/
 	if(OtherActor == UGameplayStatics::GetPlayerPawn(this,0))
 	{
-		if (PowerupInstance)
+		if (PowerUpInstance)
 		{
-			PowerupInstance->ActivatePowerUp();
-			PowerupInstance = nullptr;
+			PowerUpInstance->ActivatePowerUp();
+			PowerUpInstance = nullptr;
 
-			GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickup::RespawnPowerUp, CooldDownDuraction);
+			GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickup::RespawnPowerUp, CoolDownDuration);
 		}
 	}	
 }

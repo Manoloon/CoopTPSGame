@@ -5,7 +5,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
 
-// Sets default values
 ASPowerUp::ASPowerUp()
 {
 	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
@@ -20,17 +19,14 @@ ASPowerUp::ASPowerUp()
 	LightComp = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightComp"));
 	LightComp->SetupAttachment(MeshComp);
 
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	PowerUpInterval = 0.0f;
 	TotalNumTicks = 0.0f;
 }
 
-// Called when the game starts or when spawned
 void ASPowerUp::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ASPowerUp::OnTickPowerUp()
@@ -51,7 +47,8 @@ void ASPowerUp::ActivatePowerUp()
 
 	if(PowerUpInterval >0.0f)
 	{
-		GetWorldTimerManager().SetTimer(TimerHandle_PowerUpTicks, this, &ASPowerUp::OnTickPowerUp, PowerUpInterval, true);
+		GetWorldTimerManager().SetTimer(TimerHandle_PowerUpTicks, this,
+									&ASPowerUp::OnTickPowerUp, PowerUpInterval, true);
 	}
 	else
 	{

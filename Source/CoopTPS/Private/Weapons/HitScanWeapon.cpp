@@ -46,15 +46,21 @@ void AHitScanWeapon::HandleFiring()
 				const float HalfRad = FMath::DegreesToRadians(WeaponConfig.BulletSpread);
 				FVector ShotDirection = EyeRotation.Vector();
 				ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,	HalfRad);
-				const FVector TraceEnd = EyeLocation + (ShotDirection * WeaponConfig.MaxBulletTravelDist);
-				FVector_NetQuantize TracerEndPoint = TraceEnd;
+				const FVector_NetQuantize TraceEnd = EyeLocation + (ShotDirection * WeaponConfig.MaxBulletTravelDist);
+				//FVector_NetQuantize TracerEndPoint = TraceEnd;
 				SpendAmmo();
-				PlayShootVfx(TracerEndPoint);
+				if(HasAuthority())
+				{
+					PlayShootVfx(TraceEnd);	
+				}
+				
 				if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 				{
 					SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-					TracerEndPoint = Hit.ImpactPoint;
+					HitScanTrace.ImpactPoint = Hit.ImpactPoint;
+					HitScanTrace.ImpactNormal =Hit.ImpactNormal;
+					HitScanTrace.SurfaceType = SurfaceType;
 					float ActualDamage = WeaponConfig.BaseDamage;
 					if (SurfaceType == SURFACE_FLESHVULNERABLE)
 					{
@@ -64,11 +70,9 @@ void AHitScanWeapon::HandleFiring()
 					{
 						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), ActualDamage, ShotDirection, Hit, 
 						GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
-						HitScanTrace.ImpactPoint = TracerEndPoint;
-						HitScanTrace.ImpactNormal =Hit.ImpactNormal;
-						HitScanTrace.SurfaceType = SurfaceType;
+						PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
 					}
-					PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
+					OnRep_HitScanTrace();
 					if(!HasAuthority() && bUseServerSideRewind && PlayerController)
 					{
 						if(Pawn && Pawn->GetLagCompensationComp())
@@ -83,7 +87,7 @@ void AHitScanWeapon::HandleFiring()
 				if(DebugWeaponDrawing>0)
 				{
 					DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green,false, 1.0f);
-					DrawDebugSphere(GetWorld(),TracerEndPoint,10.0f,12,FColor::Emerald,false,
+					DrawDebugSphere(GetWorld(),TraceEnd,10.0f,12,FColor::Emerald,true,
 																	1.f,0,2);
 				}
 			}
@@ -94,9 +98,14 @@ void AHitScanWeapon::HandleFiring()
 
 void AHitScanWeapon::OnRep_HitScanTrace() const
 {
-	if(!HitScanTrace.ImpactNormal.IsZero())
+	PlayShootVfx(HitScanTrace.ImpactPoint );
+	if(!HitScanTrace.ImpactPoint .IsZero())
 	{
-		PlayShootVfx(HitScanTrace.ImpactPoint);
-		PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint,HitScanTrace.ImpactNormal);
+		PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint ,HitScanTrace.ImpactNormal);
+	}
+	if(DebugWeaponDrawing>0)
+	{
+		DrawDebugSphere(GetWorld(),HitScanTrace.ImpactPoint ,10.0f,12,FColor::Emerald,true,
+														1.f,0,2);
 	}
 }

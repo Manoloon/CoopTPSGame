@@ -236,6 +236,14 @@ void ASWeapon::UpdateAmmoInfoUI()
 	}
 }
 
+void ASWeapon::PlayAudioFX(USoundCue* SfxToPlay) const
+{
+	if(SfxToPlay)
+	{
+		UGameplayStatics::PlaySound2D(this,SfxToPlay);	
+	}
+}
+
 void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
 	if(HasAuthority())
@@ -365,6 +373,11 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 														WeaponFXConfig.TracerFX, MuzzleLocation))
 	{
 		TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
+	}
+	if(WeaponFXConfig.FireSFX)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponFXConfig.FireSFX, MuzzleLocation, 
+		FRotator::ZeroRotator);
 	}
 	// Camera shake
 	if(const APawn* MyOwner = Cast<APawn>(GetOwner()); MyOwner->IsLocallyControlled())
