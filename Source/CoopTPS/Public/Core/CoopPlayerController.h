@@ -17,7 +17,7 @@ class COOPTPS_API ACoopPlayerController : public APlayerController
 	class ATPSHud* PlayerHUD;
 	
 public:
-	ACoopPlayerController()=default;
+	ACoopPlayerController();
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)

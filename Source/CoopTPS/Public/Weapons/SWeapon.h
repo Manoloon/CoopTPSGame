@@ -23,11 +23,9 @@ class COOPTPS_API ASWeapon : public AActor
 	GENERATED_BODY()
 	
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:	
 	ASWeapon();
-	
 	bool IsReloading() const;
 	// Local + server
 	virtual void StartFire();
@@ -127,5 +125,5 @@ protected:
 		int32 OtherBodyIndex);
 
 	void CalculateAmmoReloaded();
-	void SetPickable() const;
+	void SetPickable();
 };

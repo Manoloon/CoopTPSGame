@@ -17,7 +17,8 @@
 
 ASWeapon::ASWeapon()
 {
-	PrimaryActorTick.bCanEverTick =false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+	PrimaryActorTick.bCanEverTick = false;
 	
  	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(MeshComp);
@@ -65,11 +66,6 @@ void ASWeapon::BeginPlay()
 	{
 		TimeBetweenShots = UKismetMathLibrary::SafeDivide(60, WeaponConfig.FireRate); // 10 balas por segundo;
 	}
-}
-
-void ASWeapon::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
 }
 
 void ASWeapon::OnRep_CurrentAmmo()
@@ -197,7 +193,7 @@ void ASWeapon::StartFire()
 
 void ASWeapon::StopFire()
 {
-	if(!HasAuthority())
+	if( GetOwner() && !HasAuthority())
 	{
 		ServerStopFire();
 	}
@@ -380,7 +376,8 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 		FRotator::ZeroRotator);
 	}
 	// Camera shake
-	if(const APawn* MyOwner = Cast<APawn>(GetOwner()); MyOwner->IsLocallyControlled())
+	if(const APawn* MyOwner = Cast<APawn>(GetOwner());
+						MyOwner && MyOwner->IsLocallyControlled())
 	{
 		if(APlayerController* PC = Cast<APlayerController>(MyOwner->GetController()))
 		{
@@ -417,7 +414,7 @@ void ASWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	// OtherActor->ShowWidget(null)
 }
 
-void ASWeapon::SetPickable() const
+void ASWeapon::SetPickable()
 {
 	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetEnableGravity(false);
@@ -425,9 +422,13 @@ void ASWeapon::SetPickable() const
 	{
 		SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
+	if(CurrentAmmo <=0 && CurrentAmmoInBackpack <=0)
+	{
+		Destroy();
+	}
 }
 
 bool ASWeapon::HaveAmmoInMag() const
 {
-	return (WeaponConfig.MaxAmmo >0);
+	return (CurrentAmmoInBackpack > 0);
 }

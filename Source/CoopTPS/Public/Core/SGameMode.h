@@ -20,7 +20,6 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void RespawnPlayer(const APlayerController* PlayerController);
-	virtual void Tick(float DeltaTime) override;
 	virtual void SetPlayerDefaults(class APawn* PlayerPawn) override;
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
 	FOnActorKilled OnActorKilled;

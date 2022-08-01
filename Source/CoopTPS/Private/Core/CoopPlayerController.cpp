@@ -39,6 +39,12 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("PickupWeapon", IE_Released, this, &ACoopPlayerController::PickupWeapon);
 }
 
+ACoopPlayerController::ACoopPlayerController()
+{
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.bCanEverTick = true;
+}
+
 void ACoopPlayerController::SetHudScore(const int Score)
 {
 	PlayerHUD = (PlayerHUD == nullptr)? Cast<ATPSHud>(GetHUD()) : PlayerHUD;

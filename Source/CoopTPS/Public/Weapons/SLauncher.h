@@ -39,7 +39,6 @@ protected:
 	TSubclassOf<ASProjectile>ProjectileClass;
 	virtual void StartFire() override;
 	virtual void StopFire() override;
-	virtual void Tick(float DeltaSeconds) override;
 	UFUNCTION()
 	void OnRep_LauncherPacket() const;
 	UFUNCTION(Server,Reliable,WithValidation)

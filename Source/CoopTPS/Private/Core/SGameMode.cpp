@@ -34,8 +34,10 @@ ASGameMode::ASGameMode()
 	PlayerColors.Add(FLinearColor::Green);
 	LastPlayerColorIndex = -1;
 	
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.TickInterval = 1.0f;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+	PrimaryActorTick.bCanEverTick = false;
+	//PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.TickInterval = 1.0f;
 	OnActorKilled.AddDynamic(this,&ASGameMode::ActorGetKilled);	
 }
 
@@ -72,11 +74,6 @@ void ASGameMode::SetPlayerDefaults(class APawn* PlayerPawn)
 			LastPlayerColorIndex = PlayerColorIndex;
 		}
 	}
-}
-
-void ASGameMode::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ASGameMode::StartWave()

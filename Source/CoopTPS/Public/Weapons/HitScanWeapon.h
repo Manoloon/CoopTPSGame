@@ -30,6 +30,7 @@ class COOPTPS_API AHitScanWeapon final : public ASWeapon
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
 	FHitScanTrace HitScanTrace;
+	//void TraceWithScatter(const FVector& HitTarget,const TArray<FVector>& HitTargets);
 	UFUNCTION()
 	void OnRep_HitScanTrace() const;
 	virtual void HandleFiring() override;

@@ -14,11 +14,6 @@ void ASLauncher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 	DOREPLIFETIME_CONDITION(ASLauncher,LauncherPacket,COND_OwnerOnly);
 }
 
-void ASLauncher::Tick(float DeltaSeconds)
-{
-	//Super::Tick(DeltaSeconds);
-}
-
 void ASLauncher::StartFire()
 {
 	if(CurrentAmmo <=0 || IsReloading()){return;}

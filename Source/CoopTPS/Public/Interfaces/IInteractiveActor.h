@@ -12,5 +12,5 @@ class IIInteractiveActor
 {
 	GENERATED_BODY()
 public:
-   virtual FLinearColor GetActorTypeColor()=0;
+	virtual void Activate()=0;
 };

@@ -13,6 +13,8 @@ DebugHealth,TEXT("Health component debug"),ECVF_Cheat);
 
 USHealthComponent::USHealthComponent()
 {
+	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bStartWithTickEnabled=false;
 	SetIsReplicatedByDefault(true);
 }
 

@@ -40,6 +40,10 @@ void AHitScanWeapon::HandleFiring()
 			QueryParams.bTraceComplex = false;
 			QueryParams.bReturnPhysicalMaterial = true;
 			FHitResult Hit;
+			// TODO : Ver si el burstcount es mayor a 1
+			// true -> hacer el for loop
+			// false -> solo hacer el linetrace.
+			
 			for(int32 i =0;i<WeaponConfig.BurstCount;i++)
 			{
 				Pawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
@@ -47,7 +51,6 @@ void AHitScanWeapon::HandleFiring()
 				FVector ShotDirection = EyeRotation.Vector();
 				ShotDirection = FMath::VRandCone(ShotDirection, HalfRad,	HalfRad);
 				const FVector_NetQuantize TraceEnd = EyeLocation + (ShotDirection * WeaponConfig.MaxBulletTravelDist);
-				//FVector_NetQuantize TracerEndPoint = TraceEnd;
 				SpendAmmo();
 				if(HasAuthority())
 				{
@@ -72,7 +75,6 @@ void AHitScanWeapon::HandleFiring()
 						GetOwner()->GetInstigatorController(), GetOwner(), WeaponConfig.DamageType);
 						PlayImpactFX(SurfaceType,Hit.ImpactPoint,Hit.ImpactNormal);
 					}
-					OnRep_HitScanTrace();
 					if(!HasAuthority() && bUseServerSideRewind && PlayerController)
 					{
 						if(Pawn && Pawn->GetLagCompensationComp())
@@ -84,6 +86,11 @@ void AHitScanWeapon::HandleFiring()
 						}
 					}
 				}
+				else
+				{
+					HitScanTrace.ImpactPoint = TraceEnd;
+				}
+				OnRep_HitScanTrace();
 				if(DebugWeaponDrawing>0)
 				{
 					DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green,false, 1.0f);
@@ -95,10 +102,15 @@ void AHitScanWeapon::HandleFiring()
 		}
 	}
 }
+/*
+void AHitScanWeapon::TraceWithScatter(const FVector& HitTarget, const TArray<FVector>& HitTargets)
+{
+	
+}*/
 
 void AHitScanWeapon::OnRep_HitScanTrace() const
 {
-	PlayShootVfx(HitScanTrace.ImpactPoint );
+	PlayShootVfx(HitScanTrace.ImpactPoint);
 	if(!HitScanTrace.ImpactPoint .IsZero())
 	{
 		PlayImpactFX(HitScanTrace.SurfaceType, HitScanTrace.ImpactPoint ,HitScanTrace.ImpactNormal);

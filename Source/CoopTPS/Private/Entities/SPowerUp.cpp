@@ -19,7 +19,9 @@ ASPowerUp::ASPowerUp()
 	LightComp = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightComp"));
 	LightComp->SetupAttachment(MeshComp);
 
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	PrimaryActorTick.bCanEverTick = false;
+	
 	PowerUpInterval = 0.0f;
 	TotalNumTicks = 0.0f;
 }

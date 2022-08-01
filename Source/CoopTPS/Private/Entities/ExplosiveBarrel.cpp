@@ -17,6 +17,7 @@ FAutoConsoleVariableRef CVarDebugBarrelExp(TEXT("Coop.DebugBarrelExp"),
 
 AExplosiveBarrel::AExplosiveBarrel()
 {
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates=true;
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
@@ -29,6 +30,8 @@ AExplosiveBarrel::AExplosiveBarrel()
 	
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
+	RadialForceComp->SetActive(false);
+	RadialForceComp->PrimaryComponentTick.bStartWithTickEnabled=false;
 	RadialForceComp->Radius = ExplosionRadius;
 	RadialForceComp->ImpulseStrength = ExplosionImpulse;
 }
@@ -80,6 +83,8 @@ void AExplosiveBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AExplosiveBarrel::AfterExplode()
 {
 	SetReplicateMovement(false);
+	RadialForceComp->SetComponentTickEnabled(false);
+	RadialForceComp->Activate(false);
 	MeshComp->SetCollisionObjectType(ECC_WorldStatic);
 	MeshComp->SetSimulatePhysics(false);
 }
@@ -131,6 +136,8 @@ void AExplosiveBarrel::SelfDestruct()
 	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
 	MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 	MeshComp->SetMaterial(0, ExplodedMaterial);
+	RadialForceComp->Activate(true);
+	RadialForceComp->SetComponentTickEnabled(true);
 	RadialForceComp->FireImpulse();
 
 	if (HasAuthority())

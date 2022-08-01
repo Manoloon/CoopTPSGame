@@ -16,10 +16,9 @@ UCLASS(Abstract)
 class COOPTPS_API ASTrackerBall : public APawn, public IIHealthyActor
 {
 	GENERATED_BODY()
+	
 public:
 	ASTrackerBall();
-
-	virtual void Tick(float DeltaTime) override;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	virtual USHealthComponent* I_GetHealthComp() const override;
 protected: 
@@ -63,6 +62,7 @@ protected:
 	FTimerHandle TH_HitShake;
 		
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UFUNCTION()
