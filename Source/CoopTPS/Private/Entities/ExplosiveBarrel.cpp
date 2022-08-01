@@ -61,7 +61,7 @@ void AExplosiveBarrel::PostInitializeComponents()
 void AExplosiveBarrel::BeginPlay()
 {
 	Super::BeginPlay();
-	SetReplicateMovement(true);
+	//SetReplicateMovement(true);
 	if(HealthComp && HasAuthority())
 	{
 		HealthComp->OnHealthChanged.AddDynamic(this, &AExplosiveBarrel::HealthChanged);
@@ -75,6 +75,13 @@ void AExplosiveBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		HealthComp->OnHealthChanged.RemoveDynamic(this,&AExplosiveBarrel::HealthChanged);
 	}
+}
+
+void AExplosiveBarrel::AfterExplode()
+{
+	SetReplicateMovement(false);
+	MeshComp->SetCollisionObjectType(ECC_WorldStatic);
+	MeshComp->SetSimulatePhysics(false);
 }
 
 void AExplosiveBarrel::HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
@@ -119,7 +126,8 @@ void AExplosiveBarrel::SelfDestruct()
 		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 	}
 	*/
-	// push the barrel upward! 
+	// push the barrel upward!
+	SetReplicateMovement(true);
 	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
 	MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 	MeshComp->SetMaterial(0, ExplodedMaterial);
@@ -139,6 +147,8 @@ void AExplosiveBarrel::SelfDestruct()
 									FColor::Red, false, 2.0f, 3.0f);
 		}
 	}
+	FTimerHandle Th_AfterExplode;
+	GetWorldTimerManager().SetTimer(Th_AfterExplode,this,&AExplosiveBarrel::AfterExplode,3.0f);
 }
 
 void AExplosiveBarrel::OnRep_Exploded() const

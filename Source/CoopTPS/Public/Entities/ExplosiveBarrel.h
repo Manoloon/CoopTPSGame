@@ -56,6 +56,8 @@ protected:
 
 private:
 	UFUNCTION()
+	void AfterExplode();
+	UFUNCTION()
 	void HealthChanged(USHealthComponent* OwningHealthComp, const float Health,float HealthDelta,
 				const class UDamageType* DamageType, class AController* InstigatedBy,AActor* DamageCauser);
 	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
