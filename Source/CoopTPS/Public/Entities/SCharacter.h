@@ -27,21 +27,21 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-		class UCameraComponent* CameraComp;
+		TObjectPtr<class UCameraComponent> CameraComp;
 	UPROPERTY(VisibleAnywhere)
-		class USpringArmComponent* SpringArmComp;
+		TObjectPtr<class USpringArmComponent> SpringArmComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
-		UParticleSystem* BeamFX;
+		TObjectPtr<UParticleSystem> BeamFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
-		UParticleSystemComponent* BeamComp;
+		TObjectPtr<UParticleSystemComponent> BeamComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|GrenadeMode")
-		UDecalComponent* BeamEndPointDecal;
+		TObjectPtr<UDecalComponent> BeamEndPointDecal;
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-		class USHealthComponent* HealthComp;
+		TObjectPtr<USHealthComponent> HealthComp;
 	UPROPERTY(VisibleAnywhere)
-		class URagDollStateComp* RagDollComp;
+		TObjectPtr<class URagDollStateComp> RagDollComp;
 	UPROPERTY(VisibleAnywhere)
-		class ULagCompensationComp* LagCompensationComp;
+		TObjectPtr<class ULagCompensationComp> LagCompensationComp;
 	
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Settings|Health")
 		bool bDied = false;

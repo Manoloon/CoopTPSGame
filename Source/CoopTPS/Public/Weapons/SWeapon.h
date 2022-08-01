@@ -61,7 +61,7 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		FName TracerTargetName = "BeamEnd";
 	UPROPERTY()
-	ACoopPlayerController* PlayerController;
+	TObjectPtr<ACoopPlayerController> PlayerController;
 	FTimerHandle Th_FinishReload;
 	bool bIsEquipped=false;
 	float LastFireTime;
@@ -72,11 +72,11 @@ protected:
 	int32 AmmoSequence=0;
 //Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-		USkeletalMeshComponent* MeshComp;
+		TObjectPtr<USkeletalMeshComponent> MeshComp;
 	UPROPERTY(VisibleAnywhere,Category = "Component")
-		USphereComponent* SphereComp;
+		TObjectPtr<USphereComponent> SphereComp;
 	UPROPERTY(VisibleAnywhere)
-		UAudioComponent* WeaponAudioComponent;
+		TObjectPtr<UAudioComponent> WeaponAudioComponent;
 	
 //networking
 	UFUNCTION()
