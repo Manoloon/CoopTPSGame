@@ -43,7 +43,7 @@ protected:
 		float ExplosionDamage=60.f;
 	UPROPERTY(EditAnywhere,Category = "Settings")
 		float ExplosionImpulse=400.f;
-	UPROPERTY(EditAnywhere,Replicated,Category = "Settings")
+	UPROPERTY(EditAnywhere,Category = "Settings")
 		UParticleSystem* ExplosionFX;
 	UPROPERTY(EditDefaultsOnly,Category = "Settings|SFX")
 		USoundCue* ExplosionSFX;

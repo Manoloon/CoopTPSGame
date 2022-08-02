@@ -23,22 +23,26 @@ public:
 	virtual USHealthComponent* I_GetHealthComp() const override;
 protected: 
 	UPROPERTY(Category = "Componentes", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USHealthComponent* HealthComp = nullptr;
+		TObjectPtr<USHealthComponent> HealthComp = nullptr;
 	UPROPERTY(Category = "Componentes", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USphereComponent* SphereComp = nullptr;
+		TObjectPtr<USphereComponent> SphereComp = nullptr;
 	UPROPERTY(Category = "Componentes", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UAudioComponent* AudioComp = nullptr;
+		TObjectPtr<UAudioComponent> AudioComp = nullptr;
 	UPROPERTY(Category = "Componentes", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UStaticMeshComponent* MeshComp = nullptr;
+		TObjectPtr<UStaticMeshComponent> MeshComp = nullptr;
 	
 	UPROPERTY(Category = "FX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* ExplosionFX = nullptr;
+		TObjectPtr<UParticleSystem> ExplosionFX = nullptr;
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* ExplosionSFX = nullptr;
+		TObjectPtr<USoundBase> ExplosionSFX = nullptr;
+	UPROPERTY(Category = "FX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<UParticleSystem> SelfExplosionFX = nullptr;
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* FoundTargetSFX = nullptr;
+		TObjectPtr<USoundBase> SelfExplosionSFX = nullptr;
 	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-		USoundCue* RollSFX = nullptr;
+		TObjectPtr<USoundBase> FoundTargetSFX = nullptr;
+	UPROPERTY(Category = "SFX", EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<USoundBase> RollSFX = nullptr;
 	
 	UPROPERTY(Category = "Settings", EditDefaultsOnly)
 		float ExplosionRadius = 600.0f;
@@ -53,13 +57,18 @@ protected:
 	UPROPERTY(Category = "Settings", EditAnywhere,BlueprintReadOnly)
 		TSubclassOf<UDamageType> LocDamageType;
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly)
-		UMaterialInstanceDynamic* MeshMaterialInstance = nullptr;
+		TObjectPtr<UMaterialInstanceDynamic> MeshMaterialInstance = nullptr;
 
 	FVector NextPathPoint;
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
 	bool bExploded;
 	bool bStartedSelfDestruction;
 	float SelfDamageInterval = 0.25;
-	FTimerHandle TH_HitShake;
+	UPROPERTY(Replicated)
+	TObjectPtr<UParticleSystem> CurrentExplosionFX = nullptr;
+	UPROPERTY(Replicated)
+	TObjectPtr<USoundBase> CurrentExplosionSFX=nullptr;
+	FTimerHandle Th_HitShake;
 		
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -68,10 +77,12 @@ protected:
 	UFUNCTION()
 		void HealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 			const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	UFUNCTION()
+	void OnRep_Exploded() const;
 	void CalculateMovement();
 	FVector GetNextPathPoint();
 	void SelfDamage();
-	void SelfDestruct();
+	void SelfDestruct(AController* DamageInstigator);
 	void RefreshPath();
 	//TODO NO SE USA
 	void StartHitShake();

@@ -12,9 +12,10 @@
 #include "Particles/ParticleSystem.h"
 #include "Components/SphereComponent.h"
 #include "Entities/SCharacter.h"
-#include "Sound/SoundCue.h"
+#include "Interfaces/IInputComm.h"
 #include "components/AudioComponent.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 
 static int32 DebugTrackballDraw = 0;
@@ -49,6 +50,14 @@ ASTrackerBall::ASTrackerBall()
 	bVelocityChanged = false;
 	bExploded = false;
 	bStartedSelfDestruction = false;
+}
+
+void ASTrackerBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ASTrackerBall,bExploded);
+	DOREPLIFETIME(ASTrackerBall,CurrentExplosionFX);
+	DOREPLIFETIME(ASTrackerBall,CurrentExplosionSFX);
 }
 
 void ASTrackerBall::BeginPlay()
@@ -176,37 +185,63 @@ void ASTrackerBall::HealthChanged(USHealthComponent* OwningHealthComp, float Hea
 	*/
 	if(Health <=0.0f)
 	{
-		SelfDestruct();
+		SelfDestruct(InstigatedBy);
 	}
 }
 
-void ASTrackerBall::SelfDestruct()
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
+void ASTrackerBall::SelfDestruct(AController* DamageInstigator)
 {
 	if (bExploded) { return; }
-	bExploded = true;
-	if(ExplosionFX && ExplosionSFX)
+	if(DamageInstigator == GetInstigatorController())
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
-	}	
+		if (HasAuthority())
+		{
+			if (SelfExplosionFX && SelfExplosionSFX)
+			{
+				CurrentExplosionFX = std::move(SelfExplosionFX);
+				CurrentExplosionSFX = std::move(SelfExplosionSFX);
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelfExplosionFX, GetActorLocation());
+				UGameplayStatics::PlaySoundAtLocation(this, SelfExplosionSFX, GetActorLocation());
+			}
+			TArray<AActor*> IgnoredActors;
+			IgnoredActors.Add(this);
+			UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(),
+					ExplosionRadius, LocDamageType, IgnoredActors, this,GetInstigatorController(),true);
+
+			if(DebugTrackballDraw)
+			{
+				DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12,
+									FColor::Red, false, 2.0f, 3.0f);
+			}
+		}
+	}
+	else
+	{
+		if (HasAuthority())
+		{
+			if(ExplosionFX && ExplosionSFX)
+			{
+				CurrentExplosionFX = std::move(ExplosionFX);
+				CurrentExplosionSFX = std::move(ExplosionSFX);
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
+				UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
+			}
+		}	
+	}
+	bExploded = true;
 	MeshComp->SetVisibility(false, true); 
 	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SetLifeSpan(0.5f);
+}
 
-	if(HasAuthority())
+void ASTrackerBall::OnRep_Exploded() const
+{
+	if(CurrentExplosionFX && CurrentExplosionSFX)
 	{
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(this);
-	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(),
-		ExplosionRadius, LocDamageType, IgnoredActors, this,GetInstigatorController(),
-																			true);
-
-		if(DebugTrackballDraw)
-		{
-			DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12,
-								FColor::Red, false, 2.0f, 3.0f);
-		}
-	SetLifeSpan(2.0f);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CurrentExplosionFX, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, CurrentExplosionSFX, GetActorLocation());
 	}
 }
 
@@ -228,7 +263,7 @@ void ASTrackerBall::StartHitShake()
 		MeshMaterialInstance->SetScalarParameterValue("DamageTaken", DamageHit);
 		if(DamageHit == 0.0f)
 		{
-			GetWorldTimerManager().ClearTimer(TH_HitShake);
+			GetWorldTimerManager().ClearTimer(Th_HitShake);
 		}
 	}
 }
@@ -239,7 +274,7 @@ void ASTrackerBall::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if(!bStartedSelfDestruction)
 	{
-		if (!USHealthComponent::IsFriendly(OtherActor,this))
+		if (!USHealthComponent::IsFriendly(OtherActor,this) && OtherActor->Implements<UIInputComm>())
 		{
 			// we overlapped player
 			if (GetLocalRole() == ROLE_Authority)

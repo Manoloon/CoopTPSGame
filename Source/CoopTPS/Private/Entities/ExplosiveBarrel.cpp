@@ -40,7 +40,6 @@ void AExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AExplosiveBarrel,bExploded);
-	DOREPLIFETIME(AExplosiveBarrel, ExplosionFX);
 }
 
 USHealthComponent* AExplosiveBarrel::I_GetHealthComp() const
@@ -112,7 +111,6 @@ void AExplosiveBarrel::SelfDestruct()
 	if (bExploded) { return; }
 
 	bExploded = true;
-	OnRep_Exploded();
 	if(HasAuthority())
 	{
 		if(ExplosionFX)
@@ -124,13 +122,6 @@ void AExplosiveBarrel::SelfDestruct()
 			UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
 		}
 	}
-	/*
-	if(ExplosionFX && ExplosionSFX)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, GetActorLocation());
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSFX, GetActorLocation());
-	}
-	*/
 	// push the barrel upward!
 	SetReplicateMovement(true);
 	const FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;	
