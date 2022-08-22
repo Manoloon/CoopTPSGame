@@ -14,6 +14,7 @@ class COOPTPS_API ASPlayerState final : public APlayerState
 	class ASCharacter* PlayerCharacter;
 	UPROPERTY()
 	class ACoopPlayerController* PlayerController;
+	
 public:
 	virtual void OnRep_Score() override;
 	UFUNCTION(BlueprintCallable)

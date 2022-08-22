@@ -92,7 +92,7 @@ void ASCharacter::PostInitializeComponents()
 	}
 }
 
-// Esta funcion es llamada desde el Gamemode para señalar el cambio de color segun el player controller. 
+// Esta funcion es llamada desde el Gamemode para se?alar el cambio de color segun el player controller. 
 void ASCharacter::AuthSetPlayerColor(const FLinearColor& NewColor)
 {
 	PlayerColor = NewColor;

@@ -7,8 +7,8 @@
 #include "UI/ST_HUDData.h"
 #include "TPSHud.generated.h"
 
-UCLASS()
-class COOPTPS_API ATPSHud final : public AHUD
+UCLASS(Abstract)
+class COOPTPS_API ATPSHud: public AHUD
 {
 	GENERATED_BODY()
 	
@@ -24,6 +24,8 @@ class COOPTPS_API ATPSHud final : public AHUD
 	class URoleMessage* RoleMessage;
 	UPROPERTY()
 	UUserWidget* Announcements;
+	UPROPERTY()
+	class UUW_ChatBox* ChatPanel;
 	// TODO announcement pointer.
 	virtual void BeginPlay() override;
 	FHUDData HUDData;
@@ -40,5 +42,4 @@ public:
 	void AddRoleMessage();
 	void AddPlayerUI();
 	void AddAnnouncement();
-	//void HideAllWidgets();
 };
