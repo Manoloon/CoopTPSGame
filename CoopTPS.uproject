@@ -118,18 +118,9 @@
 		{
 			"Name": "ReplicationGraph",
 			"Enabled": true
-		},
-		{
-			"Name": "StreamChat",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/05b76120ba7e4468b01d8fcbed276c3a"
-		},
-		{
-			"Name": "DaedalicTestAutomationPlugin",
-			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
-		"Windows"
+		"Win64"
 	]
 }

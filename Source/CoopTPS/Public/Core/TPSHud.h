@@ -7,10 +7,13 @@
 #include "UI/ST_HUDData.h"
 #include "TPSHud.generated.h"
 
+class UUserWidget;
 UCLASS(Abstract)
 class COOPTPS_API ATPSHud: public AHUD
 {
 	GENERATED_BODY()
+
+	ATPSHud();
 	
 	UPROPERTY(EditAnywhere,Category = "Settings")
 	TSubclassOf<UUserWidget> PlayerUIClass;
@@ -24,16 +27,16 @@ class COOPTPS_API ATPSHud: public AHUD
 	class URoleMessage* RoleMessage;
 	UPROPERTY()
 	UUserWidget* Announcements;
-	UPROPERTY()
-	class UUW_ChatBox* ChatPanel;
 	// TODO announcement pointer.
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	FHUDData HUDData;
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax=16.0f;
 	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportCenter, FVector2d Spread,
 													FLinearColor Color=FLinearColor::White);
 public:
+	
 	float CrossHairExpandWeight;
 	virtual void DrawHUD() override;
 	FORCEINLINE void SetHUDData(const FHUDData& Data){HUDData = Data;}

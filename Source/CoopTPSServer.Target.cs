@@ -3,9 +3,9 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class CoopTpsServerTarget : TargetRules
+public class CoopTPSServerTarget : TargetRules
 {
-	public CoopTpsServerTarget(TargetInfo Target) : base(Target)
+	public CoopTPSServerTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Server;
 		DefaultBuildSettings = BuildSettingsVersion.V2;

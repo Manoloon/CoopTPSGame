@@ -2,14 +2,18 @@
 
 
 #include "Core/TPSHud.h"
-
 #include "Engine/Canvas.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/UPlayerUI.h"
 #include "UI/RoleMessage.h"
+
 static bool DebugRole = false;
 FAutoConsoleVariableRef CVarDebugRole(TEXT("Coop.ShowPawnRole"), DebugRole,
 											TEXT("Show Pawn Role"), ECVF_Cheat);
+
+ATPSHud::ATPSHud()
+{
+}
 
 void ATPSHud::BeginPlay()
 {
@@ -19,6 +23,11 @@ void ATPSHud::BeginPlay()
 	{
 		AddRoleMessage();
 	}
+}
+
+void ATPSHud::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
 }
 
 void ATPSHud::DrawHUD()
