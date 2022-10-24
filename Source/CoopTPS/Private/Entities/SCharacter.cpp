@@ -15,6 +15,7 @@
 #include "Components/SHealthComponent.h"
 #include "Components/LagCompensationComp.h"
 #include "CoopTPS.h"
+#include "SPlayerState.h"
 #include "Components/RagDollStateComp.h"
 #include "Core/TPSHud.h"
 #include "Net/UnrealNetwork.h"
@@ -60,7 +61,26 @@ ASCharacter::ASCharacter()
 	RagDollComp = CreateDefaultSubobject<URagDollStateComp>(TEXT("RagDollComp"));
 	
 	LagCompensationComp = CreateDefaultSubobject<ULagCompensationComp>(TEXT("LagCompensationComp"));
+	NoWeaponTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Equipped.None"));
+	CurrentWeaponTag = NoWeaponTag;
 }
+
+UAbilitySystemComponent* ASCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ASCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	if(const ASPlayerState* LocalPlayerState = GetPlayerState<ASPlayerState>())
+	{
+		AbilitySystemComponent = LocalPlayerState->GetAbilitySystemComponent();
+		AttributeSetBase = LocalPlayerState->GetAttributeSet();
+	}
+}
+
 // networking --> 
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
@@ -145,10 +165,16 @@ void ASCharacter::BeginPlay()
 
 void ASCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
 	if(IsValid(CurrentWeapon)){CurrentWeapon->Destroy();}
 	if(IsValid(SecondaryWeapon)){SecondaryWeapon->Destroy();}
 	HealthComp->OnHealthChanged.RemoveDynamic(this,&ASCharacter::HealthChanged);
+	if(AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(CurrentWeaponTag);
+		CurrentWeaponTag = NoWeaponTag;
+		AbilitySystemComponent->AddLooseGameplayTag(CurrentWeaponTag);
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void ASCharacter::CreateRewindHitBox()
@@ -355,7 +381,7 @@ void ASCharacter::I_DropWeapon()
 	{
 		CurrentWeapon = std::move(SecondaryWeapon);
 		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+		CurrentWeapon->EquipWeapon(this,GetMesh(), WeaponSocketName);
 		SecondaryWeapon = nullptr;
 	}
 }
@@ -588,18 +614,18 @@ void ASCharacter::PickupWeapon()
 			}
 			SecondaryWeapon = std::move(CurrentWeapon);
 			SecondaryWeapon->SetOwner(this);
-			SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+			SecondaryWeapon->EquipWeapon(this,GetMesh(), SecondaryWeaponSocketName);
 			CurrentWeapon = std::move(OverlappingWeapon);
 			OverlappingWeapon =nullptr;
 			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+			CurrentWeapon->EquipWeapon(this,GetMesh(), WeaponSocketName);
 		}
 		else
 		{
 			CurrentWeapon = std::move(OverlappingWeapon);
 			OverlappingWeapon =nullptr;
 			CurrentWeapon->SetOwner(this);
-			CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+			CurrentWeapon->EquipWeapon(this,GetMesh(), WeaponSocketName);
 		}
 		if(IsLocallyControlled() && HasAuthority())
 		{
@@ -629,14 +655,14 @@ void ASCharacter::SwapWeapons()
 	if(CurrentWeapon)
 	{
 		SecondaryWeapon = std::move(CurrentWeapon);
-		SecondaryWeapon->EquipWeapon(GetMesh(), SecondaryWeaponSocketName);
+		SecondaryWeapon->EquipWeapon(this,GetMesh(), SecondaryWeaponSocketName);
 	}
 	else
 	{
 		SecondaryWeapon =nullptr;
 	}
 	CurrentWeapon = std::move(TempWeapon);
-	CurrentWeapon->EquipWeapon(GetMesh(), WeaponSocketName);
+	CurrentWeapon->EquipWeapon(this,GetMesh(), WeaponSocketName);
 	if(IsLocallyControlled())
 	{
 		PlayerController->SetWeaponInfoHUD(CurrentWeapon->GetWeaponName(),CurrentWeapon->GetCurrentAmmo(),

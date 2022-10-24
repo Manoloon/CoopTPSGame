@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Weapons/SWeapon.h"
+
+#include "AbilitySystemComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Core/CoopPlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -36,6 +38,11 @@ ASWeapon::ASWeapon()
 	// Ojo con esto que nos estamos cargando la posibilidad de ajuste de epic.
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+}
+
+UAbilitySystemComponent* ASWeapon::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -240,20 +247,25 @@ void ASWeapon::PlayAudioFX(USoundCue* SfxToPlay) const
 	}
 }
 
-void ASWeapon::EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket)
+void ASWeapon::EquipWeapon(ASCharacter* InOwningPawn,USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
-	if(HasAuthority())
+	OwningPawn = InOwningPawn;
+	if(OwningPawn)
 	{
-		SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		MeshComp->SetSimulatePhysics(false);
-		MeshComp->SetEnableGravity(false);
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
-		ClientAmmoUpdate(false,CurrentAmmo);
-	}
-	else
-	{
-		ServerEquipWeapon(MeshComponent,WeaponSocket);
+		if(HasAuthority())
+		{
+			SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			MeshComp->SetSimulatePhysics(false);
+			MeshComp->SetEnableGravity(false);
+			MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			MeshComp->AttachToComponent(MeshComponent,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponSocket);
+			AbilitySystemComponent = OwningPawn->GetAbilitySystemComponent();
+			ClientAmmoUpdate(false,CurrentAmmo);
+		}
+		else
+		{
+			ServerEquipWeapon(OwningPawn,MeshComponent,WeaponSocket);
+		}
 	}
 }
 
@@ -264,6 +276,8 @@ void ASWeapon::DropWeapon()
 	{
 		StopFire();
 		SetOwner(nullptr);
+		OwningPawn=nullptr;
+		AbilitySystemComponent = nullptr;
 		PlayerController =nullptr;
 		const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
 		MeshComp->DetachFromComponent(DetachRules);
@@ -388,9 +402,9 @@ void ASWeapon::PlayShootVfx(const FVector TraceEnd) const
 
 //call on client | execute on server
 
-void ASWeapon::ServerEquipWeapon_Implementation(USceneComponent* MeshComponent, const FName& WeaponSocket)
+void ASWeapon::ServerEquipWeapon_Implementation(ASCharacter* InOwningPawn,USceneComponent* MeshComponent, const FName& WeaponSocket)
 {
-	EquipWeapon(MeshComponent,WeaponSocket);
+	EquipWeapon(InOwningPawn,MeshComponent,WeaponSocket);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic

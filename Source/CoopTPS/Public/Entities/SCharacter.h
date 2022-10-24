@@ -6,6 +6,8 @@
 #include "Components/BoxComponent.h"
 #include "Interfaces/IHealthyActor.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "Interfaces/IInputComm.h"
 #include "SCharacter.generated.h"
 
@@ -18,13 +20,37 @@
 // 	class UTexture2D WeaponImage;
 // };
 UCLASS(Abstract)
-class COOPTPS_API ASCharacter final : public ACharacter, public IIInputComm, public IIHealthyActor
+class COOPTPS_API ASCharacter : public ACharacter, public IIInputComm, public IIHealthyActor, public 
+IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	ASCharacter();
+// GAS Impl
+virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+virtual void PossessedBy(AController* NewController) override;
 
+	FGameplayTag CurrentWeaponTag;
+	
+protected:
+	FGameplayTag DeadTag;
+	FGameplayTag EffectRemoveOnDeathTag;
+
+	FGameplayTag NoWeaponTag;
+	
+
+	UPROPERTY()
+		UAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY()
+		class UCoopAttributeSet* AttributeSetBase;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GAS|Abilities")
+		TArray<TSubclassOf<class UCoopGameplayAbility>> CharacterAbilities;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GAS|Abilities")
+		TSubclassOf<class UGameplayEffect> DefaultAttributes;
+	
+////////////
 protected:
 	UPROPERTY(VisibleAnywhere)
 		TObjectPtr<class UCameraComponent> CameraComp;

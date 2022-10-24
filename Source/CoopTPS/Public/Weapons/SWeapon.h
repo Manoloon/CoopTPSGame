@@ -6,6 +6,9 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "ST_WeaponData.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
+#include "SCharacter.h"
 #include "UI/ST_HUDData.h"
 #include "SWeapon.generated.h"
 
@@ -18,7 +21,7 @@ class USoundCue;
 class UAudioComponent;
 
 UCLASS(Abstract)
-class COOPTPS_API ASWeapon : public AActor
+class COOPTPS_API ASWeapon : public AActor, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -26,12 +29,25 @@ class COOPTPS_API ASWeapon : public AActor
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:	
 	ASWeapon();
+	// GAS
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	FGameplayTag WeaponTag;
+	UPROPERTY(BlueprintReadWrite, VisibleInstanceOnly, Category = "GASShooter|GSWeapon")
+	FGameplayTag FireMode;
+protected:
+	UPROPERTY()
+	UAbilitySystemComponent* AbilitySystemComponent;
+	UPROPERTY()
+	ASCharacter* OwningPawn;
+	//
+public:
 	bool IsReloading() const;
 	// Local + server
 	virtual void StartFire();
 	virtual void StopFire();
 	void StartReload();
-	void EquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
+	void EquipWeapon(ASCharacter* InOwningPawn,USceneComponent* MeshComponent, const FName& WeaponSocket);
 	void DropWeapon();
 	void FinishReloading();
 	const FHUDData& GetCrosshairData() const;
@@ -91,7 +107,7 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_StartReload();
 	UFUNCTION(Server, Reliable)
-		void ServerEquipWeapon(USceneComponent* MeshComponent, const FName& WeaponSocket);
+		void ServerEquipWeapon(ASCharacter* InOwningPawn,USceneComponent* MeshComponent, const FName& WeaponSocket);
 	UFUNCTION(Client,Reliable)
 		void ClientAmmoUpdate(const bool bCalculateAmmoSeq,int32 ServerAmmo);
 	UFUNCTION(Client,Reliable)
