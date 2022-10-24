@@ -11,12 +11,16 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"UMG",
-				"CoreUObject",
+				"GameplayAbilities",
 				"AIModule"
 			]
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
 		{
 			"Name": "SteamVR",
 			"Enabled": false,

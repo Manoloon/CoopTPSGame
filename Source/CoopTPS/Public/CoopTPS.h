@@ -10,6 +10,35 @@
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_PAWN				ECC_GameTraceChannel2
 
+UENUM(BlueprintType)
+enum class EGSAbilityInputID : uint8
+{
+	// 0 None
+	None				UMETA(DisplayName = "None"),
+	// 1 Confirm
+	Confirm				UMETA(DisplayName = "Confirm"),
+	// 2 Cancel
+	Cancel				UMETA(DisplayName = "Cancel"),
+	// 3 Sprint
+	Sprint				UMETA(DisplayName = "Sprint"),
+	// 4 Jump
+	Jump				UMETA(DisplayName = "Jump"),
+	// 5 PrimaryFire
+	PrimaryFire			UMETA(DisplayName = "Primary Fire"),
+	// 6 SecondaryFire
+	SecondaryFire		UMETA(DisplayName = "Secondary Fire"),
+	// 7 Alternate Fire
+	AlternateFire		UMETA(DisplayName = "Alternate Fire"),
+	// 8 Reload
+	Reload				UMETA(DisplayName = "Reload"),
+	// 9 NextWeapon
+	NextWeapon			UMETA(DisplayName = "Next Weapon"), 
+	// 10 PrevWeapon
+	PrevWeapon			UMETA(DisplayName = "Previous Weapon"),
+	// 11 Interact
+	Interact			UMETA(DisplayName = "Interact")
+};
+
 #if !IS_PROGRAM && !UE_BUILD_SHIPPING && (PLATFORM_WINDOWS || PLATFORM_PS4 || PLATFORM_XBOXONE)
 #define LOGTRACE_ENABLED 1
 #else
