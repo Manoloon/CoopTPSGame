@@ -32,14 +32,17 @@ virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 virtual void PossessedBy(AController* NewController) override;
 
 	FGameplayTag CurrentWeaponTag;
-	
+
 protected:
 	FGameplayTag DeadTag;
 	FGameplayTag EffectRemoveOnDeathTag;
 
 	FGameplayTag NoWeaponTag;
-	
-
+	bool bASCInputBound = false;
+	void BindASCInput();
+	void TryFire();
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void OnRep_PlayerState() override;
 	UPROPERTY()
 		UAbilitySystemComponent* AbilitySystemComponent;
 
@@ -49,7 +52,7 @@ protected:
 		TArray<TSubclassOf<class UCoopGameplayAbility>> CharacterAbilities;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GAS|Abilities")
 		TSubclassOf<class UGameplayEffect> DefaultAttributes;
-	
+
 ////////////
 protected:
 	UPROPERTY(VisibleAnywhere)

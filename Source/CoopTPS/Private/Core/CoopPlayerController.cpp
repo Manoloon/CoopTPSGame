@@ -27,8 +27,8 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ADS", IE_Pressed, this, &ACoopPlayerController::StartAds);
 	InputComponent->BindAction("ADS", IE_Released, this, &ACoopPlayerController::StopAds);
 
-	InputComponent->BindAction("Fire", IE_Pressed, this, &ACoopPlayerController::StartFiring);
-	InputComponent->BindAction("Fire", IE_Released, this, &ACoopPlayerController::StopFiring);
+	//InputComponent->BindAction("PrimaryFire", IE_Pressed, this, &ACoopPlayerController::StartFiring);
+	//InputComponent->BindAction("PrimaryFire", IE_Released, this, &ACoopPlayerController::StopFiring);
 
 	InputComponent->BindAction("Reload", IE_Pressed, this, &ACoopPlayerController::Reload);
 	
@@ -36,7 +36,7 @@ void ACoopPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Throw", IE_Released, this, &ACoopPlayerController::StopThrow);
 
 	InputComponent->BindAction("ChangeWeapon", IE_Released, this, &ACoopPlayerController::ContrSwapWeapon);
-	InputComponent->BindAction("PickupWeapon", IE_Released, this, &ACoopPlayerController::PickupWeapon);
+	InputComponent->BindAction("Interact", IE_Released, this, &ACoopPlayerController::PickupWeapon);
 }
 
 ACoopPlayerController::ACoopPlayerController()

@@ -12,6 +12,7 @@
 #include "UI/ST_HUDData.h"
 #include "SWeapon.generated.h"
 
+struct FGameplayAbilitySpecHandle;
 class ACoopPlayerController;
 class USkeletalMeshComponent;
 class UDamageType;
@@ -33,13 +34,19 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	FGameplayTag WeaponTag;
-	UPROPERTY(BlueprintReadWrite, VisibleInstanceOnly, Category = "GASShooter|GSWeapon")
+	UPROPERTY(BlueprintReadWrite, VisibleInstanceOnly, Category = "GAS")
 	FGameplayTag FireMode;
+	virtual void AddAbilities();
+	virtual void RemoveAbilities();
 protected:
 	UPROPERTY()
 	UAbilitySystemComponent* AbilitySystemComponent;
 	UPROPERTY()
 	ASCharacter* OwningPawn;
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TArray<TSubclassOf<UCoopGameplayAbility>> Abilities;
+	UPROPERTY(BlueprintReadOnly, Category = "GAS")
+	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 	//
 public:
 	bool IsReloading() const;

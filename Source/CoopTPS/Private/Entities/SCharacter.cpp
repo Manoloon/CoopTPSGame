@@ -81,6 +81,46 @@ void ASCharacter::PossessedBy(AController* NewController)
 	}
 }
 
+void ASCharacter::BindASCInput()
+{
+	if (!bASCInputBound && IsValid(AbilitySystemComponent) && IsValid(InputComponent))
+	{
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent,
+			FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"),
+			FString("EGSAbilityInputID"),
+			static_cast<int32>(EGSAbilityInputID::Confirm),
+			static_cast<int32>(EGSAbilityInputID::Cancel)));
+
+		bASCInputBound = true;
+	}
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void ASCharacter::TryFire()
+{
+}
+
+void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	BindASCInput();
+}
+
+void ASCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	if(ASPlayerState* PS = GetPlayerState<ASPlayerState>())
+	{
+		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(PS,this);
+		BindASCInput();
+		AttributeSetBase = PS->GetAttributeSet();
+		AbilitySystemComponent->SetTagMapCount(DeadTag,0);
+	}
+	
+}
+
 // networking --> 
 void ASCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {

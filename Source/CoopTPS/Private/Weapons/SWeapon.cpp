@@ -3,6 +3,7 @@
 #include "Weapons/SWeapon.h"
 
 #include "AbilitySystemComponent.h"
+#include "CoopGameplayAbility.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Core/CoopPlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,6 +44,44 @@ ASWeapon::ASWeapon()
 UAbilitySystemComponent* ASWeapon::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void ASWeapon::AddAbilities()
+{
+	if(!IsValid(OwningPawn) || !OwningPawn->GetAbilitySystemComponent())
+	{
+		return;
+	}
+	UAbilitySystemComponent* ASC = OwningPawn->GetAbilitySystemComponent();
+	if(GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
+	for(TSubclassOf<UCoopGameplayAbility>& Ability : Abilities)
+	{
+		AbilitySpecHandles.Add(ASC->GiveAbility(
+			FGameplayAbilitySpec(Ability,
+				1,
+				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID),
+				this)));
+	}
+}
+
+void ASWeapon::RemoveAbilities()
+{
+	if(!IsValid(OwningPawn) || !OwningPawn->GetAbilitySystemComponent())
+	{
+		return;
+	}
+	UAbilitySystemComponent* ASC = OwningPawn->GetAbilitySystemComponent();
+	if(GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
+	for(FGameplayAbilitySpecHandle& SpecHandle : AbilitySpecHandles)
+	{
+		ASC->ClearAbility(SpecHandle);
+	}
 }
 
 void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
