@@ -12,7 +12,7 @@ public class CoopTPS : ModuleRules
         
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", 
         "InputCore", "NavigationSystem", "PhysicsCore", "UMG", "OnlineSubsystemSteam",
-        "GameplayCameras","AIModule","NetCore"
+        "GameplayCameras","AIModule","NetCore", "EnhancedInput"
         });
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
@@ -21,7 +21,8 @@ public class CoopTPS : ModuleRules
 			"AnimGraphRuntime",
 			"GameplayAbilities",
 			"GameplayTags",
-			"GameplayTasks"
+			"GameplayTasks", 
+			"EnhancedInput"
 		});
 		
 		// Uncomment if you are using online features

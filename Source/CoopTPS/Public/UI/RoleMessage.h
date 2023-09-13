@@ -17,5 +17,5 @@ public:
 	void SetDisplayText(FString TextToDisplay) const;
 	void ShowPlayerNetRole(const APawn* Pawn) const;
 protected:
-	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
+	virtual void NativeDestruct() override;
 };

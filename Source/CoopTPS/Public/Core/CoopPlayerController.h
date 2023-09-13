@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
+#include "InputConfigData.h"
 #include "GameFramework/PlayerController.h"
 #include "Interfaces/IInputComm.h"
 #include "CoopPlayerController.generated.h"
 
 class ASCharacter;
+class UInputMappingContext;
 
 UCLASS()
 class COOPTPS_API ACoopPlayerController : public APlayerController
@@ -17,7 +20,7 @@ class COOPTPS_API ACoopPlayerController : public APlayerController
 	class ATPSHud* PlayerHUD;
 	
 public:
-	ACoopPlayerController();
+	ACoopPlayerController()=default;
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerID;
 	UPROPERTY(BlueprintReadWrite)
@@ -34,6 +37,12 @@ public:
 	virtual void ReceivedPlayer() override;
 protected:
 	virtual void SetupInputComponent() override;
+	
+		UInputMappingContext* InputMapping;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enhanced Input")
+		TObjectPtr<UInputConfigData> InputActions;
+	
 	IIInputComm* PawnInterface;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -42,6 +51,10 @@ protected:
 	void StartRun();
 	void StopRun();
 	void MoveForward(float Value);
+	
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	
 	void MoveRight(float Value);
 	void TurnRate(float Value);
 	void LookUpRate(float Value);
@@ -52,11 +65,11 @@ protected:
 	void StartFiring();
 	void StopFiring();
 	void Reload();
-	void ContrSwapWeapon();
 	void StartThrow();
 	void StopThrow();
 	void Jump();
-	void PickupWeapon();
+	void Interact();
+	void ChangeWeapon(const FInputActionValue& Value);
 	/* Sync time between client and server*/
 	float MatchTime =120.f;
 	uint32 Countdown=0;

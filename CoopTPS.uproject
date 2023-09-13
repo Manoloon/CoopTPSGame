@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.0",
+	"EngineAssociation": "5.1",
 	"Category": "Learning",
 	"Description": "",
 	"Modules": [
@@ -44,22 +44,6 @@
 			]
 		},
 		{
-			"Name": "MagicLeapMedia",
-			"Enabled": false,
-			"SupportedTargetPlatforms": [
-				"Lumin"
-			]
-		},
-		{
-			"Name": "MagicLeap",
-			"Enabled": false,
-			"SupportedTargetPlatforms": [
-				"Lumin",
-				"Mac",
-				"Win64"
-			]
-		},
-		{
 			"Name": "Bridge",
 			"Enabled": false,
 			"SupportedTargetPlatforms": [
@@ -67,10 +51,6 @@
 				"Mac",
 				"Linux"
 			]
-		},
-		{
-			"Name": "MultiplayerSession",
-			"Enabled": false
 		},
 		{
 			"Name": "OnlineSubsystemGooglePlay",

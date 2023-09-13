@@ -11,9 +11,12 @@
 
 
 UUW_MainMenu::UUW_MainMenu(const FObjectInitializer& ObjectInitializer)
+	: BTN_Join(nullptr), BTN_Host(nullptr), BTN_Connect(nullptr), BTN_Cancel(nullptr), BTN_Quit(nullptr),
+		BTN_CreateSession(nullptr), BTN_HostCancel(nullptr), JoinWidgetSwitcher(nullptr), ServerList(nullptr),
+		NameServerBox(nullptr), JoinMenu(nullptr), MainMenu(nullptr), HostMenu(nullptr)
 {
-	static ConstructorHelpers::FClassFinder<UUserWidget>BPServerListItemClass(TEXT("/Game/UI/UWG_ServerItem"));
-	if(BPServerListItemClass.Class)
+	static ConstructorHelpers::FClassFinder<UUserWidget> BPServerListItemClass(TEXT("/Game/UI/UWG_ServerItem"));
+	if (BPServerListItemClass.Class)
 	{
 		ServerListItemClass = BPServerListItemClass.Class;
 	}
@@ -42,16 +45,18 @@ bool UUW_MainMenu::Initialize()
 }
 
 // llama a la funcion de la interface.
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UUW_MainMenu::HostServer()
 {
 	if (MenuInterface != nullptr)
 	{
-		const FString newServerName = NameServerBox->Text.ToString();
+		const FString newServerName = NameServerBox->GetText().ToString();
 		MenuInterface->I_Host(newServerName);
 	}
 
 }
 // abre el menu de join -> ip address call.
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UUW_MainMenu::OpenJoinMenu()
 {
  	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
@@ -62,7 +67,7 @@ void UUW_MainMenu::OpenJoinMenu()
 		MenuInterface->I_RefreshServerList();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UUW_MainMenu::BackToMainMenu()
 {
 	if (!ensure(JoinWidgetSwitcher != nullptr)) return;
@@ -80,7 +85,7 @@ void UUW_MainMenu::JoinServer()
 		}
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UUW_MainMenu::QuitGame()
 {
 	if (MenuInterface != nullptr)
@@ -88,7 +93,7 @@ void UUW_MainMenu::QuitGame()
 		MenuInterface->I_QuitGame();
 	}
 }
-
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UUW_MainMenu::OpenHostMenu()
 {
 	if (!ensure(JoinWidgetSwitcher != nullptr)) return;

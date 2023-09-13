@@ -11,14 +11,6 @@
 #include "Interfaces/IInputComm.h"
 #include "SCharacter.generated.h"
 
-// USTRUCT()
-// struct FWeaponsItems
-// {
-// 	GENERATED_USTRUCT_BODY()
-// 
-// 	AActor* WeaponToSpawn;
-// 	class UTexture2D WeaponImage;
-// };
 UCLASS(Abstract)
 class COOPTPS_API ASCharacter : public ACharacter, public IIInputComm, public IIHealthyActor, public 
 IAbilitySystemInterface

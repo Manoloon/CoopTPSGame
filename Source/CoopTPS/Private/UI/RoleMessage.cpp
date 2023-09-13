@@ -36,8 +36,8 @@ void URoleMessage::ShowPlayerNetRole(const APawn* Pawn) const
 	SetDisplayText(LocalRoleString);
 }
 
-void URoleMessage::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+void URoleMessage::NativeDestruct()
 {
-	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
+	Super::NativeDestruct();
 	RemoveFromParent();
 }
